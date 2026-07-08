@@ -1,0 +1,80 @@
+'use client';
+
+import Link from 'next/link';
+import { useAuthStore } from '@/store/authStore';
+import { useTenderStore } from '@/store/tenderStore';
+import { TenderCard } from '@/components/tender/TenderCard';
+import { EmptyState } from '@/components/common/EmptyState';
+import { Breadcrumbs } from '@/components/common/Breadcrumbs';
+import { FadeIn } from '@/components/common/MotionDiv';
+import { TENDER_STATUS_LABELS, TENDER_STATUS_COLORS, TENDER_STATUS_BG } from '@/store/tenderStore';
+
+export default function DealerTendersPage() {
+  const { user } = useAuthStore();
+  const tenders = useTenderStore((s) => s.tenders);
+  const myBids = useTenderStore((s) => s.getDealerBids(user?.id || 0));
+
+  const biddedTenderIds = new Set(myBids.map((b) => b.tenderId));
+  const available = tenders.filter((t) => t.status === 'open' && !biddedTenderIds.has(t.id));
+  const participated = tenders.filter((t) => biddedTenderIds.has(t.id));
+
+  const pendingBids = myBids.filter((b) => b.status === 'pending').length;
+  const acceptedBids = myBids.filter((b) => b.status === 'accepted').length;
+
+  return (
+    <FadeIn>
+      <div className="relative min-h-screen bg-background text-foreground">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
+          <Breadcrumbs />
+
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-black text-foreground">مدیریت مناقصات</h1>
+            <p className="text-sm text-muted-foreground mt-1">درخواست‌های بازار و پیشنهادات ارسالی شما</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            {[
+              { label: 'پیشنهادات در انتظار', value: pendingBids, color: 'text-warning' },
+              { label: 'پیشنهادات تأیید شده', value: acceptedBids, color: 'text-success' },
+              { label: 'کل پیشنهادات', value: myBids.length, color: 'text-foreground' },
+              { label: 'درخواست‌های فعال', value: available.length, color: 'text-primary' },
+            ].map((stat) => (
+              <div key={stat.label} className="glass rounded-2xl p-4 border border-border-subtle text-center">
+                <span className={`text-2xl font-black ${stat.color}`}>{stat.value}</span>
+                <p className="text-[10px] text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {participated.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-sm font-bold text-foreground mb-3">درخواست‌هایی که پیشنهاد داده‌اید</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {participated.map((tender) => (
+                  <TenderCard key={tender.id} tender={tender} showActions />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h3 className="text-sm font-bold text-foreground mb-3">درخواست‌های فعال بازار</h3>
+            {available.length === 0 ? (
+              <EmptyState
+                title="درخواست جدیدی وجود ندارد"
+                description="همه درخواست‌های فعال را پاسخ داده‌اید"
+                action={<Link href="/tenders" className="btn btn-primary btn-sm">مشاهده همه درخواست‌ها</Link>}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {available.map((tender) => (
+                  <TenderCard key={tender.id} tender={tender} showActions />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </FadeIn>
+  );
+}

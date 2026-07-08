@@ -1,0 +1,46 @@
+import { Hono } from 'hono';
+import { healthRouter } from './health';
+import { authRouter } from './auth';
+import { emailRouter } from './email';
+import { phoneRouter } from './phone';
+import { categoryRouter } from './categories';
+import { provinceRouter } from './provinces';
+import { listingRouter } from './listings';
+import { searchRouter } from './search';
+import { uploadRouter } from './uploads';
+import { conversationRouter } from './conversations';
+import { favoriteRouter } from './favorites';
+import { articleRouter } from './articles';
+import { tenderRouter } from './tenders';
+import { paymentRouter } from './payments';
+import { walletRouter } from './wallet';
+import { accountRouter, dealerDashboardRouter, dealerPublicRouter } from './dealers';
+import { userRouter } from './users';
+import { adminRouter } from './admin';
+import { notificationRouter } from './notifications';
+
+const router = new Hono();
+
+router.route('/health', healthRouter);
+router.route('/auth', authRouter);
+router.route('/email', emailRouter);
+router.route('/phone', phoneRouter);
+router.route('/categories', categoryRouter);
+router.route('/provinces', provinceRouter);
+router.route('/listings', listingRouter);
+router.route('/search', searchRouter);
+router.route('/upload', uploadRouter);
+router.route('/conversations', conversationRouter);
+router.route('/favorites', favoriteRouter);
+router.route('/articles', articleRouter);
+router.route('/tenders', tenderRouter);
+router.route('/payments', paymentRouter);
+router.route('/wallet', walletRouter);
+router.route('/account', accountRouter);
+router.route('/dealer', dealerDashboardRouter);
+router.route('/dealers', dealerPublicRouter);
+router.route('/users', userRouter);
+router.route('/admin', adminRouter);
+router.route('/notifications', notificationRouter);
+
+export { router as apiRouter };
