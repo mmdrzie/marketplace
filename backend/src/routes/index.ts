@@ -18,6 +18,7 @@ import { accountRouter, dealerDashboardRouter, dealerPublicRouter } from './deal
 import { userRouter } from './users.js';
 import { adminRouter } from './admin.js';
 import { notificationRouter } from './notifications.js';
+import { meRouter } from './me.js';
 
 const router = new Hono();
 
@@ -42,5 +43,6 @@ router.route('/dealers', dealerPublicRouter);
 router.route('/users', userRouter);
 router.route('/admin', adminRouter);
 router.route('/notifications', notificationRouter);
+router.route('/me', meRouter);
 
 export { router as apiRouter };
