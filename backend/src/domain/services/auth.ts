@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { userRepo } from '../../repositories/user.js';
 import { refreshTokenRepo } from '../../repositories/refreshToken.js';
@@ -8,6 +9,10 @@ import { eventBus, UserRegistered } from '../events/index.js';
 
 const SALT_ROUNDS = 12;
 const PASSWORD_RESET_PREFIX = 'pwd_reset:';
+
+function sha256(value: string): string {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
 
 export class AuthService {
   private emailService: EmailService;
@@ -38,11 +43,10 @@ export class AuthService {
     });
 
     const refreshToken = await signRefreshToken(user.id);
-    const refreshHash = await bcrypt.hash(refreshToken, 10);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await refreshTokenRepo.create({
       user_id: user.id,
-      token_hash: refreshHash,
+      token_hash: sha256(refreshToken),
       expires_at: expiresAt,
     });
 
@@ -79,11 +83,10 @@ export class AuthService {
     });
 
     const refreshToken = await signRefreshToken(user.id);
-    const refreshHash = await bcrypt.hash(refreshToken, 10);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await refreshTokenRepo.create({
       user_id: user.id,
-      token_hash: refreshHash,
+      token_hash: sha256(refreshToken),
       expires_at: expiresAt,
     });
 
@@ -109,8 +112,7 @@ export class AuthService {
       throw AppError.invalidToken();
     }
 
-    const refreshHash = await bcrypt.hash(refreshTokenStr, 10);
-    const stored = await refreshTokenRepo.findByTokenHash(refreshHash);
+    const stored = await refreshTokenRepo.findByTokenHash(sha256(refreshTokenStr));
     if (!stored) {
       throw AppError.invalidToken();
     }
@@ -147,8 +149,7 @@ export class AuthService {
   }
 
   async logout(refreshTokenStr: string) {
-    const refreshHash = await bcrypt.hash(refreshTokenStr, 10);
-    const stored = await refreshTokenRepo.findByTokenHash(refreshHash);
+    const stored = await refreshTokenRepo.findByTokenHash(sha256(refreshTokenStr));
     if (stored) {
       await refreshTokenRepo.revoke(stored.id);
     }
