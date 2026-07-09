@@ -21,7 +21,10 @@ export function auth(): MiddlewareHandler {
   return async (c, next) => {
     const header = c.req.header('Authorization');
     if (!header?.startsWith('Bearer ')) {
-      throw AppError.unauthorized('Missing or invalid Authorization header');
+      return c.json(
+        { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing or invalid Authorization header' } },
+        401,
+      );
     }
 
     const token = header.slice(7);
@@ -30,10 +33,11 @@ export function auth(): MiddlewareHandler {
       c.set('user', payload as unknown as AuthUser);
       await next();
     } catch (err) {
-      if (err instanceof Error && err.name === 'JWTExpired') {
-        throw AppError.tokenExpired();
-      }
-      throw AppError.invalidToken();
+      const isExpired = err instanceof Error && err.name === 'JWTExpired';
+      return c.json(
+        { success: false, error: { code: isExpired ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN', message: isExpired ? 'Token expired' : 'Invalid token' } },
+        401,
+      );
     }
   };
 }

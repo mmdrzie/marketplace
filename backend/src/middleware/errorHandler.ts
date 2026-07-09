@@ -1,5 +1,4 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { AppError, getHttpStatus } from '../errors.js';
 import { ErrorCode } from '../shared/index.js';
 
 export function errorHandler(): MiddlewareHandler {
@@ -7,19 +6,13 @@ export function errorHandler(): MiddlewareHandler {
     try {
       await next();
     } catch (err: any) {
-      if (err && typeof err === 'object' && err.httpStatus && err.code) {
-        c.status(err.httpStatus as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500);
-        return c.json({
-          success: false,
-          error: { code: err.code, message: err.message },
-        });
-      }
+      const isAppError = err && typeof err === 'object' && err.constructor?.name === 'AppError';
 
-      if (err instanceof SyntaxError) {
-        c.status(422);
+      if (isAppError) {
+        c.status(err.httpStatus || 500);
         return c.json({
           success: false,
-          error: { code: ErrorCode.VALIDATION_ERROR, message: 'Invalid JSON body' },
+          error: { code: err.code || ErrorCode.INTERNAL_ERROR, message: err.message },
         });
       }
 
