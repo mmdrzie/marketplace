@@ -11,8 +11,8 @@ const BASE_ATTR_LABELS: Record<string, string> = {
 };
 
 function getAttr(item: CompareItem, key: string): string {
-  if (key === 'province') return item.province || '—';
-  if (key === 'city') return item.city || '—';
+  if (key === 'province') return item.province_name || '—';
+  if (key === 'city') return item.city_name || '—';
   if (key === 'status') return item.status || '—';
   if (item.attributes) {
     const found = item.attributes.find((a) => a.name === key || a.label === key);
@@ -84,7 +84,7 @@ export function SpecComparisonGrid({ items, onRemove }: { items: CompareItem[]; 
                     </div>
                   )}
                   <div className="mt-2 text-sm font-black text-foreground">
-                    {typeof item.price === 'number' ? `${item.price.toLocaleString('fa-IR')} تومان` : item.price_type === 'free' ? 'رایگان' : 'توافقی'}
+                    {typeof item.price === 'number' ? `${item.price.toLocaleString('fa-IR')} تومان` : item.price_type === 'negotiable' ? 'توافقی' : 'رایگان'}
                   </div>
                   <a
                     href={`/listings/${item.slug}`}

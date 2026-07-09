@@ -3,19 +3,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_CONVERSATIONS_RESPONSE, MOCK_CONVERSATIONS } from '@/lib/mockData';
-
 export function useConversations() {
   return useQuery({
     queryKey: queryKeys.conversations.all,
     queryFn: async () => {
-      try {
-        const res = await api.get('/conversations');
-        return res.data;
-      } catch {
-        return MOCK_CONVERSATIONS_RESPONSE;
-      }
+      const res = await api.get('/conversations');
+      return res.data;
     },
+    retry: 2,
   });
 }
 
@@ -23,15 +18,11 @@ export function useConversation(id: number) {
   return useQuery({
     queryKey: queryKeys.conversations.detail(id),
     queryFn: async () => {
-      try {
-        const res = await api.get(`/conversations/${id}`);
-        return res.data.data;
-      } catch {
-        const conv = MOCK_CONVERSATIONS.find((c) => c.id === id);
-        return conv || null;
-      }
+      const res = await api.get(`/conversations/${id}`);
+      return res.data.data;
     },
     enabled: !!id,
+    retry: 2,
   });
 }
 

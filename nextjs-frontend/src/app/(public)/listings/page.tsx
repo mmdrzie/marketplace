@@ -6,7 +6,6 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_CATEGORIES, MOCK_PROVINCES } from '@/lib/mockData';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { EmptyState } from '@/components/common/EmptyState';
 import { GlassSelect } from '@/components/common/GlassSelect';
@@ -101,8 +100,8 @@ export default function AllListingsPage() {
     staleTime: 300000,
   });
 
-  const provinces = apiProvinces || MOCK_PROVINCES;
-  const categories = apiCategories || MOCK_CATEGORIES;
+  const provinces = apiProvinces ?? [];
+  const categories = apiCategories ?? [];
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.listings.allListings(page, searchParams.toString()),

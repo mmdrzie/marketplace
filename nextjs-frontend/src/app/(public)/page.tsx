@@ -13,7 +13,6 @@ import { queryKeys } from '@/lib/queryKeys';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { NewsCard } from '@/components/news/NewsCard';
 import { useArticles } from '@/hooks/useArticles';
-import { MOCK_CATEGORIES, MOCK_ARTICLES } from '@/lib/mockData';
 import type { Article, Category } from '@/types';
 import { throttle } from '@/lib/utils';
 import { ICON_PATHS } from '@/lib/icons';
@@ -304,7 +303,7 @@ export default function HomePage() {
     queryFn: async () => (await api.get('/categories')).data.data,
     staleTime: 300000,
   });
-  const categories = apiCategories ?? MOCK_CATEGORIES;
+  const categories = apiCategories ?? [];
 
   const { data: latest, isLoading: listLoading } = useQuery({
     queryKey: queryKeys.listings.latest,
@@ -312,7 +311,7 @@ export default function HomePage() {
   });
 
   const { data: apiArticles, isLoading: artLoading } = useArticles();
-  const homeArticles = apiArticles ?? MOCK_ARTICLES;
+  const homeArticles = apiArticles ?? [];
 
   return (
     <>

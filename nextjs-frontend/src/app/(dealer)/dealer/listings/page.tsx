@@ -95,7 +95,7 @@ export default function DealerListingsPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-medium text-sm truncate text-foreground">{item.title}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">{item.city}/{item.province}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{item.city_name}/{item.province_name}</p>
                       {item.price != null && item.price > 0 && <p className="text-sm font-medium mt-1 text-foreground">{item.price.toLocaleString('fa-IR')} تومان</p>}
                     </div>
                     <StatusBadge status={item.status} />

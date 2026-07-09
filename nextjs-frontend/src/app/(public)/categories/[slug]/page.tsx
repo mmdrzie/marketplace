@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_CATEGORIES, MOCK_PROVINCES, MOCK_CITIES } from '@/lib/mockData';
 import { useListings } from '@/hooks/useListings';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { SortSelect } from '@/components/search/SortSelect';
@@ -14,9 +13,9 @@ import { AttributeFilters } from '@/components/search/AttributeFilters';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FadeIn, StaggerContainer } from '@/components/common/MotionDiv';
+import { SkeletonListings } from '@/components/common/Skeleton';
 import type { Category } from '@/types';
 import { HEAVY_BRANDS } from '@/lib/brands';
-import { SkeletonListings } from '@/components/common/Skeleton';
 
 const BRANDS = HEAVY_BRANDS;
 
@@ -87,7 +86,7 @@ export default function CategoryPage() {
     staleTime: 300000,
   });
 
-  const allCategories = apiCategories || MOCK_CATEGORIES;
+  const allCategories = apiCategories ?? [];
   const category = (allCategories as Category[])?.find((c) => c.slug === slug);
 
   const { data: provinces } = useQuery({
@@ -97,7 +96,7 @@ export default function CategoryPage() {
     staleTime: 300000,
   });
 
-  const allProvinces = provinces || MOCK_PROVINCES;
+  const allProvinces = provinces ?? [];
 
   const { data, isLoading } = useListings({
     category_slug: slug,
@@ -168,7 +167,7 @@ export default function CategoryPage() {
         <GlassSelect
           value={cityId}
           onChange={(val) => setCityId(val)}
-          options={(provinceId ? (MOCK_CITIES[Number(provinceId)] || []) : []).map((c: { id: number; name: string }) => ({ value: String(c.id), label: c.name }))}
+          options={(provinceId ? ((allProvinces as Array<{ id: number; name: string; cities: Array<{ id: number; name: string }> }>).find((p) => p.id === Number(provinceId))?.cities ?? []) : []).map((c) => ({ value: String(c.id), label: c.name }))}
           placeholder="همه شهرها"
           disabled={!provinceId}
         />

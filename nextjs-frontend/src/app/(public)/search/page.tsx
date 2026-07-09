@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_CATEGORIES, MOCK_PROVINCES } from '@/lib/mockData';
 import { SearchBar } from '@/components/search/SearchBar';
 import { FilterPanel } from '@/components/search/FilterPanel';
 import { SortSelect } from '@/components/search/SortSelect';
@@ -99,12 +98,12 @@ export default function SearchPage() {
   });
   const { data: apiProvinces } = useQuery({
     queryKey: queryKeys.categories.provinces,
-    queryFn: async () => (await api.get('/provinces')).data.data,
-    retry: 1, staleTime: 300000,
+    queryFn: async () => (await api.get('/provinces')).data.data as Array<{ id: number; name: string; slug: string; cities: Array<{ id: number; name: string }> }>,
+    retry: 2, staleTime: 300000,
   });
 
-  const categories = apiCategories || MOCK_CATEGORIES;
-  const provinces = apiProvinces || MOCK_PROVINCES;
+  const categories = apiCategories ?? [];
+  const provinces = apiProvinces ?? [];
 
   const searchParams = filtersToParams(filters, debouncedQuery, page);
 

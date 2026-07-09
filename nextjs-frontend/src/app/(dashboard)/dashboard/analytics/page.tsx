@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_LISTINGS } from '@/lib/mockData';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { StatChartCard } from '@/components/common/Charts';
 import { PriceDisplay } from '@/components/common/PriceDisplay';
@@ -22,14 +21,14 @@ export default function AnalyticsPage() {
   const { data } = useQuery({
     queryKey: queryKeys.listings.my,
     queryFn: async () => {
-      const res = await api.get('/my-listings');
+      const res = await api.get('/listings', { params: { scope: 'me' } });
       return res.data;
     },
     staleTime: 15000,
-    retry: 0,
+    retry: 2,
   });
 
-  const listings: Listing[] = data?.data || MOCK_LISTINGS;
+  const listings: Listing[] = data?.data ?? [];
   const selected = listings.find((l) => l.id === selectedId) || listings[0];
 
   const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
@@ -84,7 +83,7 @@ export default function AnalyticsPage() {
                   <h2 className="text-base font-bold text-foreground">{selected.title}</h2>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                     <span><PriceDisplay price={selected.price} priceType={selected.price_type} /></span>
-                    <span>{selected.city || selected.province}</span>
+                    <span>{selected.city_name || selected.province_name}</span>
                     <span>{formatRelativeTime(selected.published_at)}</span>
                   </div>
                 </div>

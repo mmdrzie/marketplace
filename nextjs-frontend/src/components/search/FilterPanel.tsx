@@ -4,7 +4,6 @@ import { useCallback } from 'react';
 import { AttributeFilters } from './AttributeFilters';
 import { HEAVY_BRANDS } from '@/lib/brands';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import { MOCK_CATEGORIES, MOCK_PROVINCES, MOCK_CITIES } from '@/lib/mockData';
 import type { Category } from '@/types';
 
 const BRANDS = HEAVY_BRANDS;
@@ -58,7 +57,7 @@ interface FilterPanelProps {
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
   categories: Category[];
-  provinces: Array<{ id: number; name: string }>;
+  provinces: Array<{ id: number; name: string; cities: Array<{ id: number; name: string }> }>;
 }
 
 export function FilterPanel({ filters, onFilterChange, categories, provinces }: FilterPanelProps) {
@@ -88,9 +87,10 @@ export function FilterPanel({ filters, onFilterChange, categories, provinces }: 
 
   const hasActiveFilters = filters.category || filters.province_id || filters.brand || filters.model || filters.year_from || filters.year_to || filters.price_min || filters.price_max || Object.keys(filters.attributeFilters).length > 0;
 
-  const allCategories = categories?.length ? categories : MOCK_CATEGORIES;
-  const allProvinces = provinces?.length ? provinces : MOCK_PROVINCES;
-  const cities = filters.province_id ? (MOCK_CITIES[Number(filters.province_id)] || []) : [];
+  const allCategories = categories ?? [];
+  const allProvinces = provinces ?? [];
+  const selectedProvince = provinces?.find((p) => p.id === Number(filters.province_id));
+  const cities = selectedProvince?.cities ?? [];
   const selectedBrandModels = MODELS_BY_BRAND[filters.brand] || [];
 
   return (

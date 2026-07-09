@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { StarRating } from './StarRating';
 import { cn, formatRelativeTime } from '@/lib/utils';
@@ -17,19 +17,19 @@ interface Review {
   created_at: string;
 }
 
-const MOCK_REVIEWS: Review[] = [
-  { id: 1, author: 'علی رضایی', avatar: null, rating: 5, text: 'معامله عالی بود. ماشین سالم تحویل داده شد.', created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-  { id: 2, author: 'سارا احمدی', avatar: null, rating: 4, text: 'خوب بود ولی یه کم تأخیر داشتن.', created_at: new Date(Date.now() - 86400000 * 7).toISOString() },
-  { id: 3, author: 'محمد محمدی', avatar: null, rating: 5, text: 'قیمت منصفانه، رفتار حرفه‌ای. حتماً بازم میام.', created_at: new Date(Date.now() - 86400000 * 14).toISOString() },
-];
-
 interface DealerReviewsProps {
   dealerId: number;
   className?: string;
 }
 
 export function DealerReviews({ dealerId, className }: DealerReviewsProps) {
-  const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
+  const { data: reviewsData } = useQuery({
+    queryKey: ['dealer-reviews', dealerId],
+    queryFn: async () => { const res = await api.get(`/dealers/${dealerId}/reviews`); return res.data.data as Review[]; },
+    enabled: !!dealerId,
+  });
+  const [localReviews, setLocalReviews] = useState<Review[]>([]);
+  const reviews = reviewsData ?? localReviews;
   const [showForm, setShowForm] = useState(false);
   const [newRating, setNewRating] = useState(0);
   const [newText, setNewText] = useState('');
@@ -57,7 +57,7 @@ export function DealerReviews({ dealerId, className }: DealerReviewsProps) {
       text: newText.trim(),
       created_at: new Date().toISOString(),
     };
-    setReviews((prev) => [review, ...prev]);
+    setLocalReviews((prev) => [review, ...prev]);
     setShowForm(false);
     setNewRating(0);
     setNewText('');

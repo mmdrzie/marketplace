@@ -6,24 +6,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_USERS, MOCK_LISTINGS } from '@/lib/mockData';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { formatDate } from '@/lib/utils';
 import type { User, Listing } from '@/types';
 
-function mockUser(id: number): User | null {
-  return MOCK_USERS.find((u) => u.id === id && u.role === 'user') || null;
-}
-
-function mockListings(userId: number): Listing[] {
-  return MOCK_LISTINGS.filter((l) => l.user?.id === userId) as Listing[];
-}
-
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
-  const userId = parseInt(id);
 
   const { data: apiUser } = useQuery({
     queryKey: queryKeys.users.profile(id),
@@ -34,8 +24,14 @@ export default function UserProfilePage() {
     enabled: !!id,
   });
 
-  const user = apiUser || mockUser(userId);
-  const listings = mockListings(userId);
+  const { data: apiListings } = useQuery({
+    queryKey: ['listings', 'seller', id],
+    queryFn: async () => { const res = await api.get('/listings', { params: { seller_id: id } }); return res.data.data as Listing[]; },
+    enabled: !!id,
+  });
+
+  const user = apiUser;
+  const listings = apiListings ?? [];
 
   if (!user && !apiUser) {
     return (

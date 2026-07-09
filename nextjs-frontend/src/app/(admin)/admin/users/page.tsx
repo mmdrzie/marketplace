@@ -24,12 +24,12 @@ export default function AdminUsersPage() {
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: async ({ id, role }: { id: number; role: string }) => { await api.put(`/admin/users/${id}/role`, { role }); },
+    mutationFn: async ({ id, role }: { id: string | number; role: string }) => { await api.put(`/admin/users/${id}/role`, { role }); },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }),
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }) => { await api.put(`/admin/users/${id}/status`, { status }); },
+    mutationFn: async ({ id, status }: { id: string | number; status: string }) => { await api.put(`/admin/users/${id}/status`, { status }); },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }),
   });
 
@@ -39,7 +39,7 @@ export default function AdminUsersPage() {
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: async (id: number) => { await api.delete(`/admin/users/${id}`); },
+    mutationFn: async (id: string | number) => { await api.delete(`/admin/users/${id}`); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }); setDeleteTarget(null); },
   });
 

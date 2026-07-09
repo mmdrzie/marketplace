@@ -3,12 +3,13 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
 import { FEATURES } from '@/lib/features';
 import { notFound } from 'next/navigation';
 import { ImportedBadge } from '@/components/imported/ImportedBadge';
 import { PriceHistoryChart } from '@/components/common/Charts';
 import { generateImportPriceTrend } from '@/lib/importChartData';
-import { IMPORTED_LISTINGS } from '@/lib/mockDataImported';
 import { cn } from '@/lib/utils';
 
 const TABS = [
@@ -32,10 +33,17 @@ export default function ImportedPage() {
   if (!FEATURES.importedVehicles) notFound();
   const [tab, setTab] = useState('all');
 
+  const { data: listingsData } = useQuery({
+    queryKey: ['imported-listings'],
+    queryFn: async () => { const res = await api.get('/listings', { params: { scope: 'imported' } }); return res.data.data as any[]; },
+    retry: 2,
+  });
+  const allListings: any[] = listingsData ?? [];
+
   const filtered = useMemo(() => {
-    if (tab === 'all') return IMPORTED_LISTINGS;
-    return IMPORTED_LISTINGS.filter((l) => l.category?.slug === tab);
-  }, [tab]);
+    if (tab === 'all') return allListings;
+    return allListings.filter((l) => l.category?.slug === tab);
+  }, [tab, allListings]);
 
   const chartData = useMemo(() => generateImportPriceTrend(), []);
 
@@ -65,7 +73,7 @@ export default function ImportedPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
           {[
             { label: 'کشور مبدأ فعال', value: '۱۴', icon: 'M3 21h18M3 10h18M3 7l9-4 9 4M3 14h18M3 17h18' },
-            { label: 'آگهی فعال', value: IMPORTED_LISTINGS.length.toLocaleString('fa-IR'), icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2' },
+            { label: 'آگهی فعال', value: allListings.length.toLocaleString('fa-IR'), icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2' },
             { label: 'میانگین قیمت', value: '۸۹۰ میلیون', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1' },
             { label: 'بیشترین برند', value: 'آلمان', icon: 'M3 21h18M3 10h18M3 7l9-4 9 4' },
           ].map((s) => (
@@ -97,9 +105,9 @@ export default function ImportedPage() {
 
         {/* Listing grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {filtered.map((l, i) => {
-            const countryAttr = l.attributes.find((a) => a.attribute_id === 201);
-            const customsAttr = l.attributes.find((a) => a.attribute_id === 203);
+          {(filtered as any[]).map((l: any, i: number) => {
+            const countryAttr = (l.attributes as any[])?.find((a: any) => a.attribute_id === 201);
+            const customsAttr = (l.attributes as any[])?.find((a: any) => a.attribute_id === 203);
             return (
               <motion.div
                 key={l.id}

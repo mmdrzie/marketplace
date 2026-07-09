@@ -46,7 +46,7 @@ export default function DealerEditListingPage() {
   }
 
   const initialData = {
-    category_id: listing.category?.id ?? 0,
+    category_id: listing.category_id ?? 0,
     title: listing.title,
     description: listing.description,
     price: listing.price,

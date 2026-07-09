@@ -16,15 +16,7 @@ interface Notification {
   created_at: string;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: 1, type: 'message', is_read: false, data: { title: 'پیام جدید', body: 'کاربر علی رضایی به آگهی پراید ۱۱۱ پیام فرستاده', action_url: '/dashboard/messages' }, created_at: new Date(Date.now() - 3600000).toISOString() },
-  { id: 2, type: 'listing', is_read: false, data: { title: 'آگهی شما تأیید شد', body: 'آگهی پراید ۱۱۱ با موفقیت تأیید و منتشر شد', action_url: '/listings/pride-111-1398' }, created_at: new Date(Date.now() - 7200000).toISOString() },
-  { id: 3, type: 'favorite', is_read: false, data: { title: 'ذخیره در علاقه‌مندی‌ها', body: 'کاربر سارا محمدی آگهی پژو ۲۰۶ شما را ذخیره کرده', action_url: '/listings/peugeot-206-type2-1400' }, created_at: new Date(Date.now() - 14400000).toISOString() },
-  { id: 4, type: 'system', is_read: true, data: { title: 'تمدید اشتراک', body: 'اشتراک حرفه‌ای شما ۳۰ روز دیگر منقضی می‌شود', action_url: '/dealer/subscription' }, created_at: new Date(Date.now() - 86400000).toISOString() },
-  { id: 5, type: 'message', is_read: true, data: { title: 'پیام جدید', body: 'کاربر رضا کریمی به آگهی کامیون بنز پیام فرستاده', action_url: '/dashboard/messages' }, created_at: new Date(Date.now() - 172800000).toISOString() },
-  { id: 6, type: 'listing', is_read: true, data: { title: 'آگهی شما رد شد', body: 'آگهی ژنراتور کامینز تأیید نشد. دلیل: تصاویر نامناسب', action_url: '/dashboard/listings' }, created_at: new Date(Date.now() - 259200000).toISOString() },
-  { id: 7, type: 'system', is_read: true, data: { title: 'خوش آمدید', body: 'به تیم دیسیژن خوش آمدید! اولین آگهی خود را ثبت کنید', action_url: '/dashboard/listings/new' }, created_at: new Date(Date.now() - 604800000).toISOString() },
-];
+const EMPTY_NOTIFICATIONS: Notification[] = [];
 
 const TYPE_LABELS: Record<string, string> = { message: 'پیام‌ها', listing: 'آگهی‌ها', favorite: 'علاقه‌مندی', system: 'سیستم' };
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -48,7 +40,7 @@ export default function NotificationsPage() {
     retry: 0,
   });
 
-  const notifications: Notification[] = data?.data || MOCK_NOTIFICATIONS;
+  const notifications: Notification[] = data?.data ?? [];
 
   const filtered = useMemo(() => {
     if (tab === 'all') return notifications;

@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_CATEGORIES } from '@/lib/mockData';
-import { ICON_PATHS } from '@/lib/icons';
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/common/MotionDiv';
+import { SkeletonCard } from '@/components/common/Skeleton';
 import type { Category } from '@/types';
 import { Skeleton } from '@/components/common/Skeleton';
+import { ICON_PATHS } from '@/lib/icons';
 
 // --- Minimalist SVG Icons ---
 const Icon = ({ d, className = "w-5 h-5" }: { d: string; className?: string }) => (
@@ -37,7 +37,7 @@ export default function CategoriesPage() {
     staleTime: 60000,
   });
 
-  const categories = apiCategories || (isError ? MOCK_CATEGORIES : null);
+  const categories = apiCategories ?? [];
 
   return (
     <FadeIn>

@@ -8,6 +8,8 @@ import { useListing } from '@/hooks/useListings';
 import { useStartConversation } from '@/hooks/useChat';
 import { useAuthStore } from '@/store/authStore';
 import { useRecentlyViewedStore } from '@/store/recentlyViewedStore';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
 const ReportModal = dynamic(() => import('@/components/common/ReportModal').then(mod => mod.ReportModal));
 const FeaturedPurchaseModal = dynamic(() => import('@/components/payment/FeaturedPurchaseModal').then(mod => mod.FeaturedPurchaseModal));
 const ListingGallery = dynamic(() => import('@/components/listing/ListingGallery').then(mod => mod.ListingGallery));
@@ -40,6 +42,12 @@ import { Skeleton } from '@/components/common/Skeleton';
 export default function ListingDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: listing, isLoading, error } = useListing(slug);
+  const { data: seller } = useQuery({
+    queryKey: ['user-profile', listing?.seller_id],
+    queryFn: async () => { const res = await api.get(`/users/${listing!.seller_id}/profile`); return res.data.data; },
+    enabled: !!listing?.seller_id,
+    retry: 2,
+  });
   const { isAuthenticated, user } = useAuthStore();
   const startConversation = useStartConversation();
   const router = useRouter();
@@ -65,7 +73,7 @@ export default function ListingDetailPage() {
     if (listing) addRecent(listing);
   }, [listing, addRecent]);
 
-  const isOwner = listing?.user && user?.id === listing.user.id;
+  const isOwner = listing?.seller_id && user?.id === listing.seller_id;
 
   const handleSendMessage = async () => {
     if (!isAuthenticated) { router.push('/login'); return; }
@@ -212,11 +220,11 @@ export default function ListingDetailPage() {
             <div className="text-sm space-y-2 mb-4">
               <div className="flex justify-between py-1">
                 <span className="text-muted-foreground">استان</span>
-                <span className="font-medium text-foreground">{listing.province || '-'}</span>
+                <span className="font-medium text-foreground">{listing.province_name || '-'}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-muted-foreground">شهر</span>
-                <span className="font-medium text-foreground">{listing.city || '-'}</span>
+                <span className="font-medium text-foreground">{listing.city_name || '-'}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-muted-foreground">تاریخ انتشار</span>
@@ -227,8 +235,8 @@ export default function ListingDetailPage() {
                 <span className="font-medium text-foreground">{toPersianNumber(listing.views)}</span>
               </div>
             </div>
-            {(listing.province || listing.city) && (
-              <MapView address={`${listing.province || ''} ${listing.city || ''}`} title={listing.title} className="h-40 w-full rounded-xl" />
+            {(listing.province_name || listing.city_name) && (
+              <MapView address={`${listing.province_name || ''} ${listing.city_name || ''}`} title={listing.title} className="h-40 w-full rounded-xl" />
             )}
           </div>
 
@@ -238,9 +246,9 @@ export default function ListingDetailPage() {
               <span className="w-1 h-4 bg-primary rounded-full"></span>
               اطلاعات فروشنده
             </h3>
-            {listing.user && (
+            {listing.seller_id && (
               <AuthGate minimal message="برای مشاهده اطلاعات فروشنده وارد حساب شوید">
-                <SellerCard seller={listing.user} />
+                <SellerCard seller={seller} />
               </AuthGate>
             )}
           </div>
@@ -258,14 +266,14 @@ export default function ListingDetailPage() {
               <AuthGate minimal message="برای خرید امن وارد حساب شوید">
                 <button onClick={() => {
                   if (!isAuthenticated) { router.push('/login'); return; }
-                  if (!listing.user) return;
+                  if (!listing.seller_id) return;
                   const hasDeal = userDeals.length > 0;
                   if (hasDeal) { router.push(`/dashboard/deals/${userDeals[0].id}`); return; }
                   createDeal({
                     listingId: listing.id, listingTitle: listing.title, listingSlug: listing.slug,
                     listingImage: listing.primary_image || undefined, buyerId: user!.id,
-                    buyerName: user!.name || 'کاربر', sellerId: listing.user.id,
-                    sellerName: listing.user.name || 'فروشنده',
+                    buyerName: user!.name || 'کاربر', sellerId: listing.seller_id,
+                    sellerName: listing.seller_name || 'فروشنده',
                     amount: typeof listing.price === 'number' ? listing.price : 0,
                   });
                   toast({ type: 'success', title: 'درخواست خرید امن ثبت شد' });
@@ -310,15 +318,15 @@ export default function ListingDetailPage() {
         </ErrorBoundary>
 
         {/* ۶. آگهی‌های مرتبط */}
-        {listing.category && (
-          <RelatedListings categoryId={listing.category.id} excludeSlug={slug} />
+        {listing.category_id && (
+          <RelatedListings categoryId={listing.category_id} excludeSlug={slug} />
         )}
 
         {/* ۷. نظرات فروشنده */}
         <div>
           <AuthGate message="برای مشاهده و ثبت نظر وارد حساب خود شوید">
             <ErrorBoundary>
-              <DealerReviews dealerId={listing.user?.id || 0} />
+              {listing.seller_id && <DealerReviews dealerId={parseInt(listing.seller_id) || 0} />}
             </ErrorBoundary>
           </AuthGate>
         </div>
@@ -329,8 +337,8 @@ export default function ListingDetailPage() {
         </ErrorBoundary>
 
         {/* ۹. قطعات و ادوات سازگار (آخرین پنجره) */}
-        {listing.category && (
-          <CompatibleParts categorySlug={listing.category.slug} categoryName={listing.category.name} />
+        {listing.category_slug && (
+          <CompatibleParts categorySlug={listing.category_slug} categoryName={listing.category_name ?? undefined} />
         )}
       </div>
 
@@ -384,8 +392,8 @@ export default function ListingDetailPage() {
             image: (listing.images as ListingImage[])?.map((i) => i.url) || [],
             offers: { '@type': 'Offer', price: listing.price, priceCurrency: 'IRR', availability: listing.status === 'active' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut' },
             itemCondition: 'https://schema.org/UsedCondition',
-            category: listing.category?.name,
-            areaServed: listing.province || 'Iran',
+            category: listing.category_name,
+            areaServed: listing.province_name || 'Iran',
           }),
         }} />
       )}

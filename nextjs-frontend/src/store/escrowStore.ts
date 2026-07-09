@@ -11,9 +11,9 @@ export interface Deal {
   listingTitle: string;
   listingSlug: string;
   listingImage?: string;
-  buyerId: number;
+  buyerId: string | number;
   buyerName: string;
-  sellerId: number;
+  sellerId: string | number;
   sellerName: string;
   amount: number;
   status: DealStatus;
@@ -27,7 +27,7 @@ interface EscrowState {
   deals: Deal[];
   createDeal: (deal: Omit<Deal, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => Deal;
   updateStatus: (id: number, status: DealStatus) => void;
-  getDealsByUser: (userId: number) => Deal[];
+  getDealsByUser: (userId: string | number) => Deal[];
   getDeal: (id: number) => Deal | undefined;
 }
 

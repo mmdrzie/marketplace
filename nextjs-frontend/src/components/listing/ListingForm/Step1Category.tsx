@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_CATEGORIES } from '@/lib/mockData';
 import type { Category } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -49,14 +48,35 @@ interface Step1CategoryProps {
 }
 
 export function Step1Category({ selected, onSelect, disabled }: Step1CategoryProps) {
-  const { data: apiCategories } = useQuery({
+  const { data: categories, isLoading } = useQuery({
     queryKey: queryKeys.categories.all,
-    queryFn: async () => { const res = await api.get('/categories'); return res.data.data; },
-    retry: 1,
+    queryFn: async () => { const res = await api.get('/categories'); return res.data.data as Category[]; },
+    retry: 2,
     staleTime: 60000,
   });
 
-  const categories = apiCategories || MOCK_CATEGORIES;
+  if (isLoading) {
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">1</div>
+            <span className="text-[11px] font-bold tracking-widest text-primary uppercase">STEP 1</span>
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tighter text-foreground mb-2">انتخاب دسته‌بندی</h2>
+          <p className="text-muted-foreground text-sm font-light">در حال بارگذاری...</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center justify-center gap-4 p-6 rounded-2xl bg-surface/40 border border-border-subtle animate-pulse">
+              <div className="w-8 h-8 rounded-xl bg-border-subtle" />
+              <div className="h-4 w-20 rounded bg-border-subtle" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -72,7 +92,7 @@ export function Step1Category({ selected, onSelect, disabled }: Step1CategoryPro
 
       {/* گرید دسته‌بندی‌ها */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {(categories as Category[])?.map((cat) => {
+        {(categories ?? [])?.map((cat) => {
           const isSelected = selected === cat.id;
           return (
               <button

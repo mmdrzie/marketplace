@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import { MOCK_ATTRIBUTES } from '@/lib/mockData';
 import { Attribute } from '@/types';
 
 interface AttributeFiltersProps {
@@ -12,13 +11,6 @@ interface AttributeFiltersProps {
   filters: Record<string, string>;
   onChange: (name: string, value: string) => void;
 }
-
-const CATEGORY_SLUG_TO_ID: Record<string, number> = {
-  car: 1, truck: 2, trailer: 3, pickup: 4, loader: 5,
-  excavator: 6, bulldozer: 7, crane: 8, tractor: 9,
-  'combine-harvester': 10, forklift: 11, motorcycle: 12,
-  generator: 13, bicycle: 14,
-};
 
 export function AttributeFilters({ categorySlug, filters, onChange }: AttributeFiltersProps) {
   const { data: apiAttrs, isError } = useQuery({
@@ -32,8 +24,7 @@ export function AttributeFilters({ categorySlug, filters, onChange }: AttributeF
     retry: 1,
   });
 
-  const catId = categorySlug ? CATEGORY_SLUG_TO_ID[categorySlug] : null;
-  const attributes = apiAttrs || (isError && catId ? ((MOCK_ATTRIBUTES[catId] || []) as Attribute[]) : null);
+  const attributes = apiAttrs ?? null;
 
   const filterable = attributes?.filter((a) => a.is_filterable) || [];
 

@@ -10,7 +10,7 @@ export type BidStatus = 'pending' | 'accepted' | 'rejected';
 export interface Bid {
   id: number;
   tenderId: number;
-  dealerId: number;
+  dealerId: string | number;
   dealerName: string;
   dealerBusiness: string;
   amount: number;
@@ -21,7 +21,7 @@ export interface Bid {
 
 export interface Tender {
   id: number;
-  userId: number;
+  userId: string | number;
   userName: string;
   title: string;
   description: string;
@@ -45,8 +45,8 @@ interface TenderState {
   addBid: (tenderId: number, bid: Omit<Bid, 'id' | 'status' | 'createdAt'>) => void;
   updateBidStatus: (tenderId: number, bidId: number, status: BidStatus) => void;
   updateTenderStatus: (tenderId: number, status: TenderStatus) => void;
-  getTendersByUser: (userId: number) => Tender[];
-  getDealerBids: (dealerId: number) => Bid[];
+  getTendersByUser: (userId: string | number) => Tender[];
+  getDealerBids: (dealerId: string | number) => Bid[];
 }
 
 export const useTenderStore = create<TenderState>()(

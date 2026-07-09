@@ -28,7 +28,7 @@ app.notFound((c) => {
 
 export default app;
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   const serve = async () => {
     const { serve: honoServe } = await import('@hono/node-server');
     honoServe({

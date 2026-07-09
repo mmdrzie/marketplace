@@ -6,8 +6,21 @@ import { useAuthStore } from '@/store/authStore';
 import { useTenderStore, TENDER_TYPE_LABELS } from '@/store/tenderStore';
 import type { TenderType } from '@/store/tenderStore';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import { MOCK_PROVINCES } from '@/lib/mockData';
 import { toast } from '@/components/common/Toast';
+
+const PROVINCES = [
+  { id: 1, name: 'آذربایجان شرقی' }, { id: 2, name: 'آذربایجان غربی' }, { id: 3, name: 'اردبیل' },
+  { id: 4, name: 'اصفهان' }, { id: 5, name: 'البرز' }, { id: 6, name: 'ایلام' },
+  { id: 7, name: 'بوشهر' }, { id: 8, name: 'تهران' }, { id: 9, name: 'چهارمحال بختیاری' },
+  { id: 10, name: 'خراسان جنوبی' }, { id: 11, name: 'خراسان رضوی' }, { id: 12, name: 'خراسان شمالی' },
+  { id: 13, name: 'خوزستان' }, { id: 14, name: 'زنجان' }, { id: 15, name: 'سمنان' },
+  { id: 16, name: 'سیستان بلوچستان' }, { id: 17, name: 'فارس' }, { id: 18, name: 'قزوین' },
+  { id: 19, name: 'قم' }, { id: 20, name: 'کردستان' }, { id: 21, name: 'کرمان' },
+  { id: 22, name: 'کرمانشاه' }, { id: 23, name: 'کهگیلویه و بویراحمد' }, { id: 24, name: 'گلستان' },
+  { id: 25, name: 'گیلان' }, { id: 26, name: 'لرستان' }, { id: 27, name: 'مازندران' },
+  { id: 28, name: 'مرکزی' }, { id: 29, name: 'هرمزگان' }, { id: 30, name: 'همدان' },
+  { id: 31, name: 'یزد' },
+];
 
 const MACHINE_TYPES = ['بیل مکانیکی', 'لودر', 'بولدوزر', 'جرثقیل', 'کامیون کمپرسی', 'تراکتور', 'گرییدر', 'غلتک', 'فینیشر', 'دکل حفاری', 'تاور کرین', 'سایر'];
 
@@ -33,7 +46,7 @@ export function TenderForm() {
       toast({ type: 'error', title: 'لطفاً فیلدهای ضروری را پر کنید' });
       return;
     }
-    const province = MOCK_PROVINCES.find((p) => String(p.id) === provinceId);
+    const province = PROVINCES.find((p) => String(p.id) === provinceId);
     createTender({
       userId: user?.id || 1,
       userName: user?.name || 'کاربر',
@@ -159,7 +172,7 @@ export function TenderForm() {
           <GlassSelect
             value={provinceId}
             onChange={setProvinceId}
-            options={MOCK_PROVINCES.map((p) => ({ value: String(p.id), label: p.name }))}
+            options={PROVINCES.map((p) => ({ value: String(p.id), label: p.name }))}
             placeholder="انتخاب کنید"
           />
         </div>

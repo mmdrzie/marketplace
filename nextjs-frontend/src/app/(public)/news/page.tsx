@@ -6,7 +6,6 @@ import { useArticles } from '@/hooks/useArticles';
 import { NewsCard } from '@/components/news/NewsCard';
 import { ArticleSidebar } from '@/components/news/ArticleSidebar';
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/common/MotionDiv';
-import { MOCK_ARTICLES } from '@/lib/mockData';
 import type { Article } from '@/types';
 import { SkeletonCard } from '@/components/common/Skeleton';
 
@@ -27,7 +26,7 @@ export default function NewsPage() {
     router.replace('/news');
   };
 
-  const displayArticles = (articles as Article[]) ?? MOCK_ARTICLES;
+  const displayArticles = articles ?? [];
   let filtered = displayArticles;
   if (activeCategory) filtered = filtered.filter((a) => a.category === activeCategory);
   if (activeTag) filtered = filtered.filter((a) => a.tags.includes(activeTag));

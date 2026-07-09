@@ -3,10 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_CATEGORIES, MOCK_ATTRIBUTES } from '@/lib/mockData';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import { JSX } from 'react/jsx-runtime';
-import type { Attribute, Category } from '@/types';
+import type { Attribute } from '@/types';
 import { cn } from '@/lib/utils';
 
 // آیکون‌های مدرن SVG
@@ -47,7 +46,7 @@ export function Step3Attributes({ categoryId, values, onChange }: Step3Attribute
     retry: 1,
   });
 
-  const attributes = apiAttrs || (MOCK_ATTRIBUTES[categoryId] || []);
+  const attributes = apiAttrs as Attribute[] ?? [];
 
   const setValue = (name: string, value: string) => onChange({ ...values, [name]: value });
 
@@ -231,13 +230,11 @@ export function Step3Attributes({ categoryId, values, onChange }: Step3Attribute
 }
 
 function useCategorySlug(categoryId: number): string | null {
-  const allCats = MOCK_CATEGORIES;
-  const find = (list: Category[]): Category | null => {
-    for (const c of list) {
-      if (c.id === categoryId) return c;
-      if (c.children) { const found = find(c.children); if (found) return found; }
-    }
-    return null;
-  };
-  return find(allCats)?.slug || null;
+  const { data: categories } = useQuery({
+    queryKey: queryKeys.categories.all,
+    queryFn: async () => { const res = await api.get('/categories'); return res.data.data as Array<{ id: number; slug: string; parent_id: number | null }>; },
+    staleTime: 300000,
+  });
+  const cat = categories?.find((c) => c.id === categoryId);
+  return cat?.slug ?? null;
 }

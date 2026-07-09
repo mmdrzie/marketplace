@@ -1,11 +1,11 @@
 export interface User {
-  id: number;
+  id: string;
   name: string | null;
+  email?: string | null;
+  phone?: string | null;
   avatar: string | null;
   city: string | null;
   role: 'user' | 'dealer' | 'agency' | 'admin';
-  phone?: string | null;
-  email?: string | null;
   status?: string | null;
   phoneVerified?: boolean;
   emailVerified?: boolean;

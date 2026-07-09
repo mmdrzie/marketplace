@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_USERS, MOCK_LISTINGS } from '@/lib/mockData';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 const DealerReviews = dynamic(() => import('@/components/common/DealerReviews').then(mod => mod.DealerReviews));
 import { AuthGate } from '@/components/common/AuthGate';
@@ -18,12 +17,9 @@ import Image from 'next/image';
 import { formatDate, formatRelativeTime } from '@/lib/utils';
 import type { User, Listing } from '@/types';
 
-function mockDealer(id: number): User | null {
-  return (MOCK_USERS as User[]).find((u) => u.id === id && (u.role === 'dealer' || u.role === 'agency')) || null;
-}
-
-function mockListings(userId: number): Listing[] {
-  return MOCK_LISTINGS.filter((l) => l.user?.id === userId) as Listing[];
+async function fetchDealerProfile(id: string) {
+  const res = await api.get(`/users/${id}/profile`);
+  return res.data.data as User;
 }
 
 export default function DealerStorefrontPage() {
@@ -40,8 +36,14 @@ export default function DealerStorefrontPage() {
     enabled: !!id,
   });
 
-  const dealer = apiUser || mockDealer(dealerId);
-  const listings = mockListings(dealerId);
+  const { data: apiListings } = useQuery({
+    queryKey: ['listings', 'seller', id],
+    queryFn: async () => { const res = await api.get('/listings', { params: { seller_id: id } }); return res.data.data as Listing[]; },
+    enabled: !!id,
+  });
+
+  const dealer = apiUser;
+  const listings = apiListings ?? [];
   const dp = dealer?.dealer_profile;
   const isAgency = dealer?.role === 'agency';
 

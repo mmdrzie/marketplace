@@ -62,7 +62,7 @@ export function QuickViewModal({ listing, onClose }: { listing: Listing; onClose
         )}
         <div className="text-2xl font-black text-foreground mb-3"><PriceDisplay price={listing.price} priceType={listing.price_type} /></div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-          <span>{listing.city || listing.province || '—'}</span>
+          <span>{listing.city_name || listing.province_name || '—'}</span>
         </div>
         <a href={`/listings/${listing.slug}`} className="btn btn-primary w-full">مشاهده کامل</a>
       </div>

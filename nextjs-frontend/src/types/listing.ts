@@ -1,19 +1,22 @@
-import { User } from './user';
-
 export interface Listing {
   id: number;
   title: string;
   slug: string;
   price: number | null;
-  price_type: 'fixed' | 'negotiable' | 'free';
+  price_type: 'fixed' | 'negotiable' | 'auction';
   status: string;
   is_featured: boolean;
   views: number;
   primary_image: string | null;
-  category?: { id: number; name: string; slug: string } | null;
-  province?: string | null;
-  city?: string | null;
-  user?: User | null;
+  category_name: string | null;
+  category_slug: string | null;
+  category_id: number | null;
+  province_name: string | null;
+  province_id: number | null;
+  city_id: number | null;
+  city_name: string | null;
+  seller_id: string | null;
+  seller_name: string | null;
   published_at?: string | null;
   created_at?: string;
 }
@@ -69,13 +72,28 @@ export interface Attribute {
   is_filterable?: boolean;
 }
 
+export interface Province {
+  id: number;
+  name: string;
+  slug: string;
+  cities: City[];
+  sort_order: number;
+}
+
+export interface City {
+  id: number;
+  name: string;
+}
+
+import type { User } from './user';
+
 export interface Conversation {
   id: number;
   listing?: Listing | null;
   buyer: User;
   seller: User;
-  buyer_id?: number;
-  seller_id?: number;
+  buyer_id?: string | number;
+  seller_id?: string | number;
   messages?: Message[];
   last_message?: Message | null;
   last_message_at?: string | null;
@@ -94,9 +112,9 @@ export interface MessageAttachment {
 
 export interface Message {
   id: number;
-  conversation_id: number;
+  conversation_id: string | number;
   sender: User;
-  sender_id: number;
+  sender_id: string | number;
   body: string;
   attachments?: MessageAttachment[];
   is_read: boolean;
@@ -119,5 +137,15 @@ export interface Article {
   views: number;
   reading_time: number;
   published_at: string;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown> | null;
+  is_read: boolean;
   created_at: string;
 }

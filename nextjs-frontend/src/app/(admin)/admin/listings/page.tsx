@@ -130,10 +130,10 @@ export default function AdminAllListingsPage() {
                       <h3 className="font-medium text-sm text-foreground truncate">{item.title}</h3>
                       <StatusBadge status={item.status} />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{item.user?.name || 'کاربر'} {item.city ? `- ${item.city}` : ''}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.seller_name || 'کاربر'} {item.city_name ? `- ${item.city_name}` : ''}</p>
                     <PriceDisplay price={item.price} priceType={item.price_type} />
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      {item.category?.name && `${item.category.name} | `}
+                      {item.category_name && `${item.category_name} | `}
                       {item.created_at && new Date(item.created_at).toLocaleDateString('fa-IR')}
                     </p>
                   </div>
@@ -181,10 +181,10 @@ export default function AdminAllListingsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div><span className="text-muted-foreground">وضعیت: </span><StatusBadge status={detailTarget.status} /></div>
                 <div><span className="text-muted-foreground">قیمت: </span><PriceDisplay price={detailTarget.price} priceType={detailTarget.price_type} /></div>
-                {detailTarget.user?.name && <div><span className="text-muted-foreground">کاربر: </span>{detailTarget.user.name}</div>}
-                {detailTarget.city && <div><span className="text-muted-foreground">شهر: </span>{detailTarget.city}</div>}
-                {detailTarget.province && <div><span className="text-muted-foreground">استان: </span>{detailTarget.province}</div>}
-                {detailTarget.category?.name && <div><span className="text-muted-foreground">دسته‌بندی: </span>{detailTarget.category.name}</div>}
+                {detailTarget.seller_name && <div><span className="text-muted-foreground">کاربر: </span>{detailTarget.seller_name}</div>}
+                {detailTarget.city_name && <div><span className="text-muted-foreground">شهر: </span>{detailTarget.city_name}</div>}
+                {detailTarget.province_name && <div><span className="text-muted-foreground">استان: </span>{detailTarget.province_name}</div>}
+                {detailTarget.category_name && <div><span className="text-muted-foreground">دسته‌بندی: </span>{detailTarget.category_name}</div>}
                 {detailTarget.created_at && <div><span className="text-muted-foreground">تاریخ ثبت: </span>{new Date(detailTarget.created_at).toLocaleDateString('fa-IR')}</div>}
               </div>
               {detailTarget.description && (

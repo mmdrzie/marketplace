@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { MOCK_PROVINCES, MOCK_CITIES } from '@/lib/mockData';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import { JSX } from 'react/jsx-runtime';
 
@@ -33,29 +32,14 @@ interface Step2BasicProps {
 }
 
 export function Step2Basic({ data, onChange }: Step2BasicProps) {
-  const { data: apiProvinces } = useQuery({
+  const { data: provinces } = useQuery({
     queryKey: queryKeys.categories.provinces,
-    queryFn: async () => { const res = await api.get('/provinces'); return res.data.data; },
-    retry: 1, staleTime: 60000,
+    queryFn: async () => { const res = await api.get('/provinces'); return res.data.data as Array<{ id: number; name: string; slug: string; cities: Array<{ id: number; name: string }> }>; },
+    retry: 2, staleTime: 120000,
   });
 
-  const provinces = apiProvinces || MOCK_PROVINCES;
-
-  const { data: apiCities } = useQuery({
-    queryKey: queryKeys.categories.cities(data.province_id),
-    queryFn: async () => {
-      if (!data.province_id) return [];
-      const province = (provinces as Array<{ id: number; slug: string; name: string }>)?.find((p) => p.id === Number(data.province_id));
-      if (!province) return [];
-      const res = await api.get(`/provinces/${province.slug}/cities`);
-      return res.data.data;
-    },
-    enabled: !!data.province_id,
-    retry: 1, staleTime: 60000,
-  });
-
-  const provinceId = data.province_id;
-  const cities = apiCities || (provinceId ? (MOCK_CITIES[Number(provinceId)] || []) : []);
+  const selectedProvince = provinces?.find((p) => p.id === Number(data.province_id));
+  const cities = selectedProvince?.cities ?? [];
 
   const update = (field: string, value: string) => onChange({ ...data, [field]: value });
 
@@ -133,7 +117,7 @@ export function Step2Basic({ data, onChange }: Step2BasicProps) {
               options={[
                 { value: 'fixed', label: 'ثابت' },
                 { value: 'negotiable', label: 'توافقی' },
-                { value: 'free', label: 'رایگان' },
+                { value: 'auction', label: 'حراج' },
               ]}
               placeholder="انتخاب کنید"
             />
@@ -151,7 +135,7 @@ export function Step2Basic({ data, onChange }: Step2BasicProps) {
               <GlassSelect
                 value={data.province_id}
                 onChange={(val) => update('province_id', val)}
-                options={(provinces as Array<{ id: number; name: string }>)?.map((p) => ({ value: String(p.id), label: p.name })) || []}
+                options={(provinces ?? []).map((p) => ({ value: String(p.id), label: p.name }))}
                 placeholder="انتخاب استان"
                 className="pr-10"
               />
@@ -166,7 +150,7 @@ export function Step2Basic({ data, onChange }: Step2BasicProps) {
               <GlassSelect
                 value={data.city_id}
                 onChange={(val) => update('city_id', val)}
-                options={(cities as Array<{ id: number; name: string }>)?.map((c) => ({ value: String(c.id), label: c.name })) || []}
+                options={cities.map((c) => ({ value: String(c.id), label: c.name }))}
                 placeholder="انتخاب شهر"
                 disabled={!data.province_id}
                 className="pr-10"

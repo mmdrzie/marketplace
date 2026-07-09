@@ -72,7 +72,7 @@ export function ListingCard({ listing, showStatus = false }: ListingCardProps) {
                 ویژه
               </span>
             )}
-            {listing.category?.slug?.startsWith('imported-') && (
+            {listing.category_slug?.startsWith('imported-') && (
               <span className="flex items-center gap-1 glass-strong text-primary text-[10px] px-2.5 py-1 rounded-full font-medium border border-primary/20 shadow-sm">
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
@@ -104,7 +104,7 @@ export function ListingCard({ listing, showStatus = false }: ListingCardProps) {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span className="truncate">{listing.city || listing.province || 'نامشخص'}</span>
+            <span className="truncate">{listing.city_name || listing.province_name || 'نامشخص'}</span>
             <span className="w-1 h-1 rounded-full bg-border shrink-0"></span>
             <span className="shrink-0">{formatRelativeTime(listing.published_at)}</span>
           </div>
@@ -144,9 +144,9 @@ export function ListingCard({ listing, showStatus = false }: ListingCardProps) {
         </div>
         
         {/* دسته‌بندی در گوشه پایین */}
-        {listing.category?.name && (
+        {listing.category_name && (
           <span className="text-[10px] text-muted-foreground font-light uppercase tracking-wider pr-2">
-            {listing.category.name}
+            {listing.category_name}
           </span>
         )}
       </div>

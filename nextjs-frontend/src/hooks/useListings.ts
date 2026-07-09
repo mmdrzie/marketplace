@@ -4,21 +4,16 @@ import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from '@tansta
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import type { ListingDetail } from '@/types';
-import { MOCK_LISTINGS_RESPONSE, MOCK_LISTING_DETAILS, MOCK_LISTINGS } from '@/lib/mockData';
 
 export function useListings(params?: Record<string, unknown>) {
   return useQuery({
     queryKey: queryKeys.listings.list(params),
     queryFn: async () => {
-      try {
-        const res = await api.get('/listings', { params });
-        return res.data;
-      } catch {
-        return MOCK_LISTINGS_RESPONSE;
-      }
+      const res = await api.get('/listings', { params });
+      return res.data;
     },
     staleTime: 30000,
-    retry: 0,
+    retry: 2,
   });
 }
 
@@ -35,7 +30,7 @@ export function useInfiniteListings(params?: Record<string, unknown>) {
       return current_page < last_page ? current_page + 1 : undefined;
     },
     staleTime: 30000,
-    retry: 0,
+    retry: 2,
   });
 }
 
@@ -43,18 +38,12 @@ export function useListing(slug: string) {
   return useQuery({
     queryKey: queryKeys.listings.detail(slug),
     queryFn: async () => {
-      try {
-        const res = await api.get(`/listings/${slug}`);
-        return res.data.data as ListingDetail;
-      } catch {
-        const mock = MOCK_LISTINGS.find((l) => l.slug === slug);
-        if (mock) return MOCK_LISTING_DETAILS[mock.id] as ListingDetail;
-        return null as unknown as ListingDetail;
-      }
+      const res = await api.get(`/listings/${slug}`);
+      return res.data.data as ListingDetail;
     },
     enabled: !!slug,
     staleTime: 30000,
-    retry: 0,
+    retry: 2,
   });
 }
 
@@ -62,15 +51,11 @@ export function useMyListings() {
   return useQuery({
     queryKey: queryKeys.listings.my,
     queryFn: async () => {
-      try {
-        const res = await api.get('/my-listings');
-        return res.data;
-      } catch {
-        return MOCK_LISTINGS_RESPONSE;
-      }
+      const res = await api.get('/listings', { params: { scope: 'me' } });
+      return res.data;
     },
     staleTime: 15000,
-    retry: 0,
+    retry: 2,
   });
 }
 
@@ -143,7 +128,7 @@ export function useSubmitListing() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const res = await api.post(`/listings/${id}/submit`);
+      const res = await api.patch(`/listings/${id}`, { action: 'submit' });
       return res.data.data;
     },
     onSuccess: () => {
@@ -162,7 +147,7 @@ export function useMarkSold() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const res = await api.post(`/listings/${id}/mark-sold`);
+      const res = await api.patch(`/listings/${id}`, { action: 'sold' });
       return res.data.data;
     },
     onMutate: async (id) => {
@@ -194,7 +179,7 @@ export function useRenewListing() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      const res = await api.post(`/listings/${id}/renew`);
+      const res = await api.patch(`/listings/${id}`, { action: 'renew' });
       return res.data.data;
     },
     onMutate: async (id) => {

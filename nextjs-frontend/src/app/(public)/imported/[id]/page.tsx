@@ -3,8 +3,9 @@
 import { use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
 import { FEATURES } from '@/lib/features';
-import { IMPORTED_LISTINGS, buildImportedDetail } from '@/lib/mockDataImported';
 import { ImportedBadge } from '@/components/imported/ImportedBadge';
 import { CustomsStatusCard } from '@/components/imported/CustomsStatusCard';
 import { BrandOriginTag } from '@/components/imported/BrandOriginTag';
@@ -14,7 +15,12 @@ import { generateImportPriceTrend } from '@/lib/importChartData';
 export default function ImportedDetailPage({ params }: { params: Promise<{ id: string }> }) {
   if (!FEATURES.importedVehicles) notFound();
   const { id } = use(params);
-  const listing = IMPORTED_LISTINGS.find((l) => l.slug === id);
+  const { data: listing } = useQuery({
+    queryKey: ['imported-listing', id],
+    queryFn: async () => { const res = await api.get(`/listings/${id}`); return res.data.data; },
+    enabled: !!id,
+    retry: 2,
+  });
   
   if (!listing) {
     return (
@@ -31,8 +37,8 @@ export default function ImportedDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const detail = buildImportedDetail(listing);
-  const getAttr = (attrId: number) => listing.attributes.find((a) => a.attribute_id === attrId)?.value;
+  const detail = listing;
+  const getAttr = (attrId: number) => (listing as any).attributes?.find((a: any) => a.attribute_id === attrId)?.value;
   const country = getAttr(201);
   const customsStatus = getAttr(203);
   const importYear = getAttr(204);
@@ -44,7 +50,7 @@ export default function ImportedDetailPage({ params }: { params: Promise<{ id: s
   const engineCc = getAttr(210);
   const color = getAttr(211);
   const warranty = getAttr(212);
-  const chartData = generateImportPriceTrend(listing.title.split(' ')[0]);
+  const chartData = generateImportPriceTrend((listing as any)?.title?.split(' ')[0] || '');
 
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">

@@ -63,9 +63,7 @@ async function refreshToken(): Promise<string | null> {
     return newToken;
   } catch {
     useAuthStore.getState().logout();
-    if (process.env.NEXT_PUBLIC_DEMO_MODE !== 'true') {
-      window.location.href = '/login';
-    }
+    window.location.href = '/login';
     return null;
   }
 }
