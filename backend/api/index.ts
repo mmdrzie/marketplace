@@ -5,6 +5,7 @@ import { rateLimiter } from '../src/middleware/rateLimiter.js';
 import { errorWrapper } from '../src/middleware/errorWrapper.js';
 import { apiRouter } from '../src/routes/index.js';
 import { config } from '../src/config/index.js';
+import { ErrorCode } from '../src/shared/index.js';
 
 const app = new Hono();
 
