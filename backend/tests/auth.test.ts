@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService } from '../src/domain/services/auth';
 import { AppError } from '../src/errors';
-import { ErrorCode } from '@marketplace/shared';
+import { ErrorCode } from '../src/shared';
 
 vi.mock('../src/repositories/user', () => ({
   userRepo: {

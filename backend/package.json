@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsup",
-    "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/",
@@ -15,7 +14,6 @@
   "dependencies": {
     "@hono/node-server": "^1.14.0",
     "@hono/zod-validator": "^0.4.0",
-    "@marketplace/shared": "0.0.0",
     "bcryptjs": "^2.4.3",
     "drizzle-orm": "^0.38.0",
     "hono": "^4.7.0",

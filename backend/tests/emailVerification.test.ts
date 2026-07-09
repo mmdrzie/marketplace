@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EmailVerificationService } from '../src/domain/services/emailVerification';
 import { AppError } from '../src/errors';
-import { ErrorCode } from '@marketplace/shared';
+import { ErrorCode } from '../src/shared';
 
 vi.mock('../src/repositories/verification', () => ({
   verificationRepo: {

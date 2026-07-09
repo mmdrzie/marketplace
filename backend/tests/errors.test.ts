@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AppError, getHttpStatus } from '../src/errors';
-import { ErrorCode, type ErrorCodeType } from '@marketplace/shared';
+import { ErrorCode, type ErrorCodeType } from '../src/shared';
 
 describe('AppError', () => {
   it('creates error with correct code and message', () => {
