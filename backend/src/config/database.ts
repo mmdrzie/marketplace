@@ -38,7 +38,8 @@ export async function checkConnection(): Promise<boolean> {
     const db = await getDb();
     await db.query('SELECT 1');
     return true;
-  } catch {
+  } catch (e: any) {
+    console.error('[db] connection check failed:', e?.code, e?.message);
     return false;
   }
 }
