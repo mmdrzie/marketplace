@@ -23,18 +23,20 @@ function parseTtl(ttl: string): number {
 }
 
 export async function signAccessToken(payload: Omit<TokenPayload, keyof JWTPayload>): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
   return new SignJWT({ ...payload } as unknown as JWTPayload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime(parseTtl(authConfig.accessTtl))
+    .setExpirationTime(now + parseTtl(authConfig.accessTtl))
     .sign(authConfig.secret);
 }
 
 export async function signRefreshToken(userId: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
   return new SignJWT({ sub: userId, type: 'refresh' })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime(parseTtl(authConfig.refreshTtl))
+    .setExpirationTime(now + parseTtl(authConfig.refreshTtl))
     .sign(authConfig.secret);
 }
 
