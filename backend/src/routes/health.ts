@@ -11,6 +11,7 @@ router.get('/', async (c) => {
       status: 'ok',
       timestamp: new Date().toISOString(),
       db: dbConnected ? 'connected' : 'disconnected',
+      dbUrlSet: !!process.env.DATABASE_URL,
     },
   });
 });
