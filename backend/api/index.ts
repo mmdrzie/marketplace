@@ -1,18 +1,29 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
 import { corsMiddleware } from '../src/middleware/cors.js';
-import { errorHandler } from '../src/middleware/errorHandler.js';
 import { rateLimiter } from '../src/middleware/rateLimiter.js';
 import { apiRouter } from '../src/routes/index.js';
 import { config } from '../src/config/index.js';
-import { AppError } from '../src/errors.js';
 import { ErrorCode } from '../src/shared/index.js';
 
 const app = new Hono();
 
 app.use('*', corsMiddleware());
-app.use('*', errorHandler());
 app.use('/api/*', rateLimiter('global'));
+
+app.onError((err, c) => {
+  if (err && typeof err === 'object' && 'code' in err && 'httpStatus' in err) {
+    return c.json(
+      { success: false, error: { code: err.code, message: err.message } },
+      err.httpStatus,
+    );
+  }
+  console.error('[error] unhandled:', err);
+  return c.json(
+    { success: false, error: { code: ErrorCode.INTERNAL_ERROR, message: 'Internal server error' } },
+    500,
+  );
+});
 
 app.route(config.apiPrefix, apiRouter);
 
