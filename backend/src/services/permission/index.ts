@@ -1,4 +1,4 @@
-import { ErrorCode } from '@marketplace/shared';
+import { ErrorCode } from '../../shared';
 import { AppError } from '../../errors';
 
 type Capability =

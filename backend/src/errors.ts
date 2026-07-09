@@ -1,4 +1,4 @@
-import { ErrorCode, type ErrorCodeType } from '@marketplace/shared';
+import { ErrorCode, type ErrorCodeType } from './shared';
 
 const httpStatusMap: Record<ErrorCodeType, number> = {
   [ErrorCode.VALIDATION_ERROR]: 422,

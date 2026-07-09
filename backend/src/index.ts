@@ -5,7 +5,7 @@ import { rateLimiter } from './middleware/rateLimiter';
 import { apiRouter } from './routes';
 import { config } from './config';
 import { AppError } from './errors';
-import { ErrorCode } from '@marketplace/shared';
+import { ErrorCode } from './shared';
 
 const app = new Hono();
 

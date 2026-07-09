@@ -1,5 +1,5 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { ErrorCode } from '@marketplace/shared';
+import { ErrorCode } from '../shared';
 import { rateLimits } from '../config/rateLimits';
 
 interface RateLimitStore {
