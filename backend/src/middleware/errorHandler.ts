@@ -6,8 +6,8 @@ export function errorHandler(): MiddlewareHandler {
   return async (c, next) => {
     try {
       await next();
-    } catch (err) {
-      if (err instanceof AppError) {
+    } catch (err: any) {
+      if (err instanceof AppError || err?.name === 'AppError') {
         c.status(err.httpStatus as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500);
         return c.json({
           success: false,
