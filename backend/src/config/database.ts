@@ -15,6 +15,7 @@ export async function getDb(): Promise<DbPool> {
     connectionString: config.database.url,
     min: config.database.poolMin,
     max: config.database.poolMax,
+    ssl: { rejectUnauthorized: false },
   });
 
   p.on('error', (err) => {
