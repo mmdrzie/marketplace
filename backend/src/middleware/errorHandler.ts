@@ -7,7 +7,7 @@ export function errorHandler(): MiddlewareHandler {
     try {
       await next();
     } catch (err: any) {
-      if (err instanceof AppError || err?.name === 'AppError') {
+      if (err && typeof err === 'object' && err.httpStatus && err.code) {
         c.status(err.httpStatus as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500);
         return c.json({
           success: false,
