@@ -1,4 +1,3 @@
 {
-  "buildCommand": "npx tsup",
   "installCommand": "npm install"
 }
