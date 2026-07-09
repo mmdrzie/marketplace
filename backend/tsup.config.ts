@@ -1,10 +1,13 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['api/index.ts'],
   format: 'esm',
-  outDir: 'dist',
-  clean: true,
+  outDir: 'api',
+  clean: false,
   target: 'node20',
   splitting: false,
+  banner: {
+    js: "import { createRequire } from 'module';const require = createRequire(import.meta.url);",
+  },
 });
