@@ -1,16 +1,16 @@
 import { Hono, type Context } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authService } from '../domain/services/auth';
-import { auth } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
-import { AppError } from '../errors';
+import { authService } from '../domain/services/auth.js';
+import { auth } from '../middleware/auth.js';
+import { rateLimiter } from '../middleware/rateLimiter.js';
+import { AppError } from '../errors.js';
 import {
   registerSchema,
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   updateProfileSchema,
-} from '../validation/auth';
+} from '../validation/auth.js';
 
 const router = new Hono();
 

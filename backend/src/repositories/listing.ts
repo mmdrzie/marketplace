@@ -1,4 +1,4 @@
-import { getDb } from '../config/database';
+import { getDb } from '../config/database.js';
 
 export type ListingStatus = 'draft' | 'pending' | 'published' | 'rejected' | 'sold' | 'archived';
 export type PriceType = 'fixed' | 'negotiable' | 'auction';

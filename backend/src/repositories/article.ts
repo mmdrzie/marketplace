@@ -1,4 +1,4 @@
-import { getDb } from '../config/database';
+import { getDb } from '../config/database.js';
 
 export interface ArticleRow {
   id: number;

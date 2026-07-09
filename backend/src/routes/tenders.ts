@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { getDb } from '../config/database';
-import { auth } from '../middleware/auth';
-import { AppError } from '../errors';
+import { getDb } from '../config/database.js';
+import { auth } from '../middleware/auth.js';
+import { AppError } from '../errors.js';
 
 const router = new Hono();
 

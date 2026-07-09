@@ -1,4 +1,4 @@
-import { config } from './index';
+import { config } from './index.js';
 
 export const authConfig = {
   secret: new TextEncoder().encode(config.jwt.secret),

@@ -1,7 +1,7 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import { jwtVerify } from 'jose';
-import { authConfig } from '../config/auth';
-import { AppError } from '../errors';
+import { authConfig } from '../config/auth.js';
+import { AppError } from '../errors.js';
 
 export interface AuthUser {
   id: string;

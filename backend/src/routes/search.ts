@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { listingService } from '../domain/services/listing';
-import { AppError } from '../errors';
+import { listingService } from '../domain/services/listing.js';
+import { AppError } from '../errors.js';
 
 const router = new Hono();
 

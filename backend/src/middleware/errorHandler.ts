@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { AppError, getHttpStatus } from '../errors';
-import { ErrorCode } from '../shared';
+import { AppError, getHttpStatus } from '../errors.js';
+import { ErrorCode } from '../shared/index.js';
 
 export function errorHandler(): MiddlewareHandler {
   return async (c, next) => {

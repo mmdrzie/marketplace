@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'hono';
-import { AppError } from '../errors';
+import { AppError } from '../errors.js';
 
 export function phoneGate(): MiddlewareHandler {
   return async (c, next) => {

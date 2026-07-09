@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
-import { authConfig } from '../config/auth';
+import { authConfig } from '../config/auth.js';
 
 export interface TokenPayload extends JWTPayload {
   id: string;

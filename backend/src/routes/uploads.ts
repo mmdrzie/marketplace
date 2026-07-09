@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { auth } from '../middleware/auth';
-import { config } from '../config';
-import { AppError } from '../errors';
+import { auth } from '../middleware/auth.js';
+import { config } from '../config/index.js';
+import { AppError } from '../errors.js';
 
 const router = new Hono();
 

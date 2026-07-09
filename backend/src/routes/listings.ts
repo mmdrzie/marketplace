@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { listingService } from '../domain/services/listing';
-import { favoriteRepo } from '../repositories/favorite';
-import { auth, optionalAuth } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
-import { AppError } from '../errors';
+import { listingService } from '../domain/services/listing.js';
+import { favoriteRepo } from '../repositories/favorite.js';
+import { auth, optionalAuth } from '../middleware/auth.js';
+import { rateLimiter } from '../middleware/rateLimiter.js';
+import { AppError } from '../errors.js';
 
 const router = new Hono();
 
@@ -135,7 +135,7 @@ router.post('/:id/report', auth(), async (c) => {
   const listingId = parseInt(c.req.param('id'), 10);
   const userId = c.get('user').id;
 
-  const db = (await import('../config/database')).getDb;
+  const db = (await import('../config/database.js')).getDb;
   const d = await db();
   await d.query(
     'INSERT INTO reports (user_id, listing_id) VALUES ($1, $2)',

@@ -1,9 +1,9 @@
-import type { EmailProvider, EmailPayload } from './provider';
-import { ConsoleEmailProvider } from './providers/console';
-import { NoopEmailProvider } from './providers/noop';
-import { config } from '../../config';
+import type { EmailProvider, EmailPayload } from './provider.js';
+import { ConsoleEmailProvider } from './providers/console.js';
+import { NoopEmailProvider } from './providers/noop.js';
+import { config } from '../../config/index.js';
 
-export * from './provider';
+export * from './provider.js';
 
 export function createEmailProvider(): EmailProvider {
   switch (config.email.provider) {

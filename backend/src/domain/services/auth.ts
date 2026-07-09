@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs';
-import { userRepo } from '../../repositories/user';
-import { refreshTokenRepo } from '../../repositories/refreshToken';
-import { signAccessToken, signRefreshToken } from '../../services/jwt';
-import { AppError } from '../../errors';
-import { EmailService } from '../../services/email';
-import { eventBus, UserRegistered } from '../events';
+import { userRepo } from '../../repositories/user.js';
+import { refreshTokenRepo } from '../../repositories/refreshToken.js';
+import { signAccessToken, signRefreshToken } from '../../services/jwt.js';
+import { AppError } from '../../errors.js';
+import { EmailService } from '../../services/email/index.js';
+import { eventBus, UserRegistered } from '../events/index.js';
 
 const SALT_ROUNDS = 12;
 const PASSWORD_RESET_PREFIX = 'pwd_reset:';
@@ -98,7 +98,7 @@ export class AuthService {
     let payload: { sub?: string };
     try {
       const { jwtVerify } = await import('jose');
-      const { authConfig } = await import('../../config/auth');
+      const { authConfig } = await import('../../config/auth.js');
       const { payload: p } = await jwtVerify(refreshTokenStr, authConfig.secret);
       payload = p as { sub?: string };
     } catch {
@@ -177,7 +177,7 @@ export class AuthService {
     }
 
     const { SignJWT } = await import('jose');
-    const { authConfig } = await import('../../config/auth');
+    const { authConfig } = await import('../../config/auth.js');
     const resetToken = await new SignJWT({ sub: user.id, type: 'password_reset' })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -191,7 +191,7 @@ export class AuthService {
     let payload: { sub?: string };
     try {
       const { jwtVerify } = await import('jose');
-      const { authConfig } = await import('../../config/auth');
+      const { authConfig } = await import('../../config/auth.js');
       const { payload: p } = await jwtVerify(token, authConfig.secret);
       payload = p as { sub?: string };
     } catch {

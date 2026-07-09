@@ -1,8 +1,8 @@
-import type { SmsProvider, SmsPayload } from './provider';
-import { ConsoleSmsProvider } from './providers/console';
-import { config } from '../../config';
+import type { SmsProvider, SmsPayload } from './provider.js';
+import { ConsoleSmsProvider } from './providers/console.js';
+import { config } from '../../config/index.js';
 
-export * from './provider';
+export * from './provider.js';
 
 export function createSmsProvider(): SmsProvider {
   switch (config.sms.provider) {

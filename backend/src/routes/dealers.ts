@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { dealerService } from '../domain/services/dealer';
-import { auth } from '../middleware/auth';
+import { dealerService } from '../domain/services/dealer.js';
+import { auth } from '../middleware/auth.js';
 
 const upgradeSchema = z.object({
   role: z.enum(['dealer', 'agency']),

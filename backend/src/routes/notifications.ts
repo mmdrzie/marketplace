@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { auth } from '../middleware/auth';
-import { getDb } from '../config/database';
+import { auth } from '../middleware/auth.js';
+import { getDb } from '../config/database.js';
 
 const router = new Hono();
 

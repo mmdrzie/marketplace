@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { paymentRepo } from '../repositories/payment';
-import { auth } from '../middleware/auth';
+import { paymentRepo } from '../repositories/payment.js';
+import { auth } from '../middleware/auth.js';
 
 const router = new Hono();
 

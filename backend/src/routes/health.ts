@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { checkConnection } from '../config/database';
+import { checkConnection } from '../config/database.js';
 
 const router = new Hono();
 

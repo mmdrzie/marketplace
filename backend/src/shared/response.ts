@@ -1,4 +1,4 @@
-import type { ErrorCodeType } from './errors';
+import type { ErrorCodeType } from './errors.js';
 
 export interface ApiSuccessResponse<T> {
   success: true;

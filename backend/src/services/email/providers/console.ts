@@ -1,4 +1,4 @@
-import type { EmailPayload, EmailProvider } from '../provider';
+import type { EmailPayload, EmailProvider } from '../provider.js';
 
 export class ConsoleEmailProvider implements EmailProvider {
   readonly name = 'console';

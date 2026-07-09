@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
-import { verificationRepo } from '../../repositories/verification';
-import { userRepo } from '../../repositories/user';
-import { AppError } from '../../errors';
-import { EmailService } from '../../services/email';
-import { eventBus, EmailVerified } from '../events';
+import { verificationRepo } from '../../repositories/verification.js';
+import { userRepo } from '../../repositories/user.js';
+import { AppError } from '../../errors.js';
+import { EmailService } from '../../services/email/index.js';
+import { eventBus, EmailVerified } from '../events/index.js';
 
 export class EmailVerificationService {
   private emailService: EmailService;
@@ -14,7 +14,7 @@ export class EmailVerificationService {
 
   async sendVerification(userId: string, email: string): Promise<void> {
     const { SignJWT } = await import('jose');
-    const { authConfig } = await import('../../config/auth');
+    const { authConfig } = await import('../../config/auth.js');
 
     const token = await new SignJWT({ sub: userId, type: 'email_verify' })
       .setProtectedHeader({ alg: 'HS256' })
@@ -33,7 +33,7 @@ export class EmailVerificationService {
     let payload: { sub?: string };
     try {
       const { jwtVerify } = await import('jose');
-      const { authConfig } = await import('../../config/auth');
+      const { authConfig } = await import('../../config/auth.js');
       const { payload: p } = await jwtVerify(token, authConfig.secret);
       payload = p as { sub?: string };
     } catch {

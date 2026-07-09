@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { emailVerificationService } from '../domain/services/emailVerification';
-import { auth } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
+import { emailVerificationService } from '../domain/services/emailVerification.js';
+import { auth } from '../middleware/auth.js';
+import { rateLimiter } from '../middleware/rateLimiter.js';
 
 const router = new Hono();
 

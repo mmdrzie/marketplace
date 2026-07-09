@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { articleRepo } from '../repositories/article';
-import { AppError } from '../errors';
+import { articleRepo } from '../repositories/article.js';
+import { AppError } from '../errors.js';
 
 const router = new Hono();
 

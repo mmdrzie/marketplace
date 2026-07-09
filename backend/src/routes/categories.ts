@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { categoryRepo } from '../repositories/category';
-import { attributeRepo } from '../repositories/attribute';
-import { auth } from '../middleware/auth';
-import { adminAuth } from '../middleware/adminAuth';
-import { AppError } from '../errors';
-import { createCategorySchema, updateCategorySchema, createAttributeSchema, updateAttributeSchema } from '../validation/categories';
+import { categoryRepo } from '../repositories/category.js';
+import { attributeRepo } from '../repositories/attribute.js';
+import { auth } from '../middleware/auth.js';
+import { adminAuth } from '../middleware/adminAuth.js';
+import { AppError } from '../errors.js';
+import { createCategorySchema, updateCategorySchema, createAttributeSchema, updateAttributeSchema } from '../validation/categories.js';
 
 const router = new Hono();
 

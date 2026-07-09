@@ -1,9 +1,9 @@
-import { dealerRepo } from '../../repositories/dealer';
-import { userRepo } from '../../repositories/user';
-import { permissionService } from '../../services/permission';
-import { eventBus, AccountUpgraded } from '../events';
-import { AppError } from '../../errors';
-import type { AuthUser } from '../../middleware/auth';
+import { dealerRepo } from '../../repositories/dealer.js';
+import { userRepo } from '../../repositories/user.js';
+import { permissionService } from '../../services/permission/index.js';
+import { eventBus, AccountUpgraded } from '../events/index.js';
+import { AppError } from '../../errors.js';
+import type { AuthUser } from '../../middleware/auth.js';
 
 export class DealerService {
   async upgrade(input: { role: 'dealer' | 'agency'; business_name: string; user: AuthUser }) {

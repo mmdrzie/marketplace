@@ -1,11 +1,11 @@
-import { listingRepo } from '../../repositories/listing';
-import type { ListingRow } from '../../repositories/listing';
-import { categoryRepo } from '../../repositories/category';
-import { permissionService } from '../../services/permission';
-import { cache } from '../../services/cache';
-import { eventBus, ListingCreated, ListingUpdated, ListingDeleted, ListingStatusChanged } from '../events';
-import { AppError } from '../../errors';
-import type { AuthUser } from '../../middleware/auth';
+import { listingRepo } from '../../repositories/listing.js';
+import type { ListingRow } from '../../repositories/listing.js';
+import { categoryRepo } from '../../repositories/category.js';
+import { permissionService } from '../../services/permission/index.js';
+import { cache } from '../../services/cache/index.js';
+import { eventBus, ListingCreated, ListingUpdated, ListingDeleted, ListingStatusChanged } from '../events/index.js';
+import { AppError } from '../../errors.js';
+import type { AuthUser } from '../../middleware/auth.js';
 
 function generateSlug(title: string): string {
   return title

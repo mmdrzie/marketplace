@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
-import { corsMiddleware } from '../src/middleware/cors';
-import { errorHandler } from '../src/middleware/errorHandler';
-import { rateLimiter } from '../src/middleware/rateLimiter';
-import { apiRouter } from '../src/routes';
-import { config } from '../src/config';
-import { AppError } from '../src/errors';
-import { ErrorCode } from '../src/shared';
+import { corsMiddleware } from '../src/middleware/cors.js';
+import { errorHandler } from '../src/middleware/errorHandler.js';
+import { rateLimiter } from '../src/middleware/rateLimiter.js';
+import { apiRouter } from '../src/routes/index.js';
+import { config } from '../src/config/index.js';
+import { AppError } from '../src/errors.js';
+import { ErrorCode } from '../src/shared/index.js';
 
 const app = new Hono();
 

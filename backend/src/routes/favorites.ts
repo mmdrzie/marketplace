@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { favoriteRepo } from '../repositories/favorite';
-import { auth } from '../middleware/auth';
+import { favoriteRepo } from '../repositories/favorite.js';
+import { auth } from '../middleware/auth.js';
 
 const router = new Hono();
 

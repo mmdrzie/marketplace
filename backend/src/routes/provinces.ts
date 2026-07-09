@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { provinceRepo } from '../repositories/province';
-import { auth } from '../middleware/auth';
-import { adminAuth } from '../middleware/adminAuth';
-import { AppError } from '../errors';
-import { createProvinceSchema, updateProvinceSchema, createCitySchema } from '../validation/categories';
+import { provinceRepo } from '../repositories/province.js';
+import { auth } from '../middleware/auth.js';
+import { adminAuth } from '../middleware/adminAuth.js';
+import { AppError } from '../errors.js';
+import { createProvinceSchema, updateProvinceSchema, createCitySchema } from '../validation/categories.js';
 
 const router = new Hono();
 

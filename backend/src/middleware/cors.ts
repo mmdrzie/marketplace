@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'hono';
-import { config } from '../config';
+import { config } from '../config/index.js';
 
 export function corsMiddleware(): MiddlewareHandler {
   return async (c, next) => {

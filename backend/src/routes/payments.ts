@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { paymentService } from '../domain/services/payment';
-import { auth } from '../middleware/auth';
+import { paymentService } from '../domain/services/payment.js';
+import { auth } from '../middleware/auth.js';
 
 const router = new Hono();
 

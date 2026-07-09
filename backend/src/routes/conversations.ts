@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { conversationService } from '../domain/services/conversation';
-import { auth } from '../middleware/auth';
-import { rateLimiter } from '../middleware/rateLimiter';
-import { AppError } from '../errors';
+import { conversationService } from '../domain/services/conversation.js';
+import { auth } from '../middleware/auth.js';
+import { rateLimiter } from '../middleware/rateLimiter.js';
+import { AppError } from '../errors.js';
 
 const router = new Hono();
 

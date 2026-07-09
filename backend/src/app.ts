@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { corsMiddleware } from './middleware/cors';
-import { errorHandler } from './middleware/errorHandler';
-import { rateLimiter } from './middleware/rateLimiter';
-import { apiRouter } from './routes';
-import { config } from './config';
-import { AppError } from './errors';
-import { ErrorCode } from './shared';
+import { corsMiddleware } from './middleware/cors.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { rateLimiter } from './middleware/rateLimiter.js';
+import { apiRouter } from './routes/index.js';
+import { config } from './config/index.js';
+import { AppError } from './errors.js';
+import { ErrorCode } from './shared/index.js';
 
 const app = new Hono();
 

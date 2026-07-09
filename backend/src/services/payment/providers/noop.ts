@@ -1,4 +1,4 @@
-import type { PaymentInterface, PaymentResult } from '../provider';
+import type { PaymentInterface, PaymentResult } from '../provider.js';
 
 export class NoopPaymentProvider implements PaymentInterface {
   async createPayment(amount: number, currency: string, metadata: Record<string, unknown>): Promise<PaymentResult> {

@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { verificationRepo } from '../../repositories/verification';
-import { userRepo } from '../../repositories/user';
-import { AppError } from '../../errors';
-import { SmsService } from '../../services/sms';
-import { eventBus, PhoneVerified } from '../events';
+import { verificationRepo } from '../../repositories/verification.js';
+import { userRepo } from '../../repositories/user.js';
+import { AppError } from '../../errors.js';
+import { SmsService } from '../../services/sms/index.js';
+import { eventBus, PhoneVerified } from '../events/index.js';
 
 const OTP_LENGTH = 6;
 const OTP_TTL_MS = 5 * 60 * 1000;

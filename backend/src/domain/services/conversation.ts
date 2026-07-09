@@ -1,9 +1,9 @@
-import { conversationRepo } from '../../repositories/conversation';
-import { listingRepo } from '../../repositories/listing';
-import { permissionService } from '../../services/permission';
-import { eventBus, ConversationStarted, MessageSent } from '../events';
-import { AppError } from '../../errors';
-import type { AuthUser } from '../../middleware/auth';
+import { conversationRepo } from '../../repositories/conversation.js';
+import { listingRepo } from '../../repositories/listing.js';
+import { permissionService } from '../../services/permission/index.js';
+import { eventBus, ConversationStarted, MessageSent } from '../events/index.js';
+import { AppError } from '../../errors.js';
+import type { AuthUser } from '../../middleware/auth.js';
 
 export class ConversationService {
   async list(user: AuthUser) {

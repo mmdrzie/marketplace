@@ -1,4 +1,4 @@
-import { ErrorCode, type ErrorCodeType } from './shared';
+import { ErrorCode, type ErrorCodeType } from './shared/index.js';
 
 const httpStatusMap: Record<ErrorCodeType, number> = {
   [ErrorCode.VALIDATION_ERROR]: 422,

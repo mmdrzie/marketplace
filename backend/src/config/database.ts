@@ -1,4 +1,4 @@
-import { config } from './index';
+import { config } from './index.js';
 
 export type DbPool = {
   query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount: number }>;

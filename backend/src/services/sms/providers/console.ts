@@ -1,4 +1,4 @@
-import type { SmsPayload, SmsProvider } from '../provider';
+import type { SmsPayload, SmsProvider } from '../provider.js';
 
 export class ConsoleSmsProvider implements SmsProvider {
   readonly name = 'console';

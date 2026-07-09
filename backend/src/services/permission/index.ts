@@ -1,5 +1,5 @@
-import { ErrorCode } from '../../shared';
-import { AppError } from '../../errors';
+import { ErrorCode } from '../../shared/index.js';
+import { AppError } from '../../errors.js';
 
 type Capability =
   | 'listing:publish'

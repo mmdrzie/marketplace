@@ -1,8 +1,8 @@
-import { paymentRepo } from '../../repositories/payment';
-import { listingRepo } from '../../repositories/listing';
-import { createPaymentProvider } from '../../services/payment/provider';
-import { AppError } from '../../errors';
-import type { AuthUser } from '../../middleware/auth';
+import { paymentRepo } from '../../repositories/payment.js';
+import { listingRepo } from '../../repositories/listing.js';
+import { createPaymentProvider } from '../../services/payment/provider.js';
+import { AppError } from '../../errors.js';
+import type { AuthUser } from '../../middleware/auth.js';
 
 const FEATURED_PRICE = 50000; // 50,000 IRR for featured listing
 const SUBSCRIPTION_PRICE = 200000; // 200,000 IRR for monthly dealer subscription
@@ -67,7 +67,7 @@ export class PaymentService {
   }
 
   async completePayment(paymentId: number) {
-    const db = (await import('../../config/database')).getDb;
+    const db = (await import('../../config/database.js')).getDb;
     const d = await db();
     const { rows } = await d.query('SELECT * FROM payments WHERE id = $1', [paymentId]);
     const payment = rows[0] as { id: number; user_id: string; amount: number; metadata: { type?: string; listing_id?: number } } | undefined;

@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { ErrorCode } from '../shared';
-import { rateLimits } from '../config/rateLimits';
+import { ErrorCode } from '../shared/index.js';
+import { rateLimits } from '../config/rateLimits.js';
 
 interface RateLimitStore {
   [key: string]: { count: number; resetAt: number };
