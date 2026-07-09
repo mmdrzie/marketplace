@@ -14,8 +14,8 @@ export function useAuth() {
     setError(null);
     try {
       const res = await api.post('/auth/register', { email, password, name });
-      const { token, user } = res.data.data;
-      setAuth(token, user);
+      const { token, refreshToken, user } = res.data.data;
+      setAuth(token, user, refreshToken);
       return { token, user };
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
@@ -32,8 +32,8 @@ export function useAuth() {
     setError(null);
     try {
       const res = await api.post('/auth/login', { email, password });
-      const { token, user } = res.data.data;
-      setAuth(token, user);
+      const { token, refreshToken, user } = res.data.data;
+      setAuth(token, user, refreshToken);
       return { token, user };
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;

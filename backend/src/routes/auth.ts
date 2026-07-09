@@ -19,18 +19,22 @@ const COOKIE_PATH = '/api/v1/auth';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
 function setRefreshCookie(c: Context, token: string) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const sameSite = isProd ? 'None' : 'Lax';
+  const secure = isProd ? '; Secure' : '';
   c.header(
     'Set-Cookie',
-    `${REFRESH_COOKIE}=${token}; HttpOnly; Path=${COOKIE_PATH}; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}${
-      process.env.NODE_ENV === 'production' ? '; Secure' : ''
-    }`,
+    `${REFRESH_COOKIE}=${token}; HttpOnly; Path=${COOKIE_PATH}; SameSite=${sameSite}${secure}; Max-Age=${COOKIE_MAX_AGE}`,
   );
 }
 
 function clearRefreshCookie(c: Context) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const sameSite = isProd ? 'None' : 'Lax';
+  const secure = isProd ? '; Secure' : '';
   c.header(
     'Set-Cookie',
-    `${REFRESH_COOKIE}=; HttpOnly; Path=${COOKIE_PATH}; SameSite=Lax; Max-Age=0`,
+    `${REFRESH_COOKIE}=; HttpOnly; Path=${COOKIE_PATH}; SameSite=${sameSite}${secure}; Max-Age=0`,
   );
 }
 
@@ -38,20 +42,21 @@ router.post('/register', rateLimiter('register'), zValidator('json', registerSch
   const { email, password, name } = c.req.valid('json');
   const result = await authService.register({ email, password, name });
   setRefreshCookie(c, result.refreshToken);
-  return c.json({ success: true, data: { token: result.token, user: result.user } }, 201);
+  return c.json({ success: true, data: { token: result.token, refreshToken: result.refreshToken, user: result.user } }, 201);
 });
 
 router.post('/login', rateLimiter('login'), zValidator('json', loginSchema), async (c) => {
   const { email, password } = c.req.valid('json');
   const result = await authService.login({ email, password });
   setRefreshCookie(c, result.refreshToken);
-  return c.json({ success: true, data: { token: result.token, user: result.user } });
+  return c.json({ success: true, data: { token: result.token, refreshToken: result.refreshToken, user: result.user } });
 });
 
 router.post('/refresh', async (c) => {
   const cookie = c.req.header('Cookie') || '';
   const match = cookie.match(new RegExp(`(?:^|;\\s*)${REFRESH_COOKIE}=([^;]*)`));
-  const refreshToken = match?.[1];
+  const body = await c.req.json().catch(() => ({}));
+  const refreshToken = match?.[1] || body.refreshToken;
 
   if (!refreshToken) {
     throw AppError.unauthorized('No refresh token');
@@ -59,7 +64,7 @@ router.post('/refresh', async (c) => {
 
   const result = await authService.refresh(refreshToken);
   setRefreshCookie(c, result.refreshToken);
-  return c.json({ success: true, data: { token: result.token } });
+  return c.json({ success: true, data: { token: result.token, refreshToken: result.refreshToken } });
 });
 
 router.post('/logout', async (c) => {

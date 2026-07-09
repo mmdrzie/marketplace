@@ -50,15 +50,18 @@ let refreshPromise: RefreshPromise = null;
 
 async function refreshToken(): Promise<string | null> {
   try {
+    const store = useAuthStore.getState();
+    const refreshTokenValue = store.refreshToken;
     const res = await axios.post(
       `${api.defaults.baseURL}/auth/refresh`,
-      {},
+      refreshTokenValue ? { refreshToken: refreshTokenValue } : {},
       { withCredentials: true },
     );
     const newToken: string = res.data.data?.token || res.data.token;
-    const user = useAuthStore.getState().user;
+    const newRefreshToken: string | undefined = res.data.data?.refreshToken;
+    const user = store.user;
     if (user) {
-      useAuthStore.getState().setAuth(newToken, user);
+      store.setAuth(newToken, user, newRefreshToken);
     }
     return newToken;
   } catch {

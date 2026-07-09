@@ -6,13 +6,14 @@ import { User } from '@/types';
 
 interface AuthState {
   token: string | null;
+  refreshToken: string | null;
   user: User | null;
   isAuthenticated: boolean;
   phoneVerified: boolean;
   emailVerified: boolean;
   pendingAction: string | null;
   _hasHydrated: boolean;
-  setAuth: (token: string, user: User) => void;
+  setAuth: (token: string, user: User, refreshToken?: string) => void;
   setUser: (user: User) => void;
   setPhoneVerified: (v: boolean) => void;
   setPendingAction: (action: string | null) => void;
@@ -25,15 +26,17 @@ export const useAuthStore = create<AuthState>()(
     persist(
       (set) => ({
         token: null,
+        refreshToken: null,
         user: null,
         isAuthenticated: false,
         phoneVerified: false,
         emailVerified: false,
         pendingAction: null,
         _hasHydrated: false,
-        setAuth: (token, user) =>
+        setAuth: (token, user, refreshToken) =>
           set({
             token,
+            refreshToken: refreshToken ?? null,
             user,
             isAuthenticated: true,
             phoneVerified: user.phoneVerified ?? false,
@@ -45,6 +48,7 @@ export const useAuthStore = create<AuthState>()(
         logout: () =>
           set({
             token: null,
+            refreshToken: null,
             user: null,
             isAuthenticated: false,
             phoneVerified: false,
@@ -55,8 +59,9 @@ export const useAuthStore = create<AuthState>()(
       }),
       {
         name: 'auth-storage',
-        version: 2,
+        version: 3,
         partialize: (state) => ({
+          refreshToken: state.refreshToken,
           user: state.user,
           isAuthenticated: state.isAuthenticated,
           phoneVerified: state.phoneVerified,
@@ -67,6 +72,7 @@ export const useAuthStore = create<AuthState>()(
           if (version === 0) {
             const old = persisted as { token?: string; user?: User; isAuthenticated?: boolean };
             return {
+              refreshToken: null,
               token: null,
               user: old.user ?? null,
               isAuthenticated: old.isAuthenticated ?? false,
@@ -76,14 +82,28 @@ export const useAuthStore = create<AuthState>()(
               _hasHydrated: true,
             } as AuthState;
           }
-          const v1 = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; pendingAction?: string | null };
+          if (version === 1) {
+            const v1 = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; pendingAction?: string | null };
+            return {
+              refreshToken: null,
+              token: null,
+              user: v1.user ?? null,
+              isAuthenticated: v1.isAuthenticated ?? false,
+              phoneVerified: v1.phoneVerified ?? false,
+              emailVerified: false,
+              pendingAction: v1.pendingAction ?? null,
+              _hasHydrated: true,
+            } as AuthState;
+          }
+          const v2 = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
           return {
+            refreshToken: null,
             token: null,
-            user: v1.user ?? null,
-            isAuthenticated: v1.isAuthenticated ?? false,
-            phoneVerified: v1.phoneVerified ?? false,
-            emailVerified: false,
-            pendingAction: v1.pendingAction ?? null,
+            user: v2.user ?? null,
+            isAuthenticated: v2.isAuthenticated ?? false,
+            phoneVerified: v2.phoneVerified ?? false,
+            emailVerified: v2.emailVerified ?? false,
+            pendingAction: v2.pendingAction ?? null,
             _hasHydrated: true,
           } as AuthState;
         },
