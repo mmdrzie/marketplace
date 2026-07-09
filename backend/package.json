@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsup src/index.ts --format esm --out-dir dist --clean --target node20",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -13,24 +13,25 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@marketplace/shared": "0.0.0",
-    "hono": "^4.7.0",
     "@hono/node-server": "^1.14.0",
-    "jose": "^6.0.0",
     "@hono/zod-validator": "^0.4.0",
-    "zod": "^3.24.0",
+    "@marketplace/shared": "0.0.0",
     "bcryptjs": "^2.4.3",
+    "drizzle-orm": "^0.38.0",
+    "hono": "^4.7.0",
+    "jose": "^6.0.0",
     "pg": "^8.13.0",
-    "drizzle-orm": "^0.38.0"
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.0",
+    "drizzle-kit": "^0.30.0",
+    "eslint": "^9.0.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.0.0",
-    "eslint": "^9.0.0",
-    "drizzle-kit": "^0.30.0"
+    "vitest": "^3.0.0"
   }
 }
