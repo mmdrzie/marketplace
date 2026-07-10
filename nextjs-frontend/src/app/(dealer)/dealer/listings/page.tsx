@@ -23,10 +23,10 @@ export default function DealerListingsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Listing | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.listings.dealer(statusFilter),
     queryFn: async () => {
-      const res = await api.get('/dealer/listings', { params: { status: statusFilter || undefined } });
+      const res = await api.get('/listings', { params: { scope: 'me', status: statusFilter || undefined } });
       return res.data;
     },
   });
@@ -70,6 +70,11 @@ export default function DealerListingsPage() {
 
       {isLoading ? (
         <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-24 bg-surface-2 rounded-2xl animate-pulse" />)}</div>
+      ) : isError ? (
+        <div className="glass rounded-2xl p-12 text-center">
+          <p className="text-sm text-muted-foreground mb-3">خطا در بارگذاری آگهی‌ها</p>
+          <button onClick={() => refetch()} className="btn btn-primary btn-sm">تلاش مجدد</button>
+        </div>
       ) : listings.length === 0 ? (
         <div className="glass rounded-2xl p-12 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface-2 border border-border-subtle flex items-center justify-center">

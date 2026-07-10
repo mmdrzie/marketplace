@@ -13,7 +13,7 @@ interface RelatedListingsProps {
 }
 
 export function RelatedListings({ categoryId, excludeSlug }: RelatedListingsProps) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.listings.related(categoryId),
     queryFn: async () => {
       const res = await api.get('/listings', {
@@ -32,6 +32,15 @@ export function RelatedListings({ categoryId, excludeSlug }: RelatedListingsProp
       <div className="mt-16">
         <Skeleton className="h-7 w-48 rounded-xl mb-8" />
         <SkeletonListings count={4} />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="mt-16 text-center">
+        <p className="text-sm text-muted-foreground mb-3">خطا در بارگذاری آگهی‌های مرتبط</p>
+        <button onClick={() => refetch()} className="btn btn-primary btn-sm">تلاش مجدد</button>
       </div>
     );
   }

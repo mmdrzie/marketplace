@@ -32,25 +32,29 @@ export default function AdminAllListingsPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [detailTarget, setDetailTarget] = useState<ListingDetail | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: queryKeys.listings.allListings(1, statusFilter),
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: queryKeys.listings.allListings(page, statusFilter),
     queryFn: async () => {
-      const res = await api.get('/listings', { params: { status: statusFilter || undefined, search: search || undefined } });
+      const res = await api.get('/listings', { params: { status: statusFilter || undefined, search: search || undefined, page, per_page: 20 } });
       return res.data;
     },
   });
 
+  const total = data?.meta?.total || 0;
+  const lastPage = data?.meta?.last_page || 1;
+
   const approveMutation = useMutation({
     mutationFn: async (id: number) => { await api.patch(`/listings/${id}`, { action: 'approve' }); },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-listings'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['all-listings'] }),
   });
 
   const rejectMutation = useMutation({
     mutationFn: async ({ id, reason }: { id: number; reason: string }) => { await api.patch(`/listings/${id}`, { action: 'reject', reason }); },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-listings'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['all-listings'] }),
   });
 
   const deleteMutation = useMutation({
@@ -69,7 +73,7 @@ export default function AdminAllListingsPage() {
         queryClient.setQueryData(['all-listings'], context.previous);
       }
     },
-    onSettled: () => { queryClient.invalidateQueries({ queryKey: ['admin-listings'] }); queryClient.invalidateQueries({ queryKey: ['all-listings'] }); setDeleteTarget(null); },
+    onSettled: () => { queryClient.invalidateQueries({ queryKey: ['all-listings'] }); setDeleteTarget(null); },
   });
 
   const listings = data?.data || [];
@@ -84,7 +88,7 @@ export default function AdminAllListingsPage() {
       <div className="flex gap-3 flex-wrap">
         <GlassSelect
           value={statusFilter}
-          onChange={(val) => setStatusFilter(val)}
+          onChange={(val) => { setStatusFilter(val); setPage(1); }}
           options={STATUS_OPTIONS}
           placeholder="همه وضعیت‌ها"
           className="w-44"
@@ -104,6 +108,11 @@ export default function AdminAllListingsPage() {
 
       {isLoading ? (
         <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-surface-2 rounded-2xl animate-pulse" />)}</div>
+      ) : isError ? (
+        <div className="glass rounded-2xl p-12 text-center">
+          <p className="text-sm text-muted-foreground mb-3">خطا در بارگذاری آگهی‌ها</p>
+          <button onClick={() => refetch()} className="btn btn-primary btn-sm">تلاش مجدد</button>
+        </div>
       ) : listings.length === 0 ? (
         <div className="glass rounded-2xl p-12 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface-2 border border-border-subtle flex items-center justify-center">
@@ -161,6 +170,25 @@ export default function AdminAllListingsPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {lastPage > 1 && (
+        <div className="flex justify-center items-center gap-2 pt-4" dir="ltr">
+          <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1} className="w-10 h-10 rounded-xl text-sm font-bold btn btn-ghost disabled:opacity-30 disabled:cursor-not-allowed p-0 flex items-center justify-center" aria-label="قبلی">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 -scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
+          {Array.from({ length: Math.min(lastPage, 5) }).map((_, i) => {
+            const start = Math.max(1, Math.min(page - 2, lastPage - 4));
+            const p = start + i;
+            if (p > lastPage) return null;
+            return (
+              <button key={p} onClick={() => setPage(p)} className={`w-10 h-10 rounded-xl text-sm font-bold transition-all p-0 flex items-center justify-center ${page === p ? 'btn btn-primary shadow-md shadow-primary/30' : 'btn btn-ghost hover:bg-surface-2'}`} aria-label={`صفحه ${p}`} aria-current={page === p ? 'page' : undefined}>{p}</button>
+            );
+          })}
+          <button onClick={() => setPage(Math.min(lastPage, page + 1))} disabled={page >= lastPage} className="w-10 h-10 rounded-xl text-sm font-bold btn btn-ghost disabled:opacity-30 disabled:cursor-not-allowed p-0 flex items-center justify-center" aria-label="بعدی">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 -scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
         </div>
       )}
 

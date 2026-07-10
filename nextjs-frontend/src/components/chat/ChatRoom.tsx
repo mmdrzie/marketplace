@@ -9,6 +9,7 @@ import { TypingIndicator } from './TypingIndicator';
 import { MessageSearch } from './MessageSearch';
 import { VoiceRecorder } from './VoiceRecorder';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/components/common/Toast';
 import type { Message } from '@/types';
 
 interface ChatRoomProps {
@@ -134,7 +135,9 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
       for (const url of objectUrlsRef.current) URL.revokeObjectURL(url);
       objectUrlsRef.current = [];
       setFilePreviews([]);
-    } catch {}
+    } catch {
+      toast({ type: 'error', title: 'خطا', message: 'ارسال پیام با مشکل مواجه شد' });
+    }
   };
 
   if (isLoading) {
