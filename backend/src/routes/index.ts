@@ -19,6 +19,8 @@ import { userRouter } from './users.js';
 import { adminRouter } from './admin.js';
 import { notificationRouter } from './notifications.js';
 import { meRouter } from './me.js';
+import { partsRouter } from './parts.js';
+import { escrowRouter } from './escrow.js';
 
 const router = new Hono();
 
@@ -44,5 +46,7 @@ router.route('/users', userRouter);
 router.route('/admin', adminRouter);
 router.route('/notifications', notificationRouter);
 router.route('/me', meRouter);
+router.route('/parts', partsRouter);
+router.route('/escrow', escrowRouter);
 
 export { router as apiRouter };
