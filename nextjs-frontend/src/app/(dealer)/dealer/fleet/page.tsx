@@ -18,7 +18,7 @@ export default function FleetPage() {
 
   const filtered = tab === 'all' ? vehicles : vehicles.filter((v) => v.status === tab);
 
-  const activeCount = vehicles.filter((v) => v.status === 'active').length;
+  const activeCount = vehicles.filter((v) => v.status === 'published').length;
   const maintenanceCount = vehicles.filter((v) => v.status === 'maintenance').length;
   const idleCount = vehicles.filter((v) => v.status === 'idle').length;
   const totalValue = vehicles.reduce((s, v) => s + v.currentValue, 0);

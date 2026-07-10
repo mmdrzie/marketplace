@@ -89,7 +89,7 @@ ON CONFLICT (slug) DO NOTHING;
 -- Sub-categories for Vehicles
 WITH p AS (SELECT id FROM categories WHERE slug = 'vehicles')
 INSERT INTO categories (name, name_en, slug, icon, parent_id, sort_order)
-SELECT p.id, name, name_en, slug, icon, p.id, sort_order
+SELECT name, name_en, slug, icon, p.id, sort_order
 FROM p, (VALUES
   ('سواری', 'Sedan', 'sedan', 'car', 1),
   ('شاسی بلند', 'SUV', 'suv', 'suv', 2),

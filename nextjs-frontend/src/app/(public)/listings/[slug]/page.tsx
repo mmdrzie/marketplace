@@ -390,7 +390,7 @@ export default function ListingDetailPage() {
             name: listing.title,
             description: listing.description,
             image: (listing.images as ListingImage[])?.map((i) => i.url) || [],
-            offers: { '@type': 'Offer', price: listing.price, priceCurrency: 'IRR', availability: listing.status === 'active' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut' },
+            offers: { '@type': 'Offer', price: listing.price, priceCurrency: 'IRR', availability: listing.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut' },
             itemCondition: 'https://schema.org/UsedCondition',
             category: listing.category_name,
             areaServed: listing.province_name || 'Iran',

@@ -38,18 +38,18 @@ export default function AdminAllListingsPage() {
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.listings.allListings(1, statusFilter),
     queryFn: async () => {
-      const res = await api.get('/admin/listings', { params: { status: statusFilter || undefined, search: search || undefined } });
+      const res = await api.get('/listings', { params: { status: statusFilter || undefined, search: search || undefined } });
       return res.data;
     },
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (id: number) => { await api.post(`/admin/listings/${id}/approve`); },
+    mutationFn: async (id: number) => { await api.patch(`/listings/${id}`, { action: 'approve' }); },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-listings'] }),
   });
 
   const rejectMutation = useMutation({
-    mutationFn: async ({ id, reason }: { id: number; reason: string }) => { await api.post(`/admin/listings/${id}/reject`, { reason }); },
+    mutationFn: async ({ id, reason }: { id: number; reason: string }) => { await api.patch(`/listings/${id}`, { action: 'reject', reason }); },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-listings'] }),
   });
 

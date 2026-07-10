@@ -149,7 +149,7 @@ export default function DealerStorefrontPage() {
 
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <StatChartCard title="آگهی فعال" value={listings.filter((l) => l.status === 'active').length.toLocaleString('fa-IR')} chartData={[4, 6, 8, 5, 7, 9, 6, 8, 10, 12]} color="var(--color-accent-blue)" />
+              <StatChartCard title="آگهی فعال" value={listings.filter((l) => l.status === 'published').length.toLocaleString('fa-IR')} chartData={[4, 6, 8, 5, 7, 9, 6, 8, 10, 12]} color="var(--color-accent-blue)" />
               <StatChartCard title="معاملات موفق" value="۱۲" chartData={[1, 2, 1, 3, 2, 4, 3, 5, 4, 6]} color="var(--color-success)" />
               <StatChartCard title="امتیاز" value="۸۶" trend={8} chartData={[60, 65, 72, 70, 78, 82, 86]} color="var(--color-warning)" />
               <StatChartCard title="سرعت پاسخگویی" value="۲ ساعت" trend={-15} chartData={[5, 4, 4, 3, 3, 2, 2]} color="var(--color-accent-indigo)" />

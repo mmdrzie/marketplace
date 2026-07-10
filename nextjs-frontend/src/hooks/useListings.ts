@@ -82,7 +82,7 @@ export function useCreateListing() {
 export function useUpdateListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Record<string, unknown> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
       const res = await api.put(`/listings/${id}`, data);
       return res.data.data;
     },
@@ -98,7 +98,7 @@ export function useUpdateListing() {
 export function useDeleteListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await api.delete(`/listings/${id}`);
     },
     onMutate: async (id) => {
@@ -127,7 +127,7 @@ export function useDeleteListing() {
 export function useSubmitListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const res = await api.patch(`/listings/${id}`, { action: 'submit' });
       return res.data.data;
     },
@@ -146,7 +146,7 @@ export function useSubmitListing() {
 export function useMarkSold() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const res = await api.patch(`/listings/${id}`, { action: 'sold' });
       return res.data.data;
     },
@@ -178,7 +178,7 @@ export function useMarkSold() {
 export function useRenewListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const res = await api.patch(`/listings/${id}`, { action: 'renew' });
       return res.data.data;
     },

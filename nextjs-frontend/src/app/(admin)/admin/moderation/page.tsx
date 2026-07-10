@@ -16,12 +16,12 @@ export default function ModerationPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.admin.pending,
-    queryFn: async () => { const res = await api.get('/admin/listings/pending'); return res.data; },
+    queryFn: async () => { const res = await api.get('/listings', { params: { status: 'pending' } }); return res.data; },
     refetchInterval: 15000,
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (id: number) => { await api.post(`/admin/listings/${id}/approve`); },
+    mutationFn: async (id: number) => { await api.patch(`/listings/${id}`, { action: 'approve' }); },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.admin.pending });
       const previous = queryClient.getQueryData(queryKeys.admin.pending);
@@ -40,7 +40,7 @@ export default function ModerationPage() {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: async ({ id, reason }: { id: number; reason: string }) => { await api.post(`/admin/listings/${id}/reject`, { reason }); },
+    mutationFn: async ({ id, reason }: { id: number; reason: string }) => { await api.patch(`/listings/${id}`, { action: 'reject', reason }); },
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.admin.pending });
       const previous = queryClient.getQueryData(queryKeys.admin.pending);

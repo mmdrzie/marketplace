@@ -51,7 +51,7 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markAllRead = useMutation({
-    mutationFn: async () => api.post('/notifications/mark-all-read'),
+    mutationFn: async () => api.put('/notifications/read-all'),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all }),
   });
 

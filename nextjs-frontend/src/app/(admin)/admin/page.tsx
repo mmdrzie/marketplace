@@ -16,7 +16,7 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 export default function AdminDashboardPage() {
   const { data: pendingData, isLoading: pendingLoading } = useQuery({
     queryKey: queryKeys.admin.pending,
-    queryFn: async () => { const res = await api.get('/admin/listings/pending'); return res.data; },
+    queryFn: async () => { const res = await api.get('/listings', { params: { status: 'pending' } }); return res.data; },
   });
 
   const { data: usersData } = useQuery({
