@@ -47,7 +47,7 @@ function parseFiltersFromParams(sp: URLSearchParams): Filters {
   const attr: Record<string, string> = {};
   return {
     category: sp.get('category') || '',
-    province_id: sp.get('province_id') || '',
+    province_id: sp.get('province') || '',
     city_id: sp.get('city_id') || '',
     sort: sp.get('sort') || 'newest',
     brand: sp.get('brand') || '',
@@ -64,7 +64,7 @@ function filtersToParams(filters: Filters, query: string, page: number): Record<
   return {
     q: query || undefined,
     category: filters.category || undefined,
-    province_id: filters.province_id || undefined,
+    province: filters.province_id || undefined,
     city_id: filters.city_id || undefined,
     brand: filters.brand || undefined,
     model: filters.model || undefined,
@@ -116,7 +116,7 @@ export default function SearchPage() {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set('q', debouncedQuery);
     if (filters.category) params.set('category', filters.category);
-    if (filters.province_id) params.set('province_id', filters.province_id);
+    if (filters.province_id) params.set('province', filters.province_id);
     if (filters.city_id) params.set('city_id', filters.city_id);
     if (filters.sort !== 'newest') params.set('sort', filters.sort);
     if (filters.brand) params.set('brand', filters.brand);

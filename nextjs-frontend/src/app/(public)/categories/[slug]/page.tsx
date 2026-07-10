@@ -48,7 +48,8 @@ const MODELS_BY_BRAND: Record<string, string[]> = {
   'هینو': ['300', '500', '700', 'Dutro', 'Profia'],
 };
 
-const YEARS = Array.from({ length: 26 }, (_, i) => String(1405 - i));
+const CURRENT_YEAR = new Date().getFullYear() - 621;
+const YEARS = Array.from({ length: 26 }, (_, i) => String(CURRENT_YEAR - i));
 
 const CATEGORY_ICONS: Record<string, string> = {
   car: "M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 002 12v4c0 .6.4 1 1 1h2m10 0v-5m-10 5v-5m-4 0h18M7 17a2 2 0 11-4 0 2 2 0 014 0zm14 0a2 2 0 11-4 0 2 2 0 014 0z",
@@ -99,7 +100,7 @@ export default function CategoryPage() {
   const allProvinces = provinces ?? [];
 
   const { data, isLoading } = useListings({
-    category_slug: slug,
+    category: slug,
     sort,
     brand: brand || undefined,
     model: model || undefined,

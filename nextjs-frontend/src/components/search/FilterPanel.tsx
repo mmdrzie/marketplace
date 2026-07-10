@@ -37,7 +37,8 @@ const MODELS_BY_BRAND: Record<string, string[]> = {
   'هینو': ['300', '500', '700', 'Dutro', 'Profia'],
 };
 
-const YEARS = Array.from({ length: 26 }, (_, i) => String(1405 - i));
+const CURRENT_YEAR = new Date().getFullYear() - 621;
+const YEARS = Array.from({ length: 26 }, (_, i) => String(CURRENT_YEAR - i));
 
 type Filters = {
   category: string;

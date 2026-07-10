@@ -26,7 +26,7 @@ interface FormData {
   isPainted: boolean;
 }
 
-const CURRENT_YEAR = 1405;
+const CURRENT_YEAR = new Date().getFullYear() - 621;
 const MONTHS = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور'];
 
 function estimatePrice(data: FormData): number {

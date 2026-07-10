@@ -45,7 +45,8 @@ const MODELS_BY_BRAND: Record<string, string[]> = {
   'هینو': ['300', '500', '700', 'Dutro', 'Profia'],
 };
 
-const YEARS = Array.from({ length: 26 }, (_, i) => String(1405 - i));
+const CURRENT_YEAR = new Date().getFullYear() - 621;
+const YEARS = Array.from({ length: 26 }, (_, i) => String(CURRENT_YEAR - i));
 
 export default function AllListingsPage() {
   const searchParams = useSearchParams();
@@ -111,7 +112,7 @@ export default function AllListingsPage() {
           q: searchParams.get('q') || undefined,
           sort: searchParams.get('sort') || 'newest',
           province_id: searchParams.get('province_id') || undefined,
-          category_slug: searchParams.get('category_slug') || undefined,
+          category: searchParams.get('category_slug') || undefined,
           brand: searchParams.get('brand') || undefined,
           model: searchParams.get('model') || undefined,
           year_from: searchParams.get('year_from') || undefined,
