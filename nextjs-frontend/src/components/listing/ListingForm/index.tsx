@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { queryKeys } from '@/lib/queryKeys';
 import { useCreateListing, useUpdateListing } from '@/hooks/useListings';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { toast } from '@/components/common/Toast';
@@ -54,6 +56,34 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
   const [submitting, setSubmitting] = useState(false);
   const initialized = useRef(false);
   const draftNotified = useRef(false);
+
+  const { data: allCategories } = useQuery({
+    queryKey: queryKeys.categories.all,
+    queryFn: async () => { const res = await api.get('/categories'); return res.data.data as Array<{ id: number; slug: string; name: string }>; },
+    staleTime: 300000,
+  });
+  const { data: provinces } = useQuery({
+    queryKey: queryKeys.categories.provinces,
+    queryFn: async () => { const res = await api.get('/provinces'); return res.data.data as Array<{ id: number; name: string; cities: Array<{ id: number; name: string }> }>; },
+    staleTime: 120000,
+  });
+  const categorySlug = useMemo(() => {
+    if (!categoryId || !allCategories) return null;
+    return allCategories.find((c: { id: number }) => c.id === categoryId)?.slug ?? null;
+  }, [categoryId, allCategories]);
+  const categoryName = useMemo(() => {
+    if (!categoryId || !allCategories) return undefined;
+    return allCategories.find((c: { id: number }) => c.id === categoryId)?.name;
+  }, [categoryId, allCategories]);
+  const provinceName = useMemo(() => {
+    if (!basicData.province_id || !provinces) return undefined;
+    return provinces.find((p: { id: number }) => p.id === Number(basicData.province_id))?.name;
+  }, [basicData.province_id, provinces]);
+  const cityName = useMemo(() => {
+    if (!basicData.city_id || !basicData.province_id || !provinces) return undefined;
+    const p = provinces.find((pr: { id: number }) => pr.id === Number(basicData.province_id));
+    return p?.cities.find((c: { id: number }) => c.id === Number(basicData.city_id))?.name;
+  }, [basicData.city_id, basicData.province_id, provinces]);
 
   useEffect(() => {
     if (initialized.current || !initialData) return;
@@ -112,11 +142,7 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
       price_type: basicData.price_type,
       province_id: Number(basicData.province_id),
       city_id: Number(basicData.city_id),
-      attributes: {
-        ...attributes,
-        document_type: attributes.document_type || '',
-        document_number: attributes.document_number || '',
-      },
+      attributes,
     };
 
     try {
@@ -184,8 +210,8 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
       <div className="glass rounded-3xl p-6 md:p-10 border border-border-subtle shadow-sm min-h-[400px]">
         {step === 0 && <Step1Category selected={categoryId} onSelect={setCategoryId} disabled={isEditMode} />}
         {step === 1 && <Step2Basic data={basicData} onChange={setBasicData} />}
-        {step === 2 && categoryId && (
-          <Step3Attributes categoryId={categoryId} values={attributes} onChange={setAttributes} />
+        {step === 2 && categorySlug && (
+          <Step3Attributes categorySlug={categorySlug} values={attributes} onChange={setAttributes} />
         )}
         {step === 3 && (
           <Step4Images
@@ -198,6 +224,9 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
         {step === 4 && (
           <Step5Preview
             data={{ ...basicData, category_id: categoryId, attributes }}
+            categoryName={categoryName}
+            cityName={cityName}
+            provinceName={provinceName}
           />
         )}
       </div>

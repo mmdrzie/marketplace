@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import { JSX } from 'react/jsx-runtime';
+import type { JSX } from 'react';
 
 // آیکون‌های مدرن SVG برای فیلدها
 const Icons = {

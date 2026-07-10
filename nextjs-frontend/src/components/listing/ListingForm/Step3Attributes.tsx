@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import { JSX } from 'react/jsx-runtime';
+import type { JSX } from 'react';
 import type { Attribute } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -28,13 +28,12 @@ const Icon = ({ path, className = "h-5 w-5" }: { path: JSX.Element; className?: 
 const inputSelectClasses = "w-full px-4 py-3.5 glass-input rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 appearance-none disabled:opacity-40 disabled:cursor-not-allowed";
 
 interface Step3AttributesProps {
-  categoryId: number;
+  categorySlug: string | null;
   values: Record<string, string>;
   onChange: (values: Record<string, string>) => void;
 }
 
-export function Step3Attributes({ categoryId, values, onChange }: Step3AttributesProps) {
-  const categorySlug = useCategorySlug(categoryId);
+export function Step3Attributes({ categorySlug, values, onChange }: Step3AttributesProps) {
 
   const { data: apiAttrs } = useQuery({
     queryKey: queryKeys.attributes.byCategory(categorySlug),
@@ -132,99 +131,7 @@ export function Step3Attributes({ categoryId, values, onChange }: Step3Attribute
         )}
       </div>
 
-      {/* بخش مدارک مالکیت */}
-      <div className="border-t border-border-subtle pt-12">
-        <div className="mb-8">
-          <h3 className="text-lg font-bold tracking-tighter text-foreground mb-2 flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-              <Icon path={Icons.shield} className="h-5 w-5" />
-            </span>
-            مدارک مالکیت
-          </h3>
-          <p className="text-muted-foreground text-sm font-light mr-13">برای تأیید مالکیت و افزایش اعتبار آگهی، مدارک زیر را وارد کنید.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <label className="block text-[11px] text-muted-foreground mb-3 uppercase tracking-wider font-medium">نوع سند <span className="text-destructive">*</span></label>
-            <GlassSelect
-              value={values['document_type'] || ''}
-              onChange={(val) => setValue('document_type', val)}
-              options={[
-                { value: 'cart', label: 'کارت خودرو / ماشین‌آلات' },
-                { value: 'ownership', label: 'سند مالکیت' },
-                { value: 'witness', label: 'گواهی امضای محلی' },
-                { value: 'bill', label: 'فاکتور خرید' },
-                { value: 'other', label: 'سایر' },
-              ]}
-              placeholder="انتخاب کنید"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] text-muted-foreground mb-3 uppercase tracking-wider font-medium">شماره سند / کد پیگیری</label>
-            <input 
-              type="text" 
-              value={values['document_number'] || ''} 
-              onChange={(e) => setValue('document_number', e.target.value)} 
-              className={inputSelectClasses} 
-              placeholder="شماره سند یا کد رهگیری" 
-            />
-          </div>
-        </div>
-
-        {/* باکس آپلود مدرن */}
-        <div className="mt-8">
-          <label className="block text-[11px] text-muted-foreground mb-3 uppercase tracking-wider font-medium">تصویر سند (اختیاری)</label>
-          <div className="relative">
-            <input
-              type="file"
-              accept="image/*,.pdf"
-              className="hidden"
-              id="document-upload"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setValue('document_file_name', file.name);
-              }}
-            />
-            <label 
-              htmlFor="document-upload" 
-              className={cn(
-                'group flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-3xl cursor-pointer transition-all duration-300 glass',
-                values['document_file_name'] 
-                  ? 'border-success/30 bg-success/5' 
-                  : 'border-border-subtle hover:border-primary/40 hover:bg-surface/40'
-              )}
-            >
-              <div className={cn(
-                'w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors border',
-                values['document_file_name'] 
-                  ? 'bg-success/10 text-success border-success/20' 
-                  : 'bg-surface-2 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 border-border'
-              )}>
-                <Icon path={values['document_file_name'] ? Icons.check : Icons.upload} className="h-6 w-6" />
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {values['document_file_name'] || 'برای آپلود تصویر سند کلیک کنید'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 font-light">تصویر کارت، سند یا فاکتور (jpg, png, pdf)</p>
-            </label>
-          </div>
-        </div>
-
-        {/* هشدار امنیتی مدرن */}
-        <div className="mt-8 flex items-start gap-4 glass rounded-3xl p-5 border border-warning/20 bg-warning/5">
-          <div className="w-10 h-10 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center text-warning shrink-0">
-            <Icon path={Icons.alert} className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-warning mb-1 uppercase tracking-wider">امنیت اطلاعات شما تضمین می‌شود</p>
-            <p className="text-xs text-muted-foreground leading-relaxed font-light">
-              مدارک شما محرمانه بوده و تنها برای تأیید مالکیت توسط تیم پشتیبانی بررسی می‌شود. پس از تأیید آگهی، مدارک به صورت خودکار از سامانه حذف خواهند شد.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* بخش مدارک مالکیت - حذف شد چون backend این قابلیت را ندارد */}
     </div>
   );
 }

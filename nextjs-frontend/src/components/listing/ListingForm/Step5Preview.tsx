@@ -1,7 +1,7 @@
 'use client';
 
 import { PriceDisplay } from '@/components/common/PriceDisplay';
-import { JSX } from 'react/jsx-runtime';
+import type { JSX } from 'react';
 
 // آیکون‌های مدرن SVG
 const Icons = {
