@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { motion, useMotionValue, useSpring, useMotionTemplate, useScroll } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
@@ -117,22 +118,41 @@ const MagneticButton = ({ children, href, variant = 'glass' }: { children: React
   );
 };
 
-/** 3D Tilt + Spotlight card — CSS-only */
+/** 3D Tilt + Spotlight card */
 const TiltSpotlightCard = ({ children, href }: { children: React.ReactNode; href: string }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotX = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
+  const rotY = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
+
+  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${mouseX}px ${mouseY}px, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 80%)`;
+
+  const handleMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - r.left;
+    const py = e.clientY - r.top;
+    mouseX.set(px);
+    mouseY.set(py);
+    rotY.set(((px / r.width) - 0.5) * -10);
+    rotX.set(((py / r.height) - 0.5) * 10);
+  };
+
   return (
-    <div className="group h-full" style={{ perspective: '800px' }}>
-      <div className="h-full transition-all duration-300 ease-out group-hover:[transform:rotateY(-5deg)_rotateX(5deg)]" style={{ transformStyle: 'preserve-3d' }}>
+    <motion.div style={{ perspective: 800 }} className="h-full">
+      <motion.div style={{ rotateX: rotX, rotateY: rotY, transformStyle: 'preserve-3d' }} className="h-full">
         <Link
           href={href}
-          className="relative bg-surface/40 border border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:bg-surface transition-colors duration-300 h-full overflow-hidden"
+          onMouseMove={handleMove}
+          onMouseLeave={() => { rotX.set(0); rotY.set(0); }}
+          className="group relative bg-surface/40 border border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:bg-surface transition-colors duration-300 h-full overflow-hidden"
         >
-          <div className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_50%_50%,color-mix(in_srgb,var(--color-primary)_16%,transparent),transparent_80%)]" />
+          <motion.div className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: spotlight }} />
           <div style={{ transform: 'translateZ(30px)' }} className="flex flex-col items-center">
             {children}
           </div>
         </Link>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -220,15 +240,14 @@ export default function HomePage() {
   const disableEffects = isTouch || reducedMotion;
 
   /* progress bar */
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   /* cursor glow */
   const [glowBg, setGlowBg] = useState('');
 
   useEffect(() => {
     const onScroll = throttle(() => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(max > 0 ? window.scrollY / max : 0);
       setShowTop(window.scrollY > 800);
     }, 100);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -288,7 +307,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-foreground overflow-x-hidden relative flex flex-col">
 
       {/* scroll progress */}
-      <div className="fixed top-0 inset-x-0 h-[3px] bg-gradient-to-l from-primary via-primary/80 to-primary origin-right z-50 transition-transform duration-75" style={{ transform: `scaleX(${scrollProgress})` }} />
+      <motion.div style={{ scaleX }} className="fixed top-0 inset-x-0 h-[3px] bg-gradient-to-l from-primary via-primary/80 to-primary origin-right z-50 shadow-[0_0_12px_var(--color-primary)]" />
 
       {/* cursor glow — only on desktop */}
       {!disableEffects && <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: glowBg }} />}
@@ -537,7 +556,11 @@ export default function HomePage() {
       <section className="relative z-10 max-w-7xl mx-auto px-4 py-20 w-full">
         <ScaleIn rootMargin="-60px" className="relative bg-gradient-to-r from-card via-primary/10 to-card border border-border rounded-3xl p-12 md:p-20 overflow-hidden text-center">
           <div className="absolute inset-0 opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px] motion-safe:animate-pulse-slow" />
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px]"
+          />
           <div className="relative z-10 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight leading-tight">آینده معامله ماشین‌آلات، همین حالا آغاز شد.</h2>
             <p className="text-muted-foreground mb-10 leading-relaxed">به شبکه‌ای از حرفه‌ای‌ترین خریداران و فروشندگان ایران بپیوندید و تجربه‌ای متفاوت از امنیت و سرعت داشته باشید.</p>
