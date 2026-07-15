@@ -75,26 +75,27 @@ export default function RootLayout({
       <body className={`${vazirmatn.variable} font-vazirmatn antialiased bg-background text-foreground overflow-x-hidden`}>
         <ThemeProvider>
           <QueryProvider>
-            <AuthProvider>
-              {/* Skip link for keyboard / screen-reader users */}
-              <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:shadow-lg"
-              >
-                پرش به محتوای اصلی
-              </a>
-              <div className="min-h-screen flex flex-col bg-transparent transition-colors duration-300">
-                {children}
-              </div>
-              <LogoutModalProvider />
-              <ApiErrorHandler />
-              <ScrollToTop />
-              <ToastContainer />
-              <CompareBar />
-              <PWAProvider />
-              <DeviceDetector />
-              <Analytics />
-            </AuthProvider>
+            <PWAProvider>
+              <AuthProvider>
+                {/* Skip link for keyboard / screen-reader users */}
+                <a
+                  href="#main-content"
+                  className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:shadow-lg"
+                >
+                  پرش به محتوای اصلی
+                </a>
+                <div className="min-h-screen flex flex-col bg-transparent transition-colors duration-300">
+                  {children}
+                </div>
+                <LogoutModalProvider />
+                <ApiErrorHandler />
+                <ScrollToTop />
+                <ToastContainer />
+                <CompareBar />
+                <DeviceDetector />
+                <Analytics />
+              </AuthProvider>
+            </PWAProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

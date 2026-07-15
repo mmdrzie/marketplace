@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useIsAuthenticated, useUser } from '@/store/authStore';
 import { useLogoutModal } from '@/store/logoutModalStore';
+import { usePWAInstall } from '@/components/common/PWAProvider';
 
 interface NavItem {
   href: string;
@@ -96,6 +97,8 @@ export function Sidebar() {
   if (user?.role === 'admin') {
     allLinks.push('admin');
   }
+
+  const { canInstall, installApp } = usePWAInstall();
 
   return (
     <>
@@ -190,8 +193,25 @@ export function Sidebar() {
             </div>
           </div>
 
+          {/* Install App Button */}
+          {canInstall && (
+            <div className="px-3 pt-2">
+              <button
+                onClick={installApp}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-primary hover:bg-primary/5 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                نصب اپلیکیشن
+              </button>
+            </div>
+          )}
+
           {/* Logout Button */}
-          <div className="p-3 pt-2 border-t border-border">
+          <div className={canInstall ? "p-3 pt-1 border-t border-border" : "p-3 pt-2 border-t border-border"}>
             <button
               onClick={() => { setOpen(false); openLogoutModal(() => {}); }}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-destructive hover:bg-destructive/5 transition-colors"

@@ -1,15 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export function PWAProvider() {
+interface PWAContextValue {
+  canInstall: boolean;
+  installApp: () => Promise<void>;
+}
+
+const PWAContext = createContext<PWAContextValue>({ canInstall: false, installApp: async () => {} });
+
+export function usePWAInstall() {
+  return useContext(PWAContext);
+}
+
+export function PWAProvider({ children }: { children?: ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstall, setShowInstall] = useState(false);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -19,7 +29,6 @@ export function PWAProvider() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowInstall(true);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -27,22 +36,18 @@ export function PWAProvider() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  if (!showInstall) return null;
+  const installApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    if (result?.outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <button
-        onClick={async () => {
-          deferredPrompt?.prompt();
-          const result = await deferredPrompt?.userChoice;
-          if (result?.outcome === 'accepted') {
-            setShowInstall(false);
-          }
-        }}
-        className="glass px-5 py-3 rounded-2xl text-sm font-bold text-primary hover:border-primary/30 transition-all duration-300 shadow-2xl"
-      >
-        نصب اپلیکیشن
-      </button>
-    </div>
+    <PWAContext.Provider value={{ canInstall: !!deferredPrompt, installApp }}>
+      {children}
+    </PWAContext.Provider>
   );
 }
