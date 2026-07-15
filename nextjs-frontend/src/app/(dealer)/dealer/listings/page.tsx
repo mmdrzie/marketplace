@@ -32,7 +32,7 @@ export default function DealerListingsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => { await api.delete(`/listings/${id}`); },
+    mutationFn: async (id: string | number) => { await api.delete(`/listings/${id}`); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.listings.dealer() }); setDeleteTarget(null); },
   });
 
@@ -69,7 +69,7 @@ export default function DealerListingsPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-24 bg-surface-2 rounded-2xl animate-pulse" />)}</div>
+        <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-24 bg-surface-2 rounded-2xl motion-safe:animate-pulse" />)}</div>
       ) : isError ? (
         <div className="glass rounded-2xl p-12 text-center">
           <p className="text-sm text-muted-foreground mb-3">خطا در بارگذاری آگهی‌ها</p>

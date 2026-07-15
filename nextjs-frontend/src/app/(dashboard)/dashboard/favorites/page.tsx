@@ -12,7 +12,7 @@ export default function FavoritesPage() {
     return (
       <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
         <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 space-y-8 animate-pulse">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 space-y-8 motion-safe:animate-pulse">
           <div className="space-y-3">
             <div className="h-8 w-48 bg-surface-2 rounded-xl"></div>
             <div className="h-4 w-64 bg-surface-2/70 rounded-lg"></div>
@@ -40,7 +40,7 @@ export default function FavoritesPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               SAVED ITEMS
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">علاقه‌مندی‌ها</h1>

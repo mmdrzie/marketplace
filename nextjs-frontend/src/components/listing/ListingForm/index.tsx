@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 const STEPS = ['دسته‌بندی', 'اطلاعات پایه', 'مشخصات', 'تصاویر', 'پیش‌نمایش'];
 
 interface ListingFormProps {
-  listingId?: number;
+  listingId?: string | number;
   initialData?: {
     category_id: number;
     title: string;
@@ -114,10 +114,11 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
     }
   }, [isEditMode]);
 
-  const { clearDraft } = useAutoSave(
-    isEditMode ? {} : { step, categoryId, basicData, attributes, objectKeys, skipImages },
-    restoreDraft,
+  const autoSaveData = useMemo(
+    () => isEditMode ? {} : { step, categoryId, basicData, attributes, objectKeys, skipImages },
+    [isEditMode, step, categoryId, basicData, attributes, objectKeys, skipImages],
   );
+  const { clearDraft } = useAutoSave(autoSaveData, restoreDraft);
 
   const canProceed = useCallback(() => {
     switch (step) {
@@ -148,16 +149,13 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
     try {
       if (isEditMode && listingId) {
         await updateListing.mutateAsync({ id: listingId, data: payload });
-        if (objectKeys.length > 0) {
-          await api.post(`/listings/${listingId}/images`, { object_keys: objectKeys, primary_index: 0 });
-        }
         toast({ type: 'success', title: 'آگهی ویرایش شد', message: 'تغییرات با موفقیت ذخیره شد.' });
         router.push(redirectPath || '/dealer/listings');
       } else {
-        const listing = await createListing.mutateAsync(payload);
         if (objectKeys.length > 0) {
-          await api.post(`/listings/${listing.id}/images`, { object_keys: objectKeys, primary_index: 0 });
+          Object.assign(payload, { images: objectKeys.map((key, i) => ({ url: key, is_primary: i === 0, sort_order: i })) });
         }
+        await createListing.mutateAsync(payload);
         clearDraft();
         router.push(redirectPath || '/dashboard/listings');
       }

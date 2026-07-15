@@ -2,7 +2,10 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useFleetStore, VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_BG, VEHICLE_STATUS_DOT } from '@/store/fleetStore';
+import { useFleet, useFleetVehicle } from '@/hooks/useFleet';
+import type { VehicleStatus } from '@/store/fleetStore';
+import { VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_BG, VEHICLE_STATUS_DOT } from '@/store/fleetStore';
+import { Skeleton } from '@/components/common/Skeleton';
 import { FleetMap } from '@/components/fleet/FleetMap';
 import { FuelChart } from '@/components/fleet/FuelChart';
 import { InsuranceTimeline } from '@/components/fleet/InsuranceTimeline';
@@ -12,8 +15,18 @@ import { FadeIn } from '@/components/common/MotionDiv';
 
 export default function FleetVehiclePage() {
   const { id } = useParams<{ id: string }>();
-  const vehicle = useFleetStore((s) => s.getVehicle(Number(id)));
-  const vehicles = useFleetStore((s) => s.vehicles);
+  const { data: vehicle, isLoading } = useFleetVehicle(id);
+  const { data: vehicles } = useFleet();
+
+  if (isLoading) {
+    return (
+      <div className="relative min-h-screen bg-background text-foreground">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
+          <Skeleton className="h-8 w-48 mb-6" />
+        </div>
+      </div>
+    );
+  }
 
   if (!vehicle) {
     return (
@@ -39,13 +52,13 @@ export default function FleetVehiclePage() {
             </Link>
           </div>
 
-          <div className={`glass rounded-2xl p-6 border mb-6 ${VEHICLE_STATUS_BG[vehicle.status]}`}>
+          <div className={`glass rounded-2xl p-6 border mb-6 ${VEHICLE_STATUS_BG[vehicle.status as VehicleStatus]}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${VEHICLE_STATUS_DOT[vehicle.status]}`} />
-                  <span className={`text-xs font-bold ${VEHICLE_STATUS_COLORS[vehicle.status]}`}>
-                    {VEHICLE_STATUS_LABELS[vehicle.status]}
+                  <span className={`w-2.5 h-2.5 rounded-full ${VEHICLE_STATUS_DOT[vehicle.status as VehicleStatus]}`} />
+                  <span className={`text-xs font-bold ${VEHICLE_STATUS_COLORS[vehicle.status as VehicleStatus]}`}>
+                    {VEHICLE_STATUS_LABELS[vehicle.status as VehicleStatus]}
                   </span>
                   <span className="text-[10px] text-muted-foreground">{vehicle.plateNumber}</span>
                   <span className="text-[10px] text-muted-foreground">VIN: {vehicle.vin}</span>

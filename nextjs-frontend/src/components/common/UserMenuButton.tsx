@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { useIsAuthenticated, useUser } from '@/store/authStore';
 import { useLogoutModal } from '@/store/logoutModalStore';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
@@ -18,7 +18,8 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 }
 
 export function UserMenuButton({ className }: { className?: string }) {
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
   const openLogoutModal = useLogoutModal((s) => s.open);
   const pathname = usePathname();
   const [userMenuOpen, setUserMenuOpen] = useState(false);

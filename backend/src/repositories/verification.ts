@@ -22,6 +22,15 @@ export interface PhoneVerificationRow {
 export class VerificationRepository {
   // Email
 
+  async findLatestEmailVerification(userId: string): Promise<EmailVerificationRow | undefined> {
+    const db = await getDb();
+    const { rows } = await db.query(
+      'SELECT * FROM email_verifications WHERE user_id = $1 AND verified_at IS NULL ORDER BY created_at DESC LIMIT 1',
+      [userId],
+    );
+    return rows[0] as EmailVerificationRow | undefined;
+  }
+
   async createEmailVerification(data: { user_id: string; token_hash: string; expires_at: Date }): Promise<EmailVerificationRow> {
     const db = await getDb();
     const { rows } = await db.query(
@@ -56,11 +65,11 @@ export class VerificationRepository {
     return rows[0] as PhoneVerificationRow;
   }
 
-  async findPhoneVerificationByHash(hash: string, userId: string): Promise<PhoneVerificationRow | undefined> {
+  async findLatestPhoneVerification(userId: string, phone: string): Promise<PhoneVerificationRow | undefined> {
     const db = await getDb();
     const { rows } = await db.query(
-      'SELECT * FROM phone_verifications WHERE otp_hash = $1 AND user_id = $2 AND verified_at IS NULL ORDER BY created_at DESC LIMIT 1',
-      [hash, userId],
+      'SELECT * FROM phone_verifications WHERE user_id = $1 AND phone = $2 AND verified_at IS NULL ORDER BY created_at DESC LIMIT 1',
+      [userId, phone],
     );
     return rows[0] as PhoneVerificationRow | undefined;
   }

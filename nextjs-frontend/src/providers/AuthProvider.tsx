@@ -1,27 +1,37 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import api from '@/lib/api';
+import { clearAuthCookie } from '@/lib/cookies';
+import { useQuery } from '@tanstack/react-query';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { token, isAuthenticated, setUser, logout } = useAuthStore();
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useIsAuthenticated();
+  const setUser = useAuthStore((s) => s.setUser);
+  const logout = useAuthStore((s) => s.logout);
+
+  const { error } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const res = await api.get('/me');
+      setUser(res.data.data);
+      return res.data.data;
+    },
+    enabled: !!token && isAuthenticated,
+    staleTime: 30000,
+    gcTime: 300000,
+    retry: false,
+    meta: { persist: false },
+  });
 
   useEffect(() => {
-    if (token && isAuthenticated) {
-      if (token.startsWith('demo-token-') || token.startsWith('register-token-')) {
-        return;
-      }
-      api
-        .get('/me')
-        .then((res) => {
-          setUser(res.data.data);
-        })
-        .catch(() => {
-          logout();
-        });
+    if (error) {
+      logout();
+      clearAuthCookie();
     }
-  }, [token, isAuthenticated]);
+  }, [error, logout]);
 
   return <>{children}</>;
 }

@@ -36,6 +36,12 @@ export class ProvinceRepository {
     return rows[0] as ProvinceRow | undefined;
   }
 
+  async findBySlug(slug: string): Promise<ProvinceRow | undefined> {
+    const db = await getDb();
+    const { rows } = await db.query('SELECT * FROM provinces WHERE slug = $1', [slug]);
+    return rows[0] as ProvinceRow | undefined;
+  }
+
   async findCities(provinceId: number): Promise<CityRow[]> {
     const db = await getDb();
     const { rows } = await db.query(

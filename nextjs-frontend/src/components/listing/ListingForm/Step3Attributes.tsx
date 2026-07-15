@@ -4,25 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import type { JSX } from 'react';
 import type { Attribute } from '@/types';
 import { cn } from '@/lib/utils';
-
-// آیکون‌های مدرن SVG
-const Icons = {
-  chevronDown: <path d="M6 9l6 6 6-6" />,
-  upload: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12" />,
-  file: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6" />,
-  shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-  check: <path d="M20 6L9 17l-5-5" />,
-  alert: <path d="M12 8v4 M12 12v4 M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />,
-};
-
-const Icon = ({ path, className = "h-5 w-5" }: { path: JSX.Element; className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    {path}
-  </svg>
-);
 
 // استایل مشترک برای اینپوت‌ها و سلکت‌ها در تم دارک و لایت
 const inputSelectClasses = "w-full px-4 py-3.5 glass-input rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 appearance-none disabled:opacity-40 disabled:cursor-not-allowed";
@@ -134,14 +117,4 @@ export function Step3Attributes({ categorySlug, values, onChange }: Step3Attribu
       {/* بخش مدارک مالکیت - حذف شد چون backend این قابلیت را ندارد */}
     </div>
   );
-}
-
-function useCategorySlug(categoryId: number): string | null {
-  const { data: categories } = useQuery({
-    queryKey: queryKeys.categories.all,
-    queryFn: async () => { const res = await api.get('/categories'); return res.data.data as Array<{ id: number; slug: string; parent_id: number | null }>; },
-    staleTime: 300000,
-  });
-  const cat = categories?.find((c) => c.id === categoryId);
-  return cat?.slug ?? null;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { usePartStore } from '@/store/partStore';
+import { useParts } from '@/hooks/useParts';
 import { PartCard } from './PartCard';
 
 interface CompatiblePartsProps {
@@ -9,33 +9,33 @@ interface CompatiblePartsProps {
   limit?: number;
 }
 
-const CATEGORY_MAP: Record<string, string> = {
-  excavator: 'excavator',
-  loader: 'loader',
-  bulldozer: 'bulldozer',
-  crane: 'crane',
-  truck: 'truck',
-  tractor: 'tractor',
-  forklift: 'forklift',
-  'combine-harvester': 'combine-harvester',
-  trailer: 'trailer',
-  pickup: 'pickup',
-  car: 'car',
-  sedan: 'sedan',
-  motorcycle: 'motorcycle',
-  generator: 'generator',
-  bicycle: 'bicycle',
+const COMPATIBLE_CATEGORIES: Record<string, string[]> = {
+  excavator: ['excavator'],
+  loader: ['loader'],
+  bulldozer: ['bulldozer'],
+  crane: ['crane'],
+  truck: ['truck'],
+  tractor: ['tractor'],
+  forklift: ['forklift'],
+  'combine-harvester': ['combine-harvester'],
+  trailer: ['trailer'],
+  pickup: ['pickup'],
+  car: ['car', 'sedan'],
+  sedan: ['car', 'sedan'],
+  motorcycle: ['motorcycle'],
+  generator: ['generator'],
+  bicycle: ['bicycle'],
 };
 
 export function CompatibleParts({ categorySlug, categoryName, limit = 6 }: CompatiblePartsProps) {
-  const getPartsByCategory = usePartStore((s) => s.getPartsByCategory);
+  const { data: allParts } = useParts();
 
   if (!categorySlug) return null;
 
-  const mapped = CATEGORY_MAP[categorySlug];
-  if (!mapped) return null;
+  const allowed = COMPATIBLE_CATEGORIES[categorySlug];
+  if (!allowed) return null;
 
-  const parts = getPartsByCategory(mapped);
+  const parts = (allParts ?? []).filter((p: { category: string }) => allowed.includes(p.category));
   const displayParts = parts.slice(0, limit);
 
   if (!displayParts.length) return null;
@@ -52,7 +52,7 @@ export function CompatibleParts({ categorySlug, categoryName, limit = 6 }: Compa
         <span className="text-[10px] text-muted-foreground">{categoryName || categorySlug}</span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {displayParts.map((part) => (
+        {displayParts.map((part: { id: number; name: string; price: number; image: string; category: string; partNumber: string; inStock: boolean; compatibility: string; description: string }) => (
           <PartCard key={part.id} part={part} />
         ))}
       </div>

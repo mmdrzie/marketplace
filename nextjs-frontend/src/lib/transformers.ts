@@ -1,5 +1,5 @@
 import type { Listing, ListingDetail, User, DealerProfile, Conversation, Message, Article, Category, Attribute, Province, City, Notification } from '@/types';
-import type { BackendListing, BackendListingDetail, BackendUser, BackendDealerProfile, BackendConversation, BackendMessage, BackendArticle, BackendCategory, BackendAttribute, BackendProvince, BackendCity, BackendNotification, BackendDealerStats } from '@/types/backend';
+import type { BackendListing, BackendListingDetail, BackendUser, BackendDealerProfile, BackendConversation, BackendMessage, BackendArticle, BackendCategory, BackendAttribute, BackendProvince, BackendCity, BackendNotification } from '@/types/backend';
 
 export function transformUser(b: BackendUser): User {
   return {
@@ -35,7 +35,7 @@ function transformDealerProfile(b: BackendDealerProfile): DealerProfile {
 
 export function transformListing(b: BackendListing): Listing {
   return {
-    id: b.id as unknown as number,
+    id: String(b.id),
     title: b.title,
     slug: b.slug,
     price: b.price,
@@ -121,12 +121,12 @@ function transformCity(b: BackendCity): City {
 export function transformConversation(b: BackendConversation): Conversation {
   return {
     id: b.id as unknown as number,
-    listing: null,
-    buyer: { id: b.buyer_id, name: b.buyer_name } as unknown as User,
-    seller: { id: b.seller_id, name: b.seller_name } as unknown as User,
+    listing: b.listing_title ? { title: b.listing_title, slug: b.listing_slug, primary_image: b.listing_image } as unknown as Listing : null,
+    buyer: { id: b.buyer_id, name: b.buyer_name, avatar: b.buyer_avatar } as unknown as User,
+    seller: { id: b.seller_id, name: b.seller_name, avatar: b.seller_avatar } as unknown as User,
     buyer_id: b.buyer_id as unknown as number,
     seller_id: b.seller_id as unknown as number,
-    last_message: b.last_message ? transformMessage(b.last_message) : null,
+    last_message: b.last_message ? { body: b.last_message } as unknown as Message : null,
     last_message_at: b.last_message_at,
     created_at: b.created_at,
     messages: b.messages?.map(transformMessage),
@@ -175,20 +175,5 @@ export function transformNotification(b: BackendNotification): Notification {
     data: b.data,
     is_read: b.is_read,
     created_at: b.created_at,
-  };
-}
-
-export function transformDealerStats(b: BackendDealerStats) {
-  return {
-    total_listings: b.total_listings,
-    active_listings: b.active_listings,
-    total_views: b.total_views,
-    total_contacts: b.total_contacts,
-    total_favorites: b.total_favorites,
-    subscription_plan: b.subscription_plan,
-    listings_limit: b.listings_limit,
-    today_views: b.total_views,
-    today_contacts: b.total_contacts,
-    unread_messages: 0,
   };
 }

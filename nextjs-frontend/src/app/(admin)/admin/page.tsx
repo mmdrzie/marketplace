@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
           {pendingLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-14 bg-surface-2 rounded-xl animate-pulse" />
+                <div key={i} className="h-14 bg-surface-2 rounded-xl motion-safe:animate-pulse" />
               ))}
             </div>
           ) : pendingListings.length === 0 ? (

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { userRepo } from '../../repositories/user.js';
+import { dealerRepo } from '../../repositories/dealer.js';
 import { refreshTokenRepo } from '../../repositories/refreshToken.js';
 import { signAccessToken, signRefreshToken } from '../../services/jwt.js';
 import { AppError } from '../../errors.js';
@@ -137,11 +138,10 @@ export class AuthService {
     });
 
     const newRefreshToken = await signRefreshToken(user.id);
-    const newRefreshHash = await bcrypt.hash(newRefreshToken, 10);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await refreshTokenRepo.create({
       user_id: user.id,
-      token_hash: newRefreshHash,
+      token_hash: sha256(newRefreshToken),
       expires_at: expiresAt,
     });
 
@@ -163,12 +163,53 @@ export class AuthService {
     return this.sanitizeUser(user);
   }
 
-  async updateProfile(userId: string, data: { name?: string; avatar?: string | null }) {
-    const user = await userRepo.update(userId, data);
-    if (!user) {
-      throw AppError.notFound('User not found');
+  async updateProfile(
+    userId: string,
+    data: {
+      name?: string;
+      avatar?: string | null;
+      phone?: string | null;
+      email?: string;
+      city?: string | null;
+      business_name?: string;
+      dealer_code?: string;
+      business_address?: string;
+      business_description?: string;
+    },
+  ) {
+    const existing = await userRepo.findById(userId);
+    if (!existing) throw AppError.notFound('User not found');
+
+    const userFields: { name?: string; avatar?: string | null; phone?: string | null; email?: string; city?: string | null; email_verified_at?: string | null } = {};
+    if (data.name !== undefined) userFields.name = data.name;
+    if (data.avatar !== undefined) userFields.avatar = data.avatar;
+    if (data.phone !== undefined) userFields.phone = data.phone;
+    if (data.city !== undefined) userFields.city = data.city;
+    if (data.email !== undefined && data.email !== existing.email) {
+      userFields.email = data.email;
+      userFields.email_verified_at = null;
     }
-    return this.sanitizeUser(user);
+
+    const updatedUser = await userRepo.update(userId, userFields);
+    if (!updatedUser) throw AppError.notFound('User not found');
+
+    const isDealer = updatedUser.role === 'dealer' || updatedUser.role === 'agency';
+    const hasDealerFields =
+      data.business_name !== undefined ||
+      data.dealer_code !== undefined ||
+      data.business_address !== undefined ||
+      data.business_description !== undefined;
+
+    if (isDealer && hasDealerFields) {
+      await dealerRepo.update(userId, {
+        business_name: data.business_name,
+        dealer_code: data.dealer_code,
+        address: data.business_address,
+        description: data.business_description,
+      });
+    }
+
+    return this.sanitizeUser(updatedUser);
   }
 
   async forgotPassword(email: string) {

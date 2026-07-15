@@ -47,7 +47,39 @@ export function ImageUploader({ onImagesChange, maxImages = 15 }: ImageUploaderP
     };
   }, []);
 
-  const uploadImage = useCallback(async (file: File) => {
+  const compressImage = useCallback(async (file: File): Promise<File> => {
+    const MAX_DIM = 1920;
+    const QUALITY = 0.8;
+
+    if (!file.type.startsWith('image/')) return file;
+
+    const img = await createImageBitmap(file);
+    let { width, height } = img;
+    if (width > MAX_DIM || height > MAX_DIM) {
+      const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { img.close(); return file; }
+    ctx.drawImage(img, 0, 0, width, height);
+    img.close();
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const mimeType = width > 1920 || height > 1920 ? 'image/webp' : file.type;
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mimeType, QUALITY));
+    if (!blob) return file;
+
+    const compressedName = file.name.replace(/\.[^.]+$/, `.${mimeType === 'image/webp' ? 'webp' : ext}`);
+    return new File([blob], compressedName, { type: mimeType });
+  }, []);
+
+  const uploadImage = useCallback(async (rawFile: File) => {
+    const file = await compressImage(rawFile);
     const id = Math.random().toString(36).substring(2);
     const tempUrl = URL.createObjectURL(file);
     tempUrlsRef.current.push(tempUrl);
@@ -66,11 +98,10 @@ export function ImageUploader({ onImagesChange, maxImages = 15 }: ImageUploaderP
     try {
       const presigned = await api.post('/upload/presigned', {
         filename: file.name,
-        content_type: file.type,
-        size: file.size,
+        contentType: file.type,
       });
 
-      const { upload_url, object_key } = presigned.data.data;
+      const { upload_url, public_url } = presigned.data.data;
 
       await fetch(upload_url, {
         method: 'PUT',
@@ -81,7 +112,7 @@ export function ImageUploader({ onImagesChange, maxImages = 15 }: ImageUploaderP
       setImages((prev) => {
         const updated = prev.map((img) =>
           img.id === id
-            ? { ...img, objectKey: object_key, uploading: false, progress: 100 }
+            ? { ...img, objectKey: public_url || upload_url, uploading: false, progress: 100 }
             : img
         );
         const keys = updated.map((img) => img.objectKey).filter(Boolean);

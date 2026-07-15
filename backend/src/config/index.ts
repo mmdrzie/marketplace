@@ -5,13 +5,13 @@ export const config = {
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 
   database: {
-    url: process.env.DATABASE_URL || 'postgres://marketplace:marketplace_pass@localhost:5432/marketplace',
+    url: process.env.DATABASE_URL,
     poolMin: parseInt(process.env.DB_POOL_MIN || '2', 10),
     poolMax: parseInt(process.env.DB_POOL_MAX || '10', 10),
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+    secret: process.env.JWT_SECRET,
     accessTtl: process.env.JWT_ACCESS_TTL || '15m',
     refreshTtl: process.env.JWT_REFRESH_TTL || '7d',
   },
@@ -56,6 +56,7 @@ export const config = {
 
   rateLimits: {
     global: { limit: parseInt(process.env.GLOBAL_RATE_LIMIT || '100', 10), window: parseInt(process.env.GLOBAL_RATE_WINDOW || '60', 10) },
+    admin: { limit: parseInt(process.env.ADMIN_RATE_LIMIT || '30', 10), window: parseInt(process.env.ADMIN_RATE_WINDOW || '60', 10) },
     login: { limit: parseInt(process.env.LOGIN_RATE_LIMIT || '5', 10), window: parseInt(process.env.LOGIN_RATE_WINDOW || '900', 10) },
     register: { limit: parseInt(process.env.REGISTER_RATE_LIMIT || '5', 10), window: parseInt(process.env.REGISTER_RATE_WINDOW || '3600', 10) },
     otpSend: { limit: parseInt(process.env.OTP_SEND_RATE_LIMIT || '3', 10), window: parseInt(process.env.OTP_SEND_RATE_WINDOW || '3600', 10) },

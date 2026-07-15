@@ -26,10 +26,12 @@ export type CreateUserData = {
 export type UpdateUserData = {
   name?: string;
   avatar?: string | null;
-  phone?: string;
+  phone?: string | null;
+  email?: string;
+  city?: string | null;
   role?: string;
   status?: string;
-  email_verified_at?: string;
+  email_verified_at?: string | null;
   phone_verified_at?: string;
   password_hash?: string;
 };

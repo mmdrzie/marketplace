@@ -16,7 +16,7 @@ export function CompareBar() {
   const count = items.length;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background/80 backdrop-blur-xl animate-slide-up">
+    <div className="fixed bottom-0 inset-x-0 z-[60] border-t border-border bg-background/80 backdrop-blur-xl animate-slide-up">
       {/* سرصفحه — همیشه نمایش داده می‌شود */}
       <div className="max-w-7xl mx-auto px-3 md:px-4 py-2 md:py-3 flex items-center gap-3">
         {/* دکمه باز/بستن در موبایل */}
@@ -80,9 +80,9 @@ export function CompareBar() {
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ maxHeight: 0, opacity: 0 }}
+            animate={{ maxHeight: 200, opacity: 1 }}
+            exit={{ maxHeight: 0, opacity: 0 }}
             className="md:hidden overflow-hidden border-t border-border"
           >
             <div className="flex gap-3 px-3 py-3 overflow-x-auto scrollbar-none">

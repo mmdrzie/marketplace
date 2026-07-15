@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { memo, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface HealthScoreBadgeProps {
@@ -30,11 +30,20 @@ const sizes = {
   lg: { donut: 56, stroke: 5, text: 'text-sm', label: 'text-sm' },
 };
 
-export function HealthScoreBadge({ score, size = 'md', showLabel = true, className }: HealthScoreBadgeProps) {
+const HealthScoreBadge = memo(function HealthScoreBadge({ score, size = 'md', showLabel = true, className }: HealthScoreBadgeProps) {
   const cfg = sizes[size];
   const r = (cfg.donut - cfg.stroke) / 2;
   const circumference = 2 * Math.PI * r;
   const offset = circumference * (1 - score / 100);
+  const circleRef = useRef<SVGCircleElement>(null);
+
+  useEffect(() => {
+    if (circleRef.current) {
+      requestAnimationFrame(() => {
+        if (circleRef.current) circleRef.current.style.strokeDashoffset = String(offset);
+      });
+    }
+  }, [offset]);
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
@@ -45,16 +54,14 @@ export function HealthScoreBadge({ score, size = 'md', showLabel = true, classNa
             fill="none" stroke="currentColor" strokeWidth={cfg.stroke}
             className="text-border-subtle"
           />
-          <motion.circle
+          <circle ref={circleRef}
             cx={cfg.donut / 2} cy={cfg.donut / 2} r={r}
             fill="none"
             stroke="currentColor"
             strokeWidth={cfg.stroke}
             strokeLinecap="round"
             strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
+            style={{ strokeDashoffset: circumference, transition: 'stroke-dashoffset 1.2s ease-out' }}
             className={scoreColor(score)}
           />
         </svg>
@@ -70,4 +77,6 @@ export function HealthScoreBadge({ score, size = 'md', showLabel = true, classNa
       )}
     </div>
   );
-}
+});
+
+export { HealthScoreBadge };

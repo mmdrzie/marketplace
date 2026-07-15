@@ -1,10 +1,7 @@
-'use client';
-
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useArticle, useArticles } from '@/hooks/useArticles';
 import { NewsCard } from '@/components/news/NewsCard';
 import { FadeIn } from '@/components/common/MotionDiv';
+import { SanitizedHtml } from '@/components/common/SanitizedHtml';
 import type { Article } from '@/types';
 
 const CATEGORY_STYLES: Record<string, { badge: string }> = {
@@ -14,39 +11,28 @@ const CATEGORY_STYLES: Record<string, { badge: string }> = {
   announcement: { badge: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
-export default function ArticlePage() {
-  const { slug } = useParams<{ slug: string }>();
-  const { data: article, isLoading } = useArticle(slug);
-  const { data: allArticles } = useArticles();
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-  const related = ((allArticles as Article[]) || [])
-    .filter((a) => a.slug !== slug && a.category === article?.category)
-    .slice(0, 3);
+async function fetchArticle(slug: string): Promise<Article | null> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/articles/${slug}`, { next: { revalidate: 120 } });
+    if (!res.ok) return null;
+    return (await res.json()).data;
+  } catch { return null; }
+}
 
-  if (isLoading) {
-    return (
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 py-12 md:py-20">
-          <div className="animate-pulse space-y-6">
-            <div className="h-6 w-32 bg-surface-2 rounded-full" />
-            <div className="h-12 w-full bg-surface-2 rounded-xl" />
-            <div className="h-12 w-3/4 bg-surface-2 rounded-xl" />
-            <div className="flex gap-4">
-              <div className="h-5 w-24 bg-surface-2/70 rounded-full" />
-              <div className="h-5 w-32 bg-surface-2/70 rounded-full" />
-            </div>
-            <div className="h-64 w-full bg-surface/40 border border-border rounded-3xl" />
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-4 w-full bg-surface-2/50 rounded-lg" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+async function fetchArticles(): Promise<Article[]> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/articles`, { next: { revalidate: 120 } });
+    if (!res.ok) return [];
+    return (await res.json()).data;
+  } catch { return []; }
+}
+
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const article = await fetchArticle(slug);
+  const allArticles = await fetchArticles();
 
   if (!article) {
     return (
@@ -63,6 +49,10 @@ export default function ArticlePage() {
       </div>
     );
   }
+
+  const related = (allArticles || [])
+    .filter((a: Article) => a.slug !== slug && a.category === article.category)
+    .slice(0, 3);
 
   const style = CATEGORY_STYLES[article.category] || CATEGORY_STYLES.guide;
 
@@ -111,7 +101,8 @@ export default function ArticlePage() {
             </span>
           </div>
 
-          <div
+          <SanitizedHtml
+            html={article.body}
             className="prose prose-sm md:prose-base max-w-none text-foreground leading-relaxed space-y-4 
                         [&_p]:text-muted-foreground [&_p]:leading-8 [&_p:font-light]
                         [&_h2]:text-foreground [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-4
@@ -121,7 +112,6 @@ export default function ArticlePage() {
                         [&_ul]:text-muted-foreground [&_ul]:list-disc [&_ul]:pr-6 [&_ul]:space-y-2
                         [&_ol]:text-muted-foreground [&_ol]:list-decimal [&_ol]:pr-6 [&_ol]:space-y-2
                         [&_blockquote]:border-r-2 [&_blockquote]:border-primary/50 [&_blockquote]:pr-4 [&_blockquote]:text-muted-foreground [&_blockquote]:italic"
-            dangerouslySetInnerHTML={{ __html: article.body }}
           />
 
           <div className="mt-12 pt-8 border-t border-border">

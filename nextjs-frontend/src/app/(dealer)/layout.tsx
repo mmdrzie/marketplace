@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useLogoutModal } from '@/store/logoutModalStore';
+import { EchoProvider } from '@/providers/EchoProvider';
+import { RealtimeNotificationListener } from '@/components/common/RealtimeNotificationListener';
 import Link from 'next/link';
 
 function SvgIcon({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -16,7 +17,8 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 }
 
 export default function DealerLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useIsAuthenticated();
   const router = useRouter();
   const pathname = usePathname();
   const openLogoutModal = useLogoutModal((s) => s.open);
@@ -57,6 +59,7 @@ export default function DealerLayout({ children }: { children: React.ReactNode }
   ];
 
   return (
+    <EchoProvider>
     <div className="relative min-h-screen flex bg-background text-foreground">
         <div className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full blur-[150px] -z-0 ${isAgency ? 'bg-warning/5' : ''}`} style={!isAgency ? { backgroundColor: 'color-mix(in srgb, var(--color-success) 5%, transparent)' } : {}} />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[130px] -z-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-blue) 5%, transparent)' }} />
@@ -153,5 +156,7 @@ export default function DealerLayout({ children }: { children: React.ReactNode }
         <div className="flex-1 p-4 md:p-8">{children}</div>
       </main>
     </div>
+      <RealtimeNotificationListener />
+    </EchoProvider>
   );
 }

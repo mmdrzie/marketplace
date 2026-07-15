@@ -16,7 +16,7 @@ const NOTIF_LABELS: Record<string, string> = {
 
 export function useRealtimeNotifications() {
   const { echo } = useEcho();
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
 
   useEffect(() => {

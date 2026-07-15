@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import { formatRelativeTime } from '@/lib/utils';
 import { queryKeys } from '@/lib/queryKeys';
+import { toast } from '@/components/common/Toast';
 
 export default function AdminReportsPage() {
   const queryClient = useQueryClient();
@@ -16,7 +17,8 @@ export default function AdminReportsPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => { await api.put(`/admin/reports/${id}`, { status }); },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.reports }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.reports }); toast({ type: 'success', title: 'گزارش بروزرسانی شد' }); },
+    onError: () => { toast({ type: 'error', title: 'خطا', message: 'بروزرسانی گزارش با مشکل مواجه شد' }); },
   });
 
   const reports = data?.data || [];
@@ -26,7 +28,7 @@ export default function AdminReportsPage() {
       <h1 className="text-2xl font-bold text-foreground">گزارشات</h1>
 
       {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-surface-2 rounded-xl animate-pulse" />)}</div>
+        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-surface-2 rounded-xl motion-safe:animate-pulse" />)}</div>
       ) : reports.length === 0 ? (
         <div className="glass rounded-2xl p-12 text-center">
           <p className="text-muted-foreground">گزارشی ثبت نشده است</p>

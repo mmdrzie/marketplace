@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
-import { useTenderStore, TENDER_TYPE_LABELS } from '@/store/tenderStore';
+import { useCreateTender } from '@/hooks/useTenders';
+import { TENDER_TYPE_LABELS } from '@/store/tenderStore';
 import type { TenderType } from '@/store/tenderStore';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import { toast } from '@/components/common/Toast';
@@ -26,8 +26,7 @@ const MACHINE_TYPES = ['بیل مکانیکی', 'لودر', 'بولدوزر', '�
 
 export function TenderForm() {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const createTender = useTenderStore((s) => s.createTender);
+  const createTender = useCreateTender();
 
   const [type, setType] = useState<TenderType>('rental');
   const [title, setTitle] = useState('');
@@ -46,20 +45,12 @@ export function TenderForm() {
       toast({ type: 'error', title: 'لطفاً فیلدهای ضروری را پر کنید' });
       return;
     }
-    const province = PROVINCES.find((p) => String(p.id) === provinceId);
-    createTender({
-      userId: user?.id || 1,
-      userName: user?.name || 'کاربر',
+    createTender.mutateAsync({
       title: title.trim(),
       description: description.trim(),
-      machineType,
-      quantity: Number(quantity) || 1,
-      duration: type === 'purchase' ? '—' : duration,
-      budgetMin: Number(budgetMin) || 0,
-      budgetMax: Number(budgetMax) || 0,
-      provinceId: Number(provinceId),
-      provinceName: province?.name || '',
-      type,
+      category: machineType,
+      province_id: Number(provinceId),
+      budget: Number(budgetMax) || 0,
       deadline: new Date(deadline).toISOString(),
     });
     toast({ type: 'success', title: 'درخواست شما ثبت شد' });

@@ -4,6 +4,7 @@ import { corsMiddleware } from '../src/middleware/cors.js';
 import { rateLimiter } from '../src/middleware/rateLimiter.js';
 import { errorWrapper } from '../src/middleware/errorWrapper.js';
 import { apiRouter } from '../src/routes/index.js';
+import { docsRouter } from '../src/routes/docs.js';
 import { config } from '../src/config/index.js';
 import { ErrorCode } from '../src/shared/index.js';
 
@@ -13,6 +14,7 @@ app.use('*', corsMiddleware());
 app.use('*', errorWrapper());
 app.use('/api/*', rateLimiter('global'));
 
+app.route('/api/v1', docsRouter);
 app.route(config.apiPrefix, apiRouter);
 
 app.notFound((c) => {

@@ -1,6 +1,6 @@
 'use client';
-
 import { useState } from 'react';
+import Image from 'next/image';
 import { formatRelativeTime } from '@/lib/utils';
 import type { Message } from '@/types';
 
@@ -30,9 +30,11 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
                   onClick={() => setImageViewer(att.url)}
                   className="rounded-xl overflow-hidden group relative"
                 >
-                  <img
+                  <Image
                     src={att.thumbnail_url || att.url}
                     alt=""
+                    width={400}
+                    height={200}
                     className="w-full h-32 md:h-40 object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl" />
@@ -72,7 +74,8 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           <button onClick={() => setImageViewer(null)} className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
           </button>
-          <img src={imageViewer} alt="" className="max-w-full max-h-[90vh] object-contain rounded-2xl" onClick={(e) => e.stopPropagation()} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={imageViewer} alt="" className="max-w-full max-h-[90vh] object-contain rounded-2xl" onClick={(e) => e.stopPropagation()} loading="lazy" />
         </div>
       )}
     </>

@@ -156,7 +156,7 @@ export function ServiceLogForm({ onSubmit, onCancel }: ServiceLogFormProps) {
         {docNames.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {docNames.map((name, i) => (
-              <span key={i} className="text-[10px] bg-surface-2 border border-border-subtle px-2 py-0.5 rounded-md text-muted-foreground flex items-center gap-1">
+              <span key={name} className="text-[10px] bg-surface-2 border border-border-subtle px-2 py-0.5 rounded-md text-muted-foreground flex items-center gap-1">
                 {name}
                 <button type="button" onClick={() => setDocNames((prev) => prev.filter((_, j) => j !== i))} className="hover:text-destructive">
                   <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>

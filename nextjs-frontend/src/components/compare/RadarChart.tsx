@@ -67,7 +67,7 @@ export function RadarChart({ series, categories, size = 320, className = '' }: R
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <svg width={size} height={size} className="overflow-visible">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible w-full max-w-[320px] h-auto">
         <defs>
           {series.map((s, i) => (
             <linearGradient key={i} id={`radar-fill-${i}`} x1="0" y1="0" x2="0" y2="1">

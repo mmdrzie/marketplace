@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 
 interface DepreciationItem {
-  id: number;
+  id: string | number;
   title: string;
   price: number;
   color: string;

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { useEscrowStore } from '@/store/escrowStore';
+import { useEscrowDeals } from '@/hooks/useEscrow';
 import type { DealStatus } from '@/store/escrowStore';
 import { TransactionCard } from '@/components/escrow/TransactionCard';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -19,12 +19,13 @@ const TABS: { key: DealStatus | 'all'; label: string }[] = [
 ];
 
 export default function DealsPage() {
-  const { user } = useAuthStore();
-  const deals = useEscrowStore((s) => s.deals);
+  const user = useAuthStore((s) => s.user);
+  const { data: deals } = useEscrowDeals();
+  const dealList = deals ?? [];
   const [tab, setTab] = useState<DealStatus | 'all'>('all');
 
-  const userDeals = deals.filter((d) => d.buyerId === user?.id || d.sellerId === user?.id);
-  const filtered = tab === 'all' ? userDeals : userDeals.filter((d) => d.status === tab);
+  const userDeals = dealList.filter((d: { buyerId: string | number; sellerId: string | number }) => d.buyerId === user?.id || d.sellerId === user?.id);
+  const filtered = tab === 'all' ? userDeals : userDeals.filter((d: { status: DealStatus }) => d.status === tab);
 
   return (
     <FadeIn>
@@ -43,7 +44,7 @@ export default function DealsPage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
             <div>
               <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm shadow-sm">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
                 SECURE DEALS
               </span>
               <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">معاملات امن</h1>
@@ -80,7 +81,7 @@ export default function DealsPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {filtered.map((deal) => (
+              {filtered.map((deal: { id: number; buyerId: string | number; sellerId: string | number; status: DealStatus; listingTitle: string; listingSlug: string; listingId: number; amount: number; buyerName: string; sellerName: string; listingImage?: string; createdAt: string; updatedAt: string; notes?: string }) => (
                 <TransactionCard key={deal.id} deal={deal} isBuyer={deal.buyerId === user?.id} />
               ))}
             </div>

@@ -1,39 +1,30 @@
-'use client';
-
-import { useParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
-import api from '@/lib/api';
-import { queryKeys } from '@/lib/queryKeys';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { formatDate } from '@/lib/utils';
 import type { User, Listing } from '@/types';
 
-export default function UserProfilePage() {
-  const { id } = useParams<{ id: string }>();
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-  const { data: apiUser } = useQuery({
-    queryKey: queryKeys.users.profile(id),
-    queryFn: async () => {
-      const res = await api.get(`/users/${id}/profile`);
-      return res.data.data as User;
-    },
-    enabled: !!id,
-  });
+export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
-  const { data: apiListings } = useQuery({
-    queryKey: ['listings', 'seller', id],
-    queryFn: async () => { const res = await api.get('/listings', { params: { seller_id: id } }); return res.data.data as Listing[]; },
-    enabled: !!id,
-  });
+  let user: User | null = null;
+  let listings: Listing[] = [];
+  try {
+    const [userRes, listingsRes] = await Promise.all([
+      fetch(`${BASE_URL}/api/v1/users/${id}/profile`, { next: { revalidate: 60 } }),
+      fetch(`${BASE_URL}/api/v1/listings?seller_id=${id}`, { next: { revalidate: 60 } }),
+    ]);
+    if (userRes.ok) user = (await userRes.json()).data;
+    if (listingsRes.ok) listings = (await listingsRes.json()).data ?? [];
+  } catch {
+    /* empty */
+  }
 
-  const user = apiUser;
-  const listings = apiListings ?? [];
-
-  if (!user && !apiUser) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

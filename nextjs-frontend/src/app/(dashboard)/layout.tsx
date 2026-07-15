@@ -3,20 +3,22 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { EchoProvider } from '@/providers/EchoProvider';
+import { RealtimeNotificationListener } from '@/components/common/RealtimeNotificationListener';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { useLogoutModal } from '@/store/logoutModalStore';
 
 function SvgIcon({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-5 w-5'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-5 w-5'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const openLogoutModal = useLogoutModal((s) => s.open);
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,6 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <AuthGuard>
+      <EchoProvider>
       <div className="relative min-h-screen flex bg-background text-foreground">
 
         {/* پس‌زمینه داینامیک معماری */}
@@ -47,7 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] -z-0 pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] -z-0 pointer-events-none" />
 
-        <aside className={`fixed md:sticky top-0 md:h-screen inset-y-0 right-0 z-40 w-72 transform transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
+        <aside className={`fixed md:sticky top-0 md:h-screen inset-y-0 right-0 z-40 w-72 max-w-[85vw] transform transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
           <div className="h-full glass rounded-l-3xl border-l border-border flex flex-col">
 
             {/* هدر پروفایل */}
@@ -60,7 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <p className="text-sm font-bold text-foreground truncate">{user?.name || 'کاربر'}</p>
                   <p className="text-xs text-muted-foreground truncate">{roleLabel}</p>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-2 shrink-0">
+                <button onClick={() => setSidebarOpen(false)} className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-2 shrink-0" aria-label="بستن منو">
                   <SvgIcon className="h-4 w-4"><path d="M18 6L6 18M6 6l12 12" /></SvgIcon>
                 </button>
               </div>
@@ -166,11 +169,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* هدر موبایل */}
           <div className="flex items-center justify-between gap-3 p-4 md:hidden border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-20">
-            <button onClick={() => setSidebarOpen(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-2/50 transition-colors">
+            <button onClick={() => setSidebarOpen(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-2/50 transition-colors" aria-label="باز کردن منو">
               <SvgIcon className="h-5 w-5"><path d="M4 6h16M4 12h16M4 18h16" /></SvgIcon>
             </button>
             <span className="font-bold text-base text-foreground">پنل کاربری</span>
-            <Link href="/" className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-2/50 transition-colors">
+            <Link href="/" className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-2/50 transition-colors" aria-label="صفحه اصلی">
               <SvgIcon className="h-5 w-5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></SvgIcon>
             </Link>
           </div>
@@ -178,6 +181,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex-1 p-4 md:p-8">{children}</div>
         </main>
       </div>
+      <RealtimeNotificationListener />
+    </EchoProvider>
     </AuthGuard>
   );
 }

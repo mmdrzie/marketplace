@@ -1,10 +1,5 @@
-'use client';
-
-import { use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
 import { FEATURES } from '@/lib/features';
 import { ImportedBadge } from '@/components/imported/ImportedBadge';
 import { CustomsStatusCard } from '@/components/imported/CustomsStatusCard';
@@ -12,15 +7,19 @@ import { BrandOriginTag } from '@/components/imported/BrandOriginTag';
 import { PriceHistoryChart } from '@/components/common/Charts';
 import { generateImportPriceTrend } from '@/lib/importChartData';
 
-export default function ImportedDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  if (!FEATURES.importedVehicles) notFound();
-  const { id } = use(params);
-  const { data: listing } = useQuery({
-    queryKey: ['imported-listing', id],
-    queryFn: async () => { const res = await api.get(`/listings/${id}`); return res.data.data; },
-    enabled: !!id,
-    retry: 2,
+async function fetchListing(id: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/listings/${id}`, {
+    next: { revalidate: 60 },
   });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data;
+}
+
+export default async function ImportedDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  if (!FEATURES.importedVehicles) notFound();
+  const { id } = await params;
+  const listing = await fetchListing(id);
   
   if (!listing) {
     return (
@@ -37,8 +36,12 @@ export default function ImportedDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const detail = listing;
-  const getAttr = (attrId: number) => (listing as any).attributes?.find((a: any) => a.attribute_id === attrId)?.value;
+  const listingRecord = listing as Record<string, unknown>;
+  const attrs = (Array.isArray(listingRecord?.attributes) ? listingRecord.attributes : []) as Array<Record<string, unknown>>;
+  const getAttr = (attrId: number): string | undefined => {
+    const v = attrs.find((a) => a.attribute_id === attrId)?.value;
+    return typeof v === 'string' ? v : undefined;
+  };
   const country = getAttr(201);
   const customsStatus = getAttr(203);
   const importYear = getAttr(204);
@@ -50,7 +53,7 @@ export default function ImportedDetailPage({ params }: { params: Promise<{ id: s
   const engineCc = getAttr(210);
   const color = getAttr(211);
   const warranty = getAttr(212);
-  const chartData = generateImportPriceTrend((listing as any)?.title?.split(' ')[0] || '');
+  const chartData = generateImportPriceTrend(typeof listingRecord?.title === 'string' ? listingRecord.title.split(' ')[0] : '');
 
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
@@ -79,7 +82,7 @@ export default function ImportedDetailPage({ params }: { params: Promise<{ id: s
                 <rect x="3" y="3" width="18" height="14" rx="2" /><path d="M21 17v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2" />
               </svg>
               <div className="absolute top-4 right-4 flex gap-2">
-                <ImportedBadge country={country || null} customsStatus={customsStatus || null} size="md" />
+                <ImportedBadge country={(country as string) || null} customsStatus={(customsStatus as string) || null} size="md" />
                 {listing.is_featured && (
                   <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-warning/10 text-warning border border-warning/20 uppercase tracking-wider">VIP</span>
                 )}

@@ -3,8 +3,10 @@ import { renderHook, act } from '@testing-library/react';
 import { useAuth } from './useAuth';
 import type { User } from '@/types';
 
-const mockSetAuth = vi.fn();
-const mockStoreLogout = vi.fn();
+const { mockSetAuth, mockStoreLogout } = vi.hoisted(() => ({
+  mockSetAuth: vi.fn(),
+  mockStoreLogout: vi.fn(),
+}));
 
 const mockApiPost = vi.hoisted(() => vi.fn());
 
@@ -12,15 +14,15 @@ vi.mock('@/lib/api', () => ({
   default: { post: mockApiPost },
 }));
 
-vi.mock('@/store/authStore', () => ({
-  useAuthStore: Object.assign(
-    () => ({ setAuth: mockSetAuth, logout: mockStoreLogout }),
-    { getState: () => ({ token: null, user: null, setAuth: mockSetAuth, logout: mockStoreLogout }) },
-  ),
-}));
+vi.mock('@/store/authStore', () => {
+  const store = { token: null, user: null, setAuth: mockSetAuth, logout: mockStoreLogout };
+  return {
+    useAuthStore: (selector: (s: typeof store) => unknown) => selector(store),
+  };
+});
 
 const mockUser: User = {
-  id: 1,
+  id: '1',
   name: 'test',
   avatar: null,
   city: null,
@@ -44,7 +46,7 @@ describe('useAuth', () => {
     });
 
     expect(mockApiPost).toHaveBeenCalledWith('/auth/register', { email: 'test@test.com', password: 'password123', name: 'Test' });
-    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser);
+    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser, undefined);
   });
 
   it('handles register error', async () => {
@@ -69,7 +71,7 @@ describe('useAuth', () => {
     });
 
     expect(mockApiPost).toHaveBeenCalledWith('/auth/login', { email: 'test@test.com', password: 'password123' });
-    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser);
+    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser, undefined);
   });
 
   it('handles login error', async () => {

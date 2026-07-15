@@ -11,6 +11,8 @@ export interface PaymentInterface {
   refund(providerPaymentId: string, amount?: number): Promise<PaymentResult>;
 }
 
+import { NoopPaymentProvider } from './providers/noop.js';
+
 export function createPaymentProvider(): PaymentInterface {
   const providerName = process.env.PAYMENT_PROVIDER || 'noop';
 
@@ -20,6 +22,5 @@ export function createPaymentProvider(): PaymentInterface {
   }
 
   // Default: NoopPaymentProvider
-  const { NoopPaymentProvider } = require('./providers/noop');
   return new NoopPaymentProvider();
 }

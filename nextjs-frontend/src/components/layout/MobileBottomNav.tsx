@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { useIsAuthenticated } from '@/store/authStore';
 // SVG icon paths
 const icons = {
   home: <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></>,
@@ -19,7 +19,7 @@ function SvgIcon({ path, className = 'h-5 w-5' }: { path: React.ReactNode; class
 }
 
 export function MobileBottomNav() {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
   const pathname = usePathname();
 
   // تابع بررسی مسیر فعال برای رنگ دهی آیکون‌ها

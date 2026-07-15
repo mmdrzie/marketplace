@@ -44,14 +44,18 @@ export class EmailVerificationService {
       throw AppError.invalidToken();
     }
 
-    const tokenHash = await bcrypt.hash(token, 10);
-    const stored = await verificationRepo.findEmailVerificationByHash(tokenHash);
+    const stored = await verificationRepo.findLatestEmailVerification(payload.sub);
     if (!stored) {
       throw AppError.invalidToken();
     }
 
     if (new Date(stored.expires_at) < new Date()) {
       throw AppError.invalidToken('Verification token expired');
+    }
+
+    const valid = await bcrypt.compare(token, stored.token_hash);
+    if (!valid) {
+      throw AppError.invalidToken();
     }
 
     await verificationRepo.markEmailVerified(stored.id);

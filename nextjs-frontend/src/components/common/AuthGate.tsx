@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuthStore, usePhoneVerified } from '@/store/authStore';
+import { useIsAuthenticated, usePhoneVerified } from '@/store/authStore';
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ interface AuthGateProps {
 }
 
 export function AuthGate({ children, message, minimal, requirePhone, phoneRedirect }: AuthGateProps) {
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
   const phoneVerified = usePhoneVerified();
 
   if (isAuthenticated && (!requirePhone || phoneVerified)) return <>{children}</>;

@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 export function usePhoneVerification() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setPhoneVerified } = useAuthStore();
+  const setPhoneVerified = useAuthStore((s) => s.setPhoneVerified);
 
   const sendOtp = async (phone: string) => {
     setLoading(true);

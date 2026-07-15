@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 export type ActivityType = 'listing_created' | 'message_received' | 'listing_sold' | 'review_received' | 'view' | 'message' | 'favorite' | 'sold';
 
@@ -31,7 +31,7 @@ function RelativeTime({ iso }: { iso: string }) {
   return <span className="text-[10px] text-muted-foreground shrink-0 mt-1">{label}</span>;
 }
 
-export function ActivityCard({ activities }: { activities: Activity[] }) {
+const ActivityCard = memo(function ActivityCard({ activities }: { activities: Activity[] }) {
   const getConfig = (type: ActivityType) => {
     const configs: Record<string, { icon: string; color: string }> = {
       listing_created: {
@@ -84,4 +84,6 @@ export function ActivityCard({ activities }: { activities: Activity[] }) {
       </div>
     </div>
   );
-}
+});
+
+export { ActivityCard };

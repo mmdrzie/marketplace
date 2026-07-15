@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { formatPriceWithUnit } from '@/lib/utils';
 
 interface PriceDisplayProps {
@@ -7,10 +8,10 @@ interface PriceDisplayProps {
   priceType?: string;
 }
 
-export function PriceDisplay({ price, priceType = 'fixed' }: PriceDisplayProps) {
+export const PriceDisplay = memo(function PriceDisplay({ price, priceType = 'fixed' }: PriceDisplayProps) {
   return (
-    <span className="font-semibold">
+    <span className="font-semibold tabular-nums">
       {formatPriceWithUnit(price, priceType)}
     </span>
   );
-}
+});

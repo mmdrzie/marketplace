@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface CostItem {
@@ -16,6 +16,18 @@ interface ImportCostBreakdownProps {
 }
 
 export function ImportCostBreakdown({ items, total, className = '' }: ImportCostBreakdownProps) {
+  const circleRefs = useRef<(SVGCircleElement | null)[]>([]);
+
+  useEffect(() => {
+    circleRefs.current.forEach((el) => {
+      if (el) {
+        requestAnimationFrame(() => {
+          el.style.strokeDashoffset = el.getAttribute('data-target') || '0';
+        });
+      }
+    });
+  }, [items]);
+
   if (!items.length || !total) return null;
 
   const size = 140;
@@ -37,8 +49,8 @@ export function ImportCostBreakdown({ items, total, className = '' }: ImportCost
       <div className="flex flex-col items-center gap-6">
         <div className="relative">
           <svg width={size} height={size} className="-rotate-90">
-            {segments.map((item) => (
-              <motion.circle
+            {segments.map((item, i) => (
+              <circle
                 key={item.label}
                 cx={size / 2}
                 cy={size / 2}
@@ -47,11 +59,10 @@ export function ImportCostBreakdown({ items, total, className = '' }: ImportCost
                 stroke={item.color}
                 strokeWidth={strokeWidth}
                 strokeDasharray={`${item.share * circumference} ${circumference - item.share * circumference}`}
-                strokeDashoffset={item.dashOffset}
+                data-target={item.dashOffset}
                 strokeLinecap="round"
-                initial={{ strokeDashoffset: circumference }}
-                animate={{ strokeDashoffset: item.dashOffset }}
-                transition={{ duration: 1, ease: 'easeOut' }}
+                ref={el => { circleRefs.current[i] = el; }}
+                style={{ strokeDashoffset: circumference, transition: 'stroke-dashoffset 1s ease-out' }}
               />
             ))}
           </svg>

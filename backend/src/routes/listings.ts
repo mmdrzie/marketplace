@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { listingService } from '../domain/services/listing.js';
+import { listingRepo } from '../repositories/listing.js';
 import { favoriteRepo } from '../repositories/favorite.js';
 import { auth, optionalAuth } from '../middleware/auth.js';
 import { rateLimiter } from '../middleware/rateLimiter.js';
@@ -19,7 +20,7 @@ const createListingSchema = z.object({
   city_id: z.number().int().positive().optional(),
   attributes: z.array(z.object({ attribute_id: z.number().int().positive(), value: z.string() })).optional(),
   images: z.array(z.object({
-    url: z.string().url(),
+    url: z.string(),
     thumbnail_url: z.string().optional(),
     medium_url: z.string().optional(),
     is_primary: z.boolean().optional(),
@@ -41,13 +42,26 @@ router.get('/', optionalAuth(), async (c) => {
   const scope = query.scope;
   if (scope === 'me' && !user) throw AppError.unauthorized();
 
+  const requestedStatus = query.status;
+  if (requestedStatus && (!user || user.role !== 'admin')) {
+    throw AppError.forbidden('Only admins can filter by status');
+  }
+
+  const minPrice = query.min_price ?? query.price_min;
+  const maxPrice = query.max_price ?? query.price_max;
+
   const result = await listingService.list({
     scope: query.scope,
     category: query.category,
     province: query.province,
-    status: query.status,
-    min_price: query.min_price ? parseInt(query.min_price, 10) : undefined,
-    max_price: query.max_price ? parseInt(query.max_price, 10) : undefined,
+    status: requestedStatus,
+    min_price: minPrice ? parseInt(minPrice, 10) : undefined,
+    max_price: maxPrice ? parseInt(maxPrice, 10) : undefined,
+    city_id: query.city_id,
+    brand: query.brand,
+    model: query.model,
+    year_from: query.year_from,
+    year_to: query.year_to,
     sort: query.sort,
     page: query.page ? parseInt(query.page, 10) : undefined,
     perPage: query.per_page ? parseInt(query.per_page, 10) : undefined,
@@ -143,6 +157,49 @@ router.post('/:id/report', auth(), async (c) => {
   );
 
   return c.json({ success: true, data: { reported: true } }, 201);
+});
+
+// GET /listings/:id/stats — listing stats (views, messages, favorites)
+router.get('/:id/stats', auth(), async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  const listing = await listingRepo.findById(id);
+  if (!listing) throw AppError.notFound('Listing not found');
+
+  const db = (await import('../config/database.js')).getDb;
+  const d = await db();
+
+  // Daily views for last 90 days
+  const { rows: dailyViews } = await d.query(
+    `SELECT date, views FROM listing_views_daily WHERE listing_id = $1 AND date >= CURRENT_DATE - 90 ORDER BY date`,
+    [id],
+  );
+
+   // Total messages count for this listing
+   const { rows: msgCount } = await d.query(
+     `SELECT COUNT(*) as count FROM messages m
+      JOIN conversations c ON m.conversation_id = c.id
+      WHERE c.listing_id = $1`,
+     [id],
+   );
+
+   // Total favorites count
+   const { rows: favCount } = await d.query(
+     `SELECT COUNT(*) as count FROM favorites WHERE listing_id = $1`,
+     [id],
+   );
+
+   const msgRow = msgCount[0] as { count: string } | undefined;
+   const favRow = favCount[0] as { count: string } | undefined;
+
+   return c.json({
+     success: true,
+     data: {
+       total_views: listing.views,
+       total_messages: parseInt(msgRow?.count || '0', 10),
+       total_favorites: parseInt(favRow?.count || '0', 10),
+       daily_views: dailyViews,
+     },
+   });
 });
 
 export { router as listingRouter };

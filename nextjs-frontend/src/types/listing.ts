@@ -2,7 +2,7 @@ export interface Listing {
   id: string;
   title: string;
   slug: string;
-  price: number | null;
+  price: number;
   price_type: 'fixed' | 'negotiable' | 'auction';
   status: string;
   is_featured: boolean;

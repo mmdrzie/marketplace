@@ -12,13 +12,12 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 const ReportModal = dynamic(() => import('@/components/common/ReportModal').then(mod => mod.ReportModal));
 const FeaturedPurchaseModal = dynamic(() => import('@/components/payment/FeaturedPurchaseModal').then(mod => mod.FeaturedPurchaseModal));
-const ListingGallery = dynamic(() => import('@/components/listing/ListingGallery').then(mod => mod.ListingGallery));
+import { ListingGallery } from '@/components/listing/ListingGallery';
 import { PriceDisplay } from '@/components/common/PriceDisplay';
 import { StatusBadge } from '@/components/common/StatusBadge';
-const SellerCard = dynamic(() => import('@/components/listing/SellerCard').then(mod => mod.SellerCard));
+import { SellerCard } from '@/components/listing/SellerCard';
 const RelatedListings = dynamic(() => import('@/components/listing/RelatedListings').then(mod => mod.RelatedListings));
 const RecentlyViewed = dynamic(() => import('@/components/common/RecentlyViewed').then(mod => mod.RecentlyViewed));
-const TradeInWidget = dynamic(() => import('@/components/common/TradeInWidget').then(mod => mod.TradeInWidget));
 const PriceHistoryChart = dynamic(() => import('@/components/common/Charts').then(mod => mod.PriceHistoryChart));
 const LoanCalculator = dynamic(() => import('@/components/common/LoanCalculator').then(mod => mod.LoanCalculator));
 const DealerReviews = dynamic(() => import('@/components/common/DealerReviews').then(mod => mod.DealerReviews));
@@ -28,7 +27,7 @@ const MapView = dynamic(() => import('@/components/listing/MapView').then(mod =>
 const CompatibleParts = dynamic(() => import('@/components/listing/CompatibleParts').then(mod => mod.CompatibleParts));
 import { HealthScoreBadge } from '@/components/listing/HealthScoreBadge';
 import { useServiceLogStore, calcHealthScore } from '@/store/serviceLogStore';
-import { useEscrowStore } from '@/store/escrowStore';
+import { useEscrowDeals, useCreateEscrowDeal } from '@/hooks/useEscrow';
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import { generatePriceHistory } from '@/lib/chartData';
 import { ShareButton } from '@/components/listing/ShareButton';
@@ -48,7 +47,8 @@ export default function ListingDetailPage() {
     enabled: !!listing?.seller_id,
     retry: 2,
   });
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useAuthStore((s) => !!s.token);
+  const user = useAuthStore((s) => s.user);
   const startConversation = useStartConversation();
   const router = useRouter();
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -58,12 +58,12 @@ export default function ListingDetailPage() {
   const addRecent = useRecentlyViewedStore((s) => s.addItem);
 
   const allServiceRecords = useServiceLogStore((s) => s.records);
-  const allDeals = useEscrowStore((s) => s.deals);
-  const createDeal = useEscrowStore((s) => s.createDeal);
+  const { data: allDeals } = useEscrowDeals();
+  const createDealMutation = useCreateEscrowDeal();
 
   const records = useMemo(() => allServiceRecords.filter((r) => r.listingId === (listing?.id || 0)), [allServiceRecords, listing?.id]);
   const healthScore = useMemo(() => calcHealthScore(records), [records]);
-  const userDeals = useMemo(() => allDeals.filter((d) => (d.buyerId === user?.id || d.sellerId === user?.id) && d.listingId === listing?.id), [allDeals, user?.id, listing?.id]);
+  const userDeals = useMemo(() => (allDeals ?? []).filter((d: { buyerId: string | number; sellerId: string | number; listingId: string | number }) => (d.buyerId === user?.id || d.sellerId === user?.id) && d.listingId === listing?.id), [allDeals, user?.id, listing?.id]);
   const priceHistory = useMemo(() => {
     const basePrice = typeof listing?.price === 'number' ? listing.price : 500000000;
     return generatePriceHistory(Math.round(basePrice / 1000000), 8, '');
@@ -79,7 +79,7 @@ export default function ListingDetailPage() {
     if (!isAuthenticated) { router.push('/login'); return; }
     if (!listing || !messageBody.trim()) return;
     try {
-      const conv = await startConversation.mutateAsync({ listing_id: listing.id, message: messageBody });
+      const conv = await startConversation.mutateAsync({ listing_id: Number(listing.id), message: messageBody });
       setShowMessageModal(false);
       setMessageBody('');
       router.push(`/dashboard/messages/${conv.id}`);
@@ -269,11 +269,8 @@ export default function ListingDetailPage() {
                   if (!listing.seller_id) return;
                   const hasDeal = userDeals.length > 0;
                   if (hasDeal) { router.push(`/dashboard/deals/${userDeals[0].id}`); return; }
-                  createDeal({
-                    listingId: listing.id, listingTitle: listing.title, listingSlug: listing.slug,
-                    listingImage: listing.primary_image || undefined, buyerId: user!.id,
-                    buyerName: user!.name || 'کاربر', sellerId: listing.seller_id,
-                    sellerName: listing.seller_name || 'فروشنده',
+                  createDealMutation.mutateAsync({
+                    listing_id: listing.id, seller_id: listing.seller_id,
                     amount: typeof listing.price === 'number' ? listing.price : 0,
                   });
                   toast({ type: 'success', title: 'درخواست خرید امن ثبت شد' });
@@ -283,9 +280,6 @@ export default function ListingDetailPage() {
                   خرید امن (اسکرو)
                 </button>
               </AuthGate>
-              <div className="md:col-span-2">
-                <TradeInWidget />
-              </div>
             </>
           )}
 

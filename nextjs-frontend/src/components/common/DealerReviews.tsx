@@ -43,7 +43,7 @@ export function DealerReviews({ dealerId, className }: DealerReviewsProps) {
       toast({ type: 'success', title: 'نظر شما ثبت شد' });
     },
     onError: () => {
-      toast({ type: 'success', title: 'نظر شما ثبت شد' });
+      toast({ type: 'error', title: 'خطا در ثبت نظر', message: 'لطفاً مجدداً تلاش کنید' });
     },
   });
 

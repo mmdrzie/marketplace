@@ -6,6 +6,10 @@ import { auth } from '../middleware/auth.js';
 
 const router = new Hono();
 
+const depositSchema = z.object({
+  amount: z.number().int().positive(),
+});
+
 const featuredSchema = z.object({
   listing_id: z.number().int().positive(),
 });
@@ -20,6 +24,13 @@ router.post('/featured', auth(), zValidator('json', featuredSchema), async (c) =
 // POST /payments/dealer-subscription — create subscription purchase
 router.post('/dealer-subscription', auth(), async (c) => {
   const result = await paymentService.createSubscriptionPayment(c.get('user'));
+  return c.json({ success: true, data: result }, 201);
+});
+
+// POST /payments/deposit — deposit to wallet
+router.post('/deposit', auth(), zValidator('json', depositSchema), async (c) => {
+  const { amount } = c.req.valid('json');
+  const result = await paymentService.createDeposit(c.get('user'), amount);
   return c.json({ success: true, data: result }, 201);
 });
 

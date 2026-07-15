@@ -15,12 +15,12 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 }
 
 export default function DealerStatsPage() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const isAgency = user?.role === 'agency';
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.dealers.stats,
-    queryFn: async () => { const res = await api.get('/dealer/stats'); return res.data; },
+    queryFn: async () => { const res = await api.get('/dealer/stats'); return res.data.data; },
   });
 
   const stats = data || {};
@@ -55,7 +55,7 @@ export default function DealerStatsPage() {
       </div>
       </ErrorBoundary>
 
-      {isLoading && <div className="h-40 bg-surface-2 rounded-2xl animate-pulse" />}
+      {isLoading && <div className="h-40 bg-surface-2 rounded-2xl motion-safe:animate-pulse" />}
 
       <ErrorBoundary>
       <div className="glass rounded-2xl p-6">

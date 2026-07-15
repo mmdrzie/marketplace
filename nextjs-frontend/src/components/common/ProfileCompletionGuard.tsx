@@ -2,14 +2,14 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { useAuthStore } from '@/store/authStore';
+import { useUser } from '@/store/authStore';
 
 interface ProfileCompletionGuardProps {
   children: React.ReactNode;
 }
 
 export function ProfileCompletionGuard({ children }: ProfileCompletionGuardProps) {
-  const { user } = useAuthStore();
+  const user = useUser();
 
   const missing = useMemo(() => {
     const fields: string[] = [];

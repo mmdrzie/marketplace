@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { forwardRef, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 export interface GlassOption {
   value: string;
@@ -16,13 +16,18 @@ interface GlassSelectProps {
   className?: string;
 }
 
-export function GlassSelect({ value, onChange, options, placeholder = 'انتخاب کنید', disabled, className = '' }: GlassSelectProps) {
+export const GlassSelect = forwardRef<HTMLDivElement, GlassSelectProps>(function GlassSelect({ value, onChange, options, placeholder = 'انتخاب کنید', disabled, className = '' }, ref) {
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const ref = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  const highlightedIndexRef = useRef(highlightedIndex);
+  useEffect(() => { highlightedIndexRef.current = highlightedIndex; }, [highlightedIndex]);
+
+  const resolvedRef = (ref ?? innerRef) as React.RefObject<HTMLDivElement | null>;
 
   const close = useCallback(() => {
     setOpen(false);
@@ -35,7 +40,7 @@ export function GlassSelect({ value, onChange, options, placeholder = 'انتخ�
     previousActiveElement.current = document.activeElement as HTMLElement;
     setOpen(true);
     setHighlightedIndex(options.findIndex(o => o.value === value));
-  }, [disabled, value]);
+  }, [disabled, value, options]);
 
   useEffect(() => {
     if (!open) return;
@@ -56,8 +61,8 @@ export function GlassSelect({ value, onChange, options, placeholder = 'انتخ�
         setHighlightedIndex(prev => Math.max(prev - 1, 0));
       } else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        if (highlightedIndex >= 0) {
-          onChange(options[highlightedIndex].value);
+        if (highlightedIndexRef.current >= 0) {
+          onChange(options[highlightedIndexRef.current].value);
           close();
         }
       } else if (e.key === 'Home') {
@@ -72,7 +77,7 @@ export function GlassSelect({ value, onChange, options, placeholder = 'انتخ�
     };
 
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (resolvedRef.current && !resolvedRef.current.contains(e.target as Node)) {
         close();
       }
     };
@@ -83,7 +88,7 @@ export function GlassSelect({ value, onChange, options, placeholder = 'انتخ�
       document.removeEventListener('keydown', handleKey);
       document.removeEventListener('mousedown', handleClick);
     };
-  }, [open, close, options, onChange, highlightedIndex]);
+  }, [open, close, options, onChange, resolvedRef]);
 
   useEffect(() => {
     if (open && highlightedIndex >= 0) {
@@ -95,7 +100,7 @@ export function GlassSelect({ value, onChange, options, placeholder = 'انتخ�
   const selected = useMemo(() => options.find((o) => o.value === value), [options, value]);
 
   return (
-    <div ref={ref} className={`relative ${className}`}>
+    <div ref={resolvedRef} className={`relative ${className}`}>
       <button
         ref={buttonRef}
         type="button"
@@ -130,7 +135,7 @@ export function GlassSelect({ value, onChange, options, placeholder = 'انتخ�
             className="absolute z-50 inset-x-0 top-full mt-1.5 glass rounded-xl border border-border-subtle shadow-2xl overflow-y-auto max-h-60 animate-dropdown scrollbar-dropdown"
           >
             {options.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-muted-foreground text-center" role="option" aria-disabled="true">موردی یافت نشد</div>
+              <div className="px-4 py-3 text-sm text-muted-foreground text-center" role="option" aria-selected={false} aria-disabled="true">موردی یافت نشد</div>
             ) : (
               options.map((option, index) => (
                 <button
@@ -165,4 +170,4 @@ export function GlassSelect({ value, onChange, options, placeholder = 'انتخ�
       )}
     </div>
   );
-}
+});

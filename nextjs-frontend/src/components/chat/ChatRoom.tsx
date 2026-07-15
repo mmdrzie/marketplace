@@ -1,13 +1,12 @@
 'use client';
-
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useConversation, useSendMessage, useMarkRead } from '@/hooks/useChat';
 import { useAuthStore } from '@/store/authStore';
 import { useEcho } from '@/providers/EchoProvider';
 import { MessageBubble } from './MessageBubble';
 import { TypingIndicator } from './TypingIndicator';
 import { MessageSearch } from './MessageSearch';
-import { VoiceRecorder } from './VoiceRecorder';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/common/Toast';
 import type { Message } from '@/types';
@@ -45,7 +44,7 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
   const { data: conversation, isLoading } = useConversation(conversationId);
   const sendMessage = useSendMessage();
   const markRead = useMarkRead();
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const { echo } = useEcho();
   const queryClient = useQueryClient();
   
@@ -60,7 +59,6 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
   const objectUrlsRef = useRef<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [showSearch, setShowSearch] = useState(false);
-  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,6 +67,8 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
   const otherUserName = conversation
     ? (conversation.buyer_id === user?.id ? conversation.seller : conversation.buyer)?.name || 'کاربر'
     : 'کاربر';
+  const otherUserNameRef = useRef(otherUserName);
+  otherUserNameRef.current = otherUserName;
 
   useEffect(() => {
     if (!conversationId || !echo || initialized.current) return;
@@ -81,9 +81,9 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
     });
 
     channel.listen('Typing', () => {
-      setTypingUsers((prev) => prev.includes(otherUserName) ? prev : [...prev, otherUserName]);
+      setTypingUsers((prev) => prev.includes(otherUserNameRef.current) ? prev : [...prev, otherUserNameRef.current]);
       setTimeout(() => {
-        setTypingUsers((prev) => prev.filter((u) => u !== otherUserName));
+        setTypingUsers((prev) => prev.filter((u) => u !== otherUserNameRef.current));
       }, 3000);
     });
 
@@ -91,7 +91,7 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
       try { echo.leave(`App.Models.Conversation.${conversationId}`); } catch {}
       initialized.current = false;
     };
-  }, [conversationId, echo, queryClient, otherUserName]);
+  }, [conversationId, echo, queryClient]);
 
   useEffect(() => {
     if (conversationId) markRead.mutate(conversationId);
@@ -175,7 +175,7 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
         <div className="relative">
           {otherUser?.avatar ? (
             <div className="w-10 h-10 rounded-full p-0.5 bg-primary/20">
-              <img src={otherUser.avatar} alt={otherUser.name || 'avatar'} className="w-full h-full rounded-full object-cover" />
+              <Image src={otherUser.avatar} alt={otherUser.name || 'avatar'} width={40} height={40} className="w-full h-full rounded-full object-cover" />
             </div>
           ) : (
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
@@ -232,6 +232,7 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
               <div key={i} className="relative shrink-0 group">
                 <div className="w-16 h-16 rounded-xl bg-surface-2 border border-border overflow-hidden">
                   {fp.isImage ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={fp.preview} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -265,14 +266,6 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none py-2"
                 maxLength={1000}
               />
-              
-              {showVoiceRecorder ? (
-                <VoiceRecorder onSend={(blob) => { setShowVoiceRecorder(false); }} onCancel={() => setShowVoiceRecorder(false)} />
-              ) : (
-                <button type="button" onClick={() => setShowVoiceRecorder(true)} className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors" title="ضبط پیام صوتی">
-                  <Icon d={ICON_PATHS.mic} className="w-5 h-5" />
-                </button>
-              )}
             </div>
 
             <button

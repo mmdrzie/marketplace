@@ -20,7 +20,7 @@ export default function ListingHealthPage() {
   if (isLoading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="animate-pulse space-y-4">
+        <div className="motion-safe:animate-pulse space-y-4">
           <div className="h-8 bg-surface rounded-2xl w-48" />
           <div className="h-64 bg-surface rounded-2xl" />
         </div>

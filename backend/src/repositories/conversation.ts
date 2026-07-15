@@ -25,19 +25,22 @@ export class ConversationRepository {
     const { rows } = await db.query(
       `SELECT c.*,
               l.title as listing_title, l.slug as listing_slug, l.primary_image as listing_image,
-              u.name as other_name, u.avatar as other_avatar,
+              buyer.name as buyer_name, buyer.avatar as buyer_avatar,
+              seller.name as seller_name, seller.avatar as seller_avatar,
               (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
               (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != $1 AND is_read = false) as unread_count
        FROM conversations c
        JOIN listings l ON l.id = c.listing_id
-       JOIN users u ON u.id = CASE WHEN c.buyer_id = $1 THEN c.seller_id ELSE c.buyer_id END
+       JOIN users buyer ON buyer.id = c.buyer_id
+       JOIN users seller ON seller.id = c.seller_id
        WHERE c.buyer_id = $1 OR c.seller_id = $1
        ORDER BY COALESCE(c.last_message_at, c.created_at) DESC`,
       [userId],
     );
     return rows as (ConversationRow & {
       listing_title: string; listing_slug: string; listing_image: string | null;
-      other_name: string; other_avatar: string | null;
+      buyer_name: string; buyer_avatar: string | null;
+      seller_name: string; seller_avatar: string | null;
       last_message: string | null; unread_count: string;
     })[];
   }
@@ -49,6 +52,27 @@ export class ConversationRepository {
       [id],
     );
     return rows[0] as ConversationRow | undefined;
+  }
+
+  async findByIdDetailed(id: number) {
+    const db = await getDb();
+    const { rows } = await db.query(
+      `SELECT c.*,
+              l.title as listing_title, l.slug as listing_slug, l.primary_image as listing_image,
+              buyer.name as buyer_name, buyer.avatar as buyer_avatar,
+              seller.name as seller_name, seller.avatar as seller_avatar
+       FROM conversations c
+       JOIN listings l ON l.id = c.listing_id
+       JOIN users buyer ON buyer.id = c.buyer_id
+       JOIN users seller ON seller.id = c.seller_id
+       WHERE c.id = $1`,
+      [id],
+    );
+    return rows[0] as (ConversationRow & {
+      listing_title: string; listing_slug: string; listing_image: string | null;
+      buyer_name: string; buyer_avatar: string | null;
+      seller_name: string; seller_avatar: string | null;
+    }) | undefined;
   }
 
   async findByListingAndBuyer(listingId: number, buyerId: string) {

@@ -97,7 +97,7 @@ export default function AdminProvincesPage() {
         </div>
 
         {loadingProv ? (
-          <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl animate-pulse" />)}</div>
+          <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl motion-safe:animate-pulse" />)}</div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="glass rounded-2xl p-5">
@@ -135,7 +135,7 @@ export default function AdminProvincesPage() {
                 )}
               </div>
               {loadingCities ? (
-                <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-8 bg-surface-2 rounded-lg animate-pulse" />)}</div>
+                <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-8 bg-surface-2 rounded-lg motion-safe:animate-pulse" />)}</div>
               ) : cities && cities.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
                   {cities.map((city) => (

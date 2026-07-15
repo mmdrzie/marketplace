@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 
 interface EchoInstance {
   private: (channel: string) => { listen: (event: string, callback: () => void) => void };
@@ -21,7 +21,8 @@ export function useEcho() {
 }
 
 export function EchoProvider({ children }: { children: ReactNode }) {
-  const { token, isAuthenticated } = useAuthStore();
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useIsAuthenticated();
   const [echo, setEcho] = useState<EchoInstance | null>(null);
   const echoCleanupRef = useRef<EchoInstance | null>(null);
 

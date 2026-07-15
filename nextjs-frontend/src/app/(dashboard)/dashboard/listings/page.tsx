@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useMyListings } from '@/hooks/useListings';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { EmptyState } from '@/components/common/EmptyState';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import Link from 'next/link';
 
 const STATUS_TABS = [
@@ -17,7 +18,7 @@ const STATUS_TABS = [
 
 export default function MyListingsPage() {
   const [statusFilter, setStatusFilter] = useState('');
-  const { data, isLoading } = useMyListings();
+  const { data, isLoading, error } = useMyListings();
   const allListings = data?.data || [];
   
   const listings = statusFilter
@@ -33,7 +34,7 @@ export default function MyListingsPage() {
     return (
       <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
         <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 space-y-8 animate-pulse">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 space-y-8 motion-safe:animate-pulse">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-3">
               <div className="h-8 w-48 bg-surface-2 rounded-xl"></div>
@@ -56,6 +57,20 @@ export default function MyListingsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="relative min-h-screen bg-background text-foreground overflow-hidden flex items-center justify-center">
+        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+        <div className="text-center relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4 text-destructive">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
+          </div>
+          <p className="text-destructive font-medium">خطا در بارگذاری آگهی‌ها</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       {/* پس‌زمینه داینامیک معماری */}
@@ -69,7 +84,7 @@ export default function MyListingsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               MY LISTINGS
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground mb-2">آگهی‌های من</h1>
@@ -110,7 +125,7 @@ export default function MyListingsPage() {
         </div>
 
         {/* نمایش آگهی‌ها یا حالت خالی */}
-        {listings.length === 0 ? (
+        {listings.length === 0 && !isLoading ? (
           <div className="glass rounded-3xl border border-border-subtle py-24 flex items-center justify-center">
             <EmptyState
               icon="listing"

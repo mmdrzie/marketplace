@@ -66,6 +66,29 @@ export class PaymentService {
     return { ...payment, redirect_url: result.redirectUrl };
   }
 
+  async createDeposit(user: AuthUser, amount: number) {
+    const payment = await paymentRepo.create({
+      user_id: user.id,
+      amount,
+      metadata: { type: 'deposit' },
+    });
+
+    const provider = createPaymentProvider();
+    const result = await provider.createPayment(amount, 'IRR', {
+      payment_id: payment.id,
+      type: 'deposit',
+    });
+
+    if (result.success && result.providerPaymentId) {
+      await paymentRepo.update(payment.id, { provider_id: result.providerPaymentId });
+      if (payment.provider === 'noop') {
+        await this.completePayment(payment.id);
+      }
+    }
+
+    return { ...payment, redirect_url: result.redirectUrl };
+  }
+
   async completePayment(paymentId: number) {
     const db = (await import('../../config/database.js')).getDb;
     const d = await db();
@@ -76,18 +99,19 @@ export class PaymentService {
     await paymentRepo.update(paymentId, { status: 'completed' });
 
     const balance = await paymentRepo.getWalletBalance(payment.user_id);
+    const type = payment.metadata?.type || 'featured';
+    const isDeposit = type === 'deposit';
     await paymentRepo.addWalletTransaction({
       user_id: payment.user_id,
-      type: payment.metadata?.type === 'subscription' ? 'subscription' : 'featured',
-      amount: -payment.amount,
+      type: isDeposit ? 'deposit' : type,
+      amount: isDeposit ? payment.amount : -payment.amount,
       balance_before: balance,
-      description: payment.metadata?.type === 'subscription' ? 'Dealer subscription' : `Featured listing #${payment.metadata?.listing_id}`,
+      description: isDeposit ? 'Deposit to wallet' : type === 'subscription' ? 'Dealer subscription' : `Featured listing #${payment.metadata?.listing_id}`,
       reference_type: 'payment',
       reference_id: paymentId,
     });
 
-    // If featured, mark the listing as featured
-    if (payment.metadata?.type === 'featured' && payment.metadata?.listing_id) {
+    if (type === 'featured' && payment.metadata?.listing_id) {
       await listingRepo.update(payment.metadata.listing_id, { is_featured: true });
     }
   }

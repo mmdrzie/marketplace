@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { GlassSelect } from '@/components/common/GlassSelect';
 import { FadeIn } from '@/components/common/MotionDiv';
 import type { Category, Attribute } from '@/types';
 import { queryKeys } from '@/lib/queryKeys';
@@ -121,7 +122,7 @@ export default function AdminAttributesPage() {
         </div>
 
         {isLoading ? (
-          <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl animate-pulse" />)}</div>
+          <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl motion-safe:animate-pulse" />)}</div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="glass rounded-2xl p-5">
@@ -207,9 +208,7 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">نوع</label>
-                    <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full glass-input rounded-xl px-3 py-2 text-sm">
-                      {typeOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
+                    <GlassSelect value={form.type} onChange={(v) => setForm({ ...form, type: v })} options={typeOptions} placeholder="انتخاب نوع" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">واحد</label>

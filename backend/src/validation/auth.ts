@@ -23,6 +23,13 @@ export const resetPasswordSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatar: z.string().max(500).nullable().optional(),
+  phone: z.string().max(15).nullable().optional(),
+  email: z.string().email().optional(),
+  city: z.string().max(100).nullable().optional(),
+  business_name: z.string().max(200).optional(),
+  dealer_code: z.string().max(50).optional(),
+  business_address: z.string().max(500).optional(),
+  business_description: z.string().max(2000).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

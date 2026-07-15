@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
+import { setAuthCookie, clearAuthCookie } from '@/lib/cookies';
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setAuth, logout: storeLogout } = useAuthStore();
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const storeLogout = useAuthStore((s) => s.logout);
 
   const registerWithEmail = async (email: string, password: string, name: string) => {
     setLoading(true);
@@ -16,6 +18,7 @@ export function useAuth() {
       const res = await api.post('/auth/register', { email, password, name });
       const { token, refreshToken, user } = res.data.data;
       setAuth(token, user, refreshToken);
+      setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
@@ -34,6 +37,7 @@ export function useAuth() {
       const res = await api.post('/auth/login', { email, password });
       const { token, refreshToken, user } = res.data.data;
       setAuth(token, user, refreshToken);
+      setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
@@ -81,7 +85,8 @@ export function useAuth() {
     } catch (e) {
       console.error('Logout error', e);
     } finally {
-      storeLogout();
+        storeLogout();
+        clearAuthCookie();
     }
   };
 

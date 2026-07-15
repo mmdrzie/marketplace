@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type Message = { role: 'user' | 'assistant'; text: string };
@@ -21,7 +20,6 @@ export function AIAssistant() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', text: 'سلام! اسم ماشین یا بازه قیمت رو بگو تا برات جستجو کنم.' }]);
   const [input, setInput] = useState('');
-  const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,16 +45,11 @@ export function AIAssistant() {
     }, 600);
   };
 
-  const handleSearch = () => {
-    setOpen(false);
-    router.push(`/search?q=${encodeURIComponent(input || '')}`);
-  };
-
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-accent text-white shadow-glow-accent flex items-center justify-center hover:scale-110 transition-transform duration-200"
+        className="fixed bottom-20 md:bottom-6 left-6 z-[70] w-14 h-14 rounded-full bg-gradient-accent text-white shadow-glow-accent flex items-center justify-center hover:scale-110 transition-transform duration-200"
         title="دستیار هوشمند"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -70,7 +63,7 @@ export function AIAssistant() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-24 left-6 z-40 w-[340px] sm:w-[380px] glass rounded-3xl border border-border-subtle shadow-2xl overflow-hidden"
+            className="fixed bottom-36 md:bottom-24 left-6 z-[70] w-[340px] sm:w-[380px] glass rounded-3xl border border-border-subtle shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">

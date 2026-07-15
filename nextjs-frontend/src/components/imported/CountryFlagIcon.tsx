@@ -23,7 +23,7 @@ const COUNTRY_COLORS: Record<string, [string, string]> = {
   چین: ['#DE2910', '#FFDE00'],
   آمریکا: ['#B22234', '#ffffff'],
   فرانسه: ['#002395', '#ffffff'],
-  ایتالIA: ['#009246', '#ffffff'],
+  ایتالیا: ['#009246', '#ffffff'],
   انگلستان: ['#C8102E', '#ffffff'],
   سوئد: ['#005B99', '#FECC02'],
   رومانی: ['#002B7F', '#FCD116'],

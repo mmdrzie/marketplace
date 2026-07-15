@@ -13,7 +13,7 @@ interface AttributeFiltersProps {
 }
 
 export function AttributeFilters({ categorySlug, filters, onChange }: AttributeFiltersProps) {
-  const { data: apiAttrs, isError } = useQuery({
+  const { data: apiAttrs } = useQuery({
     queryKey: queryKeys.attributes.byCategory(categorySlug),
     queryFn: async () => {
       if (!categorySlug) return [];

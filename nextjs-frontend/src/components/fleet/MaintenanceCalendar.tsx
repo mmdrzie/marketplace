@@ -44,7 +44,7 @@ export function MaintenanceCalendar({ serviceHistory, nextService, className = '
       ) : (
         <div className="space-y-2">
           {recent.map((s, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+            <div key={`${s.date}-${s.type}`} className="flex items-center justify-between py-2 border-b border-border last:border-0">
               <div>
                 <span className="text-xs text-foreground font-medium">{s.type}</span>
                 <p className="text-[10px] text-muted-foreground">{s.description}</p>

@@ -140,6 +140,7 @@ body {
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
 }
 
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
@@ -349,6 +350,9 @@ body {
 @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes aurora-1 { 0% { transform: translate(0, 0) scale(1); } 33% { transform: translate(60px, -40px) scale(1.15); } 66% { transform: translate(-40px, 30px) scale(0.95); } 100% { transform: translate(0, 0) scale(1); } }
+@keyframes aurora-2 { 0% { transform: translate(0, 0) scale(1); } 33% { transform: translate(-50px, 50px) scale(0.9); } 66% { transform: translate(40px, -30px) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
+@keyframes scrollHint { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
 
 /* Animated Checkbox */
 .cbx-check {
@@ -428,6 +432,14 @@ kbd {
   font-family: var(--font-vazirmatn);
   direction: ltr;
 }
+/* Slow pulse — برای CTA glow در homepage */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+@utility animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
 /* Glow pulse — برای عناصر تأکیدی */
 @keyframes glow-pulse {
   0%, 100% { box-shadow: 0 0 12px -10px var(--color-primary); }
@@ -443,4 +455,50 @@ kbd {
 }
 @utility bg-gradient-accent-horizontal {
   background: linear-gradient(to right, var(--color-accent-blue), var(--color-accent-indigo));
+}
+
+/*
+ * ── Touch device overrides ──
+ * Reduces heavy GPU/CSS effects on mobile/touch devices
+ * while keeping full desktop experience intact.
+ */
+.touch-device .animate-glow-pulse {
+  animation: none;
+}
+
+.touch-device .btn-glass,
+.touch-device .glass,
+.touch-device .glass-input {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Slower marquee on touch to reduce motion sickness */
+.touch-device .animate-marquee-rtl {
+  animation-duration: 60s;
+}
+
+/* Stop decorative blur blob animations on touch — still visible but static */
+.touch-device .animate-pulse[class*="blur-"] {
+  animation: none;
+}
+
+/* Reduce heavy backdrop filters on touch devices to relieve GPU paint pressure */
+.touch-device [class*="backdrop-blur-"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* On touch, disable the scroll hint bounce animation if animated via CSS */
+.touch-device [class*="animate-bounce"],
+.touch-device [class*="animate-ping"] {
+  animation: none;
+}
+
+/* Pause all animations when browser tab is hidden */
+.page-hidden .animate-glow-pulse,
+.page-hidden .animate-marquee,
+.page-hidden .animate-marquee-rtl,
+.page-hidden .animate-aurora {
+  animation-play-state: paused !important;
 }

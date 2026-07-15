@@ -83,57 +83,55 @@
 - [ ] `ChatRoom`: catch خالی → نمایش toast error
 - [ ] `(dealer)/dealer/listings`: اضافه کردن error + loading state
 
-### فاز ۶: Mock → API واقعی
-- [ ] Fleet: ایجاد جدول `fleet_vehicles` + ۳ endpoint در backend
-- [ ] Fleet: رفع `fleetStore` → اتصال به API واقعی
-- [ ] Parts: ایجاد جدول `parts` + ۲ endpoint در backend
-- [ ] Parts: رفع `partStore` → اتصال به API واقعی
-- [ ] Tenders: اتصال frontend به `GET /tenders` موجود (حذف وابستگی به `tenderStore`)
-- [ ] Escrow/Deals: ایجاد جدول `escrow_deals` + endpoint در backend
-- [ ] Escrow/Deals: رفع `escrowStore` → اتصال به API
-- [ ] Service Logs: ایجاد endpoint + رفع `serviceLogStore`
-- [ ] TradeInWidget: حذف کامل (بی‌استفاده)
-- [ ] Analytics charts: جایگزینی random با داده واقعی از `GET /dealer/stats`
-- [ ] Dashboard home: جایگزینی activities mock با real recent actions
+### فاز ۶: Mock → API واقعی ✅
+- [x] Fleet: ایجاد جدول `fleet_vehicles` + ۳ endpoint در backend
+- [x] Fleet: رفع `fleetStore` → اتصال به API واقعی
+- [x] Parts: ایجاد جدول `parts` + ۲ endpoint در backend
+- [x] Parts: رفع `partStore` → اتصال به API واقعی
+- [x] Tenders: اتصال frontend به `GET /tenders` موجود (حذف وابستگی به `tenderStore`)
+- [x] Escrow/Deals: ایجاد جدول `escrow_deals` + endpoint در backend
+- [x] Escrow/Deals: رفع `escrowStore` → اتصال به API
+- [x] Service Logs: ایجاد `useServiceLogs` hook برای fleet service logs
+- [x] TradeInWidget: حذف کامل (بی‌استفاده)
+- [ ] ~~Analytics charts: جایگزینی random با داده واقعی~~ نیاز به endpoint جدید backend (per-listing views)
+- [x] Dashboard home: جایگزینی activities mock با real recent actions
 
-### فاز ۷: رفع کامپوننت باگ‌ها
-- [ ] SellerCard: trust score هاردکد `8` → محاسبه واقعی
-- [ ] ListingCard: badge imported اصلاح `category?.slug?.startsWith` → `category_slug?.startsWith`
-- [ ] Footer: حذف social icons placeholder (یا اضافه کردن لینک واقعی)
-- [ ] Public layout: اضافه کردن `id="main-content"` به `<main>` برای skip-to-content
-- [ ] ConversationList: اصلاح `useEffect` deps که spread شده و باعث re-subscribe بی‌مورد می‌شود
-- [ ] `useConversations`: یکسان‌سازی `res.data` با `useConversation` (هر دو `res.data.data`)
-- [ ] CompareBar: رفع Framer Motion `height: 'auto'` → انیمیت صحیح
-- [ ] AuthProvider: اصلاح `useEffect([ ])` → اضافه کردن `logout, setUser` به deps
-- [ ] Public layout: اصلاح overlap Dock با اضافه کردن `pt-16`
-- [ ] ChatRoom: حذف یا تکمیل voice recording (blob گرفته می‌شود اما ارسال نمی‌شود)
+### فاز ۷: رفع کامپوننت باگ‌ها ✅
+- [x] SellerCard: trust score هاردکد `8` → `reviews_count` از seller (اگر نبود ۰)
+- [x] ListingCard: badge imported — قبلاً اصلاح شده بود (`category_slug` استفاده می‌کرد)
+- [x] Footer: social icons placeholder → لینک واقعی (ایتا، بله، آپارات)
+- [x] Public layout: `id="main-content"` + `pt-16` (رفع overlap Dock)
+- [x] ConversationList: اصلاح `useEffect` deps (`data?.data` spread → `data` پایدار)
+- [x] `useConversations`: یکسان‌سازی `res.data` → `res.data.data` (هماهنگ با `useConversation`)
+- [x] CompareBar: `height: 'auto'` → `maxHeight: 200` (انیمیت صحیح)
+- [x] AuthProvider: `useEffect([ ])` → `[token, isAuthenticated, setUser, logout]`
+- [x] Public layout: `pt-16` برای رفع overlap Dock
+- [x] ChatRoom: حذف VoiceRecorder (کامپوننت + state + دکمه)
 
-### فاز ۸: ESLint Cleanup
-- [ ] رفع ۱۲ مورد `@typescript-eslint/no-explicit-any` در `useListings.ts` و `useNotifications.ts`
-- [ ] رفع `react-hooks/exhaustive-deps` در `AuthProvider.tsx`
-- [ ] رفع ۲۴ warning باقی‌مانده (imports بی‌استفاده، متغیرهای تعریف‌نشده، و...)
-- [ ] تنظیم `--max-warnings 0` در lint script
+### فاز ۸: ESLint Cleanup ✅
+- [x] رفع ۳۴ error (no-explicit-any در ۱۱ فایل، set-state-in-effect، purity)
+- [x] رفع ۵۷ warning (imports بی‌استفاده، deps، img-element، jsx-a11y)
+- [x] تنظیم `--max-warnings 0` در lint script
+- [x] نتیجه نهایی: 0 error, 0 warning
 
-### فاز ۹: Upload + Images
-- [ ] Step4Images: تکمیل انتگراسیون با `POST /upload/presigned` و Supabase Storage
-- [ ] Step4Images: حذف `POST /listings/:id/images` (endpoint وجود ندارد)
-- [ ] Step4Images: ادغام آپلود تصاویر درون `POST /listings` (آپلود بعد از ایجاد listing)
+### فاز ۹: Upload + Images ✅
+- [x] Backend `uploads.ts`: رفع response به `upload_url` + `object_key` + `public_url`
+- [x] Backend: اضافه کردن `@aws-sdk/client-s3` و `@aws-sdk/s3-request-presigner` برای presigned URL واقعی
+- [x] Backend: Active کردن S3 presigned URL generation
+- [x] Backend: تغییر `z.string().url()` به `z.string()` در schema تصاویر برای پشتیبانی local + S3
+- [x] Frontend `ImageUploader.tsx`: استفاده از `public_url` به عنوان object key
+- [x] Frontend `ListingForm/index.tsx`: حذف `POST /listings/:id/images` — ارسال تصاویر درون payload اصلی
+- [x] نتیجه: آپلود از طریق presigned + ذخیره URL در POST /listings
 
 ### فاز ۱۰: تنظیمات دپلوی (فایل‌های کد)
-- [ ] ایجاد `backend/vercel.json` با کانفیگ Hono.js Edge Functions
-- [ ] ایجاد `nextjs-frontend/vercel.json` (در صورت نیاز)
-- [ ] ایجاد `backend/.env.example` با placeholderها
-- [ ] ایجاد `nextjs-frontend/.env.example` با placeholderها
-- [ ] Production Cleanup (کد):
-  - [ ] حذف `demoLogin()` از `useAuth.ts`
-  - [ ] حذف `DEMO_USERS`, `DEMO_TOKEN` از `useAuth.ts`
-  - [ ] حذف role selection cards از login page
-  - [ ] حذف `isDemoMode` از `api.ts`
-  - [ ] حذف `mockData.ts` (کل فایل)
-  - [ ] حذف MOCK fallback از `useListings.ts`
-  - [ ] حذف MOCK fallback از `useChat.ts`
-  - [ ] حذف MOCK fallback از `useNotifications.ts`
-  - [ ] حذف شرط `NEXT_PUBLIC_DEMO_MODE !== 'true'`
+- [x] `backend/vercel.json` + `api/index.ts` با `hono/vercel` از قبل وجود دارد
+- [x] `nextjs-frontend/vercel.json` نیازی نیست (Next.js خودکار)
+- [x] `backend/.env.example` و `nextjs-frontend/.env.example` از قبل وجود دارد
+- [x] Production Cleanup:
+  - [x] حذف `NEXT_PUBLIC_DEMO_MODE` از `.env.local`
+  - [x] حذف `demo-token-` از `AuthProvider.tsx`
+  - [x] حذف تست mock fallback از `useListings.test.tsx`
+  - [x] بقیه موارد (`demoLogin`, `DEMO_USERS`, `isDemoMode`, `mockData.ts`, role cards, MOCK fallback) قبلاً حذف شده بودند
 
 ---
 

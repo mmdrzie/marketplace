@@ -1,25 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuthStore } from '@/store/authStore';
-import { useTenderStore } from '@/store/tenderStore';
+import { useTenders } from '@/hooks/useTenders';
 import { TenderCard } from '@/components/tender/TenderCard';
+import type { Tender } from '@/store/tenderStore';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
-import { TENDER_STATUS_LABELS, TENDER_STATUS_COLORS, TENDER_STATUS_BG } from '@/store/tenderStore';
 
 export default function DealerTendersPage() {
-  const { user } = useAuthStore();
-  const tenders = useTenderStore((s) => s.tenders);
-  const myBids = useTenderStore((s) => s.getDealerBids(user?.id || 0));
+  const { data: tenders } = useTenders();
+  const tenderList = tenders ?? [];
 
-  const biddedTenderIds = new Set(myBids.map((b) => b.tenderId));
-  const available = tenders.filter((t) => t.status === 'open' && !biddedTenderIds.has(t.id));
-  const participated = tenders.filter((t) => biddedTenderIds.has(t.id));
-
-  const pendingBids = myBids.filter((b) => b.status === 'pending').length;
-  const acceptedBids = myBids.filter((b) => b.status === 'accepted').length;
+  const available = tenderList.filter((t: Tender) => t.status === 'open');
 
   return (
     <FadeIn>
@@ -34,9 +27,6 @@ export default function DealerTendersPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             {[
-              { label: 'پیشنهادات در انتظار', value: pendingBids, color: 'text-warning' },
-              { label: 'پیشنهادات تأیید شده', value: acceptedBids, color: 'text-success' },
-              { label: 'کل پیشنهادات', value: myBids.length, color: 'text-foreground' },
               { label: 'درخواست‌های فعال', value: available.length, color: 'text-primary' },
             ].map((stat) => (
               <div key={stat.label} className="glass rounded-2xl p-4 border border-border-subtle text-center">
@@ -45,17 +35,6 @@ export default function DealerTendersPage() {
               </div>
             ))}
           </div>
-
-          {participated.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-sm font-bold text-foreground mb-3">درخواست‌هایی که پیشنهاد داده‌اید</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {participated.map((tender) => (
-                  <TenderCard key={tender.id} tender={tender} showActions />
-                ))}
-              </div>
-            </div>
-          )}
 
           <div>
             <h3 className="text-sm font-bold text-foreground mb-3">درخواست‌های فعال بازار</h3>
@@ -67,7 +46,7 @@ export default function DealerTendersPage() {
               />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {available.map((tender) => (
+                {available.map((tender: Tender) => (
                   <TenderCard key={tender.id} tender={tender} showActions />
                 ))}
               </div>

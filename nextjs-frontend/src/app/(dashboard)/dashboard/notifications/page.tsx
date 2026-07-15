@@ -4,7 +4,6 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { formatRelativeTime, cn } from '@/lib/utils';
 
@@ -15,8 +14,6 @@ interface Notification {
   data: { title?: string; body?: string; action_url?: string };
   created_at: string;
 }
-
-const EMPTY_NOTIFICATIONS: Notification[] = [];
 
 const TYPE_LABELS: Record<string, string> = { message: 'پیام‌ها', listing: 'آگهی‌ها', favorite: 'علاقه‌مندی', system: 'سیستم' };
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -40,7 +37,7 @@ export default function NotificationsPage() {
     retry: 0,
   });
 
-  const notifications: Notification[] = data?.data ?? [];
+  const notifications = useMemo(() => (data?.data ?? []) as Notification[], [data]);
 
   const filtered = useMemo(() => {
     if (tab === 'all') return notifications;

@@ -6,6 +6,8 @@ const mockUseAuthStore = vi.hoisted(() => vi.fn());
 
 vi.mock('@/store/authStore', () => ({
   useAuthStore: mockUseAuthStore,
+  useIsAuthenticated: () => mockUseAuthStore().isAuthenticated,
+  usePhoneVerified: () => mockUseAuthStore().phoneVerified,
 }));
 
 vi.mock('next/link', () => ({

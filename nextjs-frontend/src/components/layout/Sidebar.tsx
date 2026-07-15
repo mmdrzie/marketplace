@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { useIsAuthenticated, useUser } from '@/store/authStore';
 import { useLogoutModal } from '@/store/logoutModalStore';
 
 interface NavItem {
@@ -14,7 +14,7 @@ interface NavItem {
 
 function Svg({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-5 w-5'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-5 w-5'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
@@ -76,7 +76,8 @@ const QUICK_LINKS = [
 ];
 
 export function Sidebar() {
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
   const openLogoutModal = useLogoutModal((s) => s.open);
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -102,9 +103,9 @@ export function Sidebar() {
       <button
         onClick={() => setOpen((p) => !p)}
         className="fixed right-4 top-1/2 -translate-y-1/2 z-40 w-12 h-12 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition-all group shadow-lg"
-        title={open ? 'بستن منو' : 'منوی دسترسی سریع'}
+        aria-label={open ? 'بستن منو' : 'منوی دسترسی سریع'}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           {open ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
         </svg>
       </button>
@@ -195,7 +196,7 @@ export function Sidebar() {
               onClick={() => { setOpen(false); openLogoutModal(() => {}); }}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-destructive hover:bg-destructive/5 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />

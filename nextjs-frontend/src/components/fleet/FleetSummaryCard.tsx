@@ -1,7 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
-
 interface FleetSummaryCardProps {
   label: string;
   value: string;
@@ -13,11 +11,7 @@ interface FleetSummaryCardProps {
 
 export function FleetSummaryCard({ label, value, change, changePositive, icon, color = 'text-primary' }: FleetSummaryCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass rounded-2xl p-4 border border-border-subtle"
-    >
+    <div className="animate-fade-in-up glass rounded-2xl p-4 border border-border-subtle">
       <div className="flex items-start justify-between mb-3">
         <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${color} bg-current/10`}>
           {icon}
@@ -31,6 +25,6 @@ export function FleetSummaryCard({ label, value, change, changePositive, icon, c
       </div>
       <div className="text-2xl font-black text-foreground">{value}</div>
       <p className="text-[11px] text-muted-foreground mt-0.5">{label}</p>
-    </motion.div>
+    </div>
   );
 }

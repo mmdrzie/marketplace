@@ -1,9 +1,8 @@
 'use client';
 
-import { ReactNode } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { ReactNode, useEffect } from 'react';
+import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 function FullScreenLoader() {
   return (
@@ -23,7 +22,8 @@ function FullScreenLoader() {
 }
 
 export function AuthGuard({ children }: { children: ReactNode }) {
-  const { isAuthenticated, _hasHydrated } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
+  const _hasHydrated = useAuthStore((s) => s._hasHydrated);
   const router = useRouter();
 
   useEffect(() => {

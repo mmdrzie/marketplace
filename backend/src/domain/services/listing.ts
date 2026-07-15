@@ -1,3 +1,4 @@
+import { unlink } from 'node:fs/promises';
 import { listingRepo } from '../../repositories/listing.js';
 import type { ListingRow } from '../../repositories/listing.js';
 import { categoryRepo } from '../../repositories/category.js';
@@ -6,6 +7,7 @@ import { cache } from '../../services/cache/index.js';
 import { eventBus, ListingCreated, ListingUpdated, ListingDeleted, ListingStatusChanged } from '../events/index.js';
 import { AppError } from '../../errors.js';
 import type { AuthUser } from '../../middleware/auth.js';
+import { config } from '../../config/index.js';
 
 function generateSlug(title: string): string {
   return title
@@ -25,6 +27,11 @@ export class ListingService {
     status?: string;
     min_price?: number;
     max_price?: number;
+    city_id?: string;
+    brand?: string;
+    model?: string;
+    year_from?: string;
+    year_to?: string;
     sort?: string;
     page?: number;
     perPage?: number;
@@ -48,7 +55,7 @@ export class ListingService {
 
   async getBySlug(slug: string) {
     const cacheKey = `listing:${slug}`;
-    const cached = cache.get<any>(cacheKey);
+    const cached = cache.get<ListingRow & { category_name?: string; category_slug?: string; province_name?: string; seller_name?: string; seller_avatar?: string }>(cacheKey);
     if (cached) return cached;
 
     const listing = await listingRepo.findBySlug(slug);
@@ -145,10 +152,18 @@ export class ListingService {
       throw AppError.forbidden('You can only delete your own listings');
     }
 
+    const images = await listingRepo.findImages(id);
+    await Promise.allSettled(images.map((img) => this.deleteMediaFile(img.url)));
     await listingRepo.softDelete(id);
     cache.invalidate(`listing:${listing.slug}`);
     cache.invalidatePattern('listings:');
     eventBus.publish(ListingDeleted, { listingId: String(id), userId: user.id });
+  }
+
+  private async deleteMediaFile(url: string) {
+    if (config.storage.provider === 'local' && url.startsWith('/uploads/')) {
+      await unlink(`.${url}`).catch(() => {});
+    }
   }
 
   async submit(id: number, user: AuthUser) {
@@ -275,11 +290,19 @@ export class ListingService {
   async search(q: string, filters: {
     category?: string;
     province?: string;
+    city_id?: string;
+    brand?: string;
+    model?: string;
+    year_from?: string;
+    year_to?: string;
     min_price?: number;
     max_price?: number;
-  }): Promise<{ data: ListingRow[]; total: number }> {
+    sort?: string;
+    page?: number;
+    perPage?: number;
+  }): Promise<{ data: ListingRow[]; total: number; page: number; lastPage: number }> {
     const cacheKey = `search:${q}:${JSON.stringify(filters)}`;
-    const cached = cache.get<{ data: ListingRow[]; total: number }>(cacheKey);
+    const cached = cache.get<{ data: ListingRow[]; total: number; page: number; lastPage: number }>(cacheKey);
     if (cached) return cached;
     const result = await listingRepo.search(q, filters);
     cache.set(cacheKey, result, 30000);

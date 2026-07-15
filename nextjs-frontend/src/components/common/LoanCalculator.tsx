@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { MiniDonut } from './Charts';
-import { motion } from 'framer-motion';
 
 interface LoanCalculatorProps {
   className?: string;
@@ -48,16 +47,11 @@ export function LoanCalculator({ className, defaultPrice }: LoanCalculatorProps)
         {/* Results */}
         <div className="flex flex-col items-center justify-center">
           <MiniDonut value={downPayment} max={price} size={120} strokeWidth={8} color="var(--color-accent-blue)" label={`${downPaymentPct}%`} className="mb-4" />
-          <motion.div
-            key={monthlyPayment}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-center"
-          >
+          <div key={monthlyPayment} className="text-center animate-scale-in">
             <p className="text-xs text-muted-foreground mb-1">قسط ماهانه</p>
             <p className="text-2xl font-black text-foreground">{format(monthlyPayment)}</p>
             <p className="text-[10px] text-muted-foreground mt-1">تومان</p>
-          </motion.div>
+          </div>
           <div className="flex items-center gap-6 mt-4 text-[11px] text-muted-foreground">
             <span>سود کل: {format(totalInterest)}</span>
             <span>مجموع: {format(totalPayment)}</span>

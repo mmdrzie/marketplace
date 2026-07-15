@@ -17,7 +17,7 @@ export function useFavorites() {
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (listingId: number) => {
+    mutationFn: async (listingId: string | number) => {
       const res = await api.post(`/listings/${listingId}/favorite`);
       return res.data.data;
     },

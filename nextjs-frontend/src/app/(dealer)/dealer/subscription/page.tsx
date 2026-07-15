@@ -63,7 +63,7 @@ function formatPrice(amount: number) {
 }
 
 export default function DealerSubscriptionPage() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const isAgency = user?.role === 'agency';
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState('professional');
@@ -152,7 +152,7 @@ export default function DealerSubscriptionPage() {
       {/* Plan Cards */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1,2,3].map((i) => <div key={i} className="h-56 bg-surface-2 rounded-2xl animate-pulse" />)}
+          {[1,2,3].map((i) => <div key={i} className="h-56 bg-surface-2 rounded-2xl motion-safe:animate-pulse" />)}
         </div>
       ) : (
         <LayoutGroup>

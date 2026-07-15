@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { FEATURES } from '@/lib/features';
 import { notFound } from 'next/navigation';
+import { GlassSelect } from '@/components/common/GlassSelect';
 import { StatChartCard } from '@/components/common/Charts';
 import { ImportCostBreakdown } from '@/components/imported/ImportCostBreakdown';
 import { IMPORT_COUNTRIES } from '@/types/imported';
@@ -98,7 +99,7 @@ export default function CustomsCalcPage() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto">
           <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-6 backdrop-blur-sm shadow-sm">
-            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
             CUSTOMS CALCULATOR
           </span>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tighter text-foreground mb-4 leading-tight">
@@ -118,13 +119,7 @@ export default function CustomsCalcPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[11px] text-muted-foreground block uppercase tracking-wider font-medium">کشور مبدأ</label>
-                <select
-                  value={form.country}
-                  onChange={(e) => update({ country: e.target.value })}
-                  className="w-full bg-surface-2/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
-                >
-                  {IMPORT_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <GlassSelect value={form.country} onChange={(v) => update({ country: v })} options={IMPORT_COUNTRIES.map((c: string) => ({ value: c, label: c }))} placeholder="کشور مبدأ" />
               </div>
 
               <div className="space-y-2">
@@ -139,24 +134,12 @@ export default function CustomsCalcPage() {
 
               <div className="space-y-2">
                 <label className="text-[11px] text-muted-foreground block uppercase tracking-wider font-medium">حجم موتور</label>
-                <select
-                  value={form.engineCC}
-                  onChange={(e) => update({ engineCC: Number(e.target.value) })}
-                  className="w-full bg-surface-2/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
-                >
-                  {ENGINE_CC_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+                <GlassSelect value={String(form.engineCC)} onChange={(v) => update({ engineCC: Number(v) })} options={ENGINE_CC_OPTIONS.map((o: { value: number; label: string }) => ({ value: String(o.value), label: o.label }))} placeholder="حجم موتور" />
               </div>
 
               <div className="space-y-2">
                 <label className="text-[11px] text-muted-foreground block uppercase tracking-wider font-medium">نوع سوخت</label>
-                <select
-                  value={form.fuelType}
-                  onChange={(e) => update({ fuelType: e.target.value })}
-                  className="w-full bg-surface-2/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
-                >
-                  {FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
-                </select>
+                <GlassSelect value={form.fuelType} onChange={(v) => update({ fuelType: v })} options={FUEL_TYPES.map((f: string) => ({ value: f, label: f }))} placeholder="نوع سوخت" />
               </div>
 
               <div className="space-y-2">
@@ -185,15 +168,11 @@ export default function CustomsCalcPage() {
 
               <div className="space-y-2">
                 <label className="text-[11px] text-muted-foreground block uppercase tracking-wider font-medium">نوع واردات</label>
-                <select
-                  value={form.importType}
-                  onChange={(e) => update({ importType: e.target.value })}
-                  className="w-full bg-surface-2/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
-                >
-                  <option value="طرح نوین">طرح نوین</option>
-                  <option value="شمال">واردات شمال</option>
-                  <option value="منطقه آزاد">منطقه آزاد</option>
-                </select>
+                <GlassSelect value={form.importType} onChange={(v) => update({ importType: v })} options={[
+                  { value: 'طرح نوین', label: 'طرح نوین' },
+                  { value: 'شمال', label: 'واردات شمال' },
+                  { value: 'منطقه آزاد', label: 'منطقه آزاد' },
+                ]} placeholder="نوع واردات" />
               </div>
             </div>
 

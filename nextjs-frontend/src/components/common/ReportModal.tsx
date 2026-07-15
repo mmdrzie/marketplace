@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 
 interface ReportModalProps {
-  listingId: number;
+  listingId: string | number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -35,8 +35,8 @@ export function ReportModal({ listingId, onClose, onSuccess }: ReportModalProps)
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 rounded-xl p-6 w-full max-w-md border border-slate-800">
-        <h3 className="text-lg font-bold text-white mb-4">گزارش آگهی</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-800">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">گزارش آگهی</h3>
 
         <div className="space-y-4">
           <div>
@@ -71,7 +71,7 @@ export function ReportModal({ listingId, onClose, onSuccess }: ReportModalProps)
 
           {reportMutation.isError && (
             <p className="text-rose-400 text-sm">
-              {(reportMutation.error as any)?.response?.data?.message || 'خطا در ثبت گزارش'}
+              {(reportMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'خطا در ثبت گزارش'}
             </p>
           )}
 

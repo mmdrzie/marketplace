@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { FEATURES } from '@/lib/features';
@@ -35,14 +34,17 @@ export default function ImportedPage() {
 
   const { data: listingsData } = useQuery({
     queryKey: ['imported-listings'],
-    queryFn: async () => { const res = await api.get('/listings', { params: { scope: 'imported' } }); return res.data.data as any[]; },
+    queryFn: async () => { const res = await api.get('/listings', { params: { scope: 'imported' } }); return res.data.data as Array<Record<string, unknown>>; },
     retry: 2,
   });
-  const allListings: any[] = listingsData ?? [];
+  const allListings = useMemo(() => (listingsData ?? []) as Array<Record<string, unknown>>, [listingsData]);
 
   const filtered = useMemo(() => {
     if (tab === 'all') return allListings;
-    return allListings.filter((l) => l.category?.slug === tab);
+    return allListings.filter((l) => {
+      const cat = (l as Record<string, unknown>)?.category as Record<string, unknown> | undefined;
+      return cat?.slug === tab;
+    });
   }, [tab, allListings]);
 
   const chartData = useMemo(() => generateImportPriceTrend(), []);
@@ -58,7 +60,7 @@ export default function ImportedPage() {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto">
           <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-6 backdrop-blur-sm shadow-sm">
-            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
             IMPORTED VEHICLES
           </span>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground mb-4 leading-tight">
@@ -105,17 +107,18 @@ export default function ImportedPage() {
 
         {/* Listing grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {(filtered as any[]).map((l: any, i: number) => {
-            const countryAttr = (l.attributes as any[])?.find((a: any) => a.attribute_id === 201);
-            const customsAttr = (l.attributes as any[])?.find((a: any) => a.attribute_id === 203);
+          {(filtered as Array<Record<string, unknown>>).map((l, i: number) => {
+            const item = l as { id: string; slug: string; title: string; province: string; city: string; price: number; is_featured: boolean; views: number; attributes: Array<Record<string, unknown>> };
+            const attrs = (Array.isArray(item.attributes) ? item.attributes : []) as Array<Record<string, unknown>>;
+            const countryAttr = attrs.find((a) => a.attribute_id === 201);
+            const customsAttr = attrs.find((a) => a.attribute_id === 203);
             return (
-              <motion.div
-                key={l.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.3 }}
+              <div
+                key={item.id}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}
               >
-                <Link href={`/imported/${l.slug}`} className="block group h-full">
+                <Link href={`/imported/${item.slug}`} className="block group h-full">
                   <div className="bg-surface/40 border border-border rounded-3xl p-6 hover:border-primary/40 hover:bg-surface hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
                     <div className="w-full aspect-video bg-surface-2/50 border border-border-subtle rounded-2xl flex items-center justify-center overflow-hidden mb-4">
                       <svg className="h-12 w-12 text-muted-foreground/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -123,20 +126,20 @@ export default function ImportedPage() {
                       </svg>
                     </div>
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <ImportedBadge country={countryAttr?.value || null} customsStatus={customsAttr?.value || null} size="sm" />
-                      {l.is_featured && (
+                      <ImportedBadge country={(countryAttr?.value as string) || null} customsStatus={(customsAttr?.value as string) || null} size="sm" />
+                      {item.is_featured && (
                         <span className="text-[9px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-full border border-warning/20">VIP</span>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-foreground leading-tight mb-1 group-hover:text-primary transition-colors">{l.title}</h3>
-                    <p className="text-[11px] text-muted-foreground mb-4 font-light">{l.province} — {l.city}</p>
+                    <h3 className="text-sm font-bold text-foreground leading-tight mb-1 group-hover:text-primary transition-colors">{item.title}</h3>
+                    <p className="text-[11px] text-muted-foreground mb-4 font-light">{item.province} — {item.city}</p>
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-border-subtle">
-                      <span className="text-base font-bold text-foreground tracking-tighter">{typeof l.price === 'number' ? l.price.toLocaleString('fa-IR') : '—'}<span className="text-[10px] text-muted-foreground font-normal mr-1">تومان</span></span>
-                      <span className="text-[10px] text-muted-foreground">{l.views?.toLocaleString('fa-IR')} بازدید</span>
+                      <span className="text-base font-bold text-foreground tracking-tighter">{typeof item.price === 'number' ? item.price.toLocaleString('fa-IR') : '—'}<span className="text-[10px] text-muted-foreground font-normal mr-1">تومان</span></span>
+                      <span className="text-[10px] text-muted-foreground">{item.views.toLocaleString('fa-IR')} بازدید</span>
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
         </div>

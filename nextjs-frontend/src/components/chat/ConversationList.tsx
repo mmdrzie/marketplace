@@ -1,6 +1,6 @@
 'use client';
-
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useConversations } from '@/hooks/useChat';
 import { useAuthStore } from '@/store/authStore';
 import { useEcho } from '@/providers/EchoProvider';
@@ -15,7 +15,7 @@ interface ConversationListProps {
 
 export function ConversationList({ onSelectChat, activeChatId }: ConversationListProps) {
   const { data, isLoading } = useConversations();
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const { echo } = useEcho();
   const queryClient = useQueryClient();
   const subscribed = useRef<Set<number>>(new Set());
@@ -24,7 +24,7 @@ export function ConversationList({ onSelectChat, activeChatId }: ConversationLis
   useEffect(() => {
     if (!echo || !user) return;
     const active = subscribed.current;
-    const newIds = new Set((data?.data as Conversation[] | undefined)?.map((c) => c.id) || []);
+    const newIds = new Set((data as Conversation[] | undefined)?.map((c) => c.id) || []);
     const prevIds: number[] = JSON.parse(idsSnapshot.current);
 
     const same = prevIds.length === newIds.size && prevIds.every((id) => newIds.has(id));
@@ -48,13 +48,13 @@ export function ConversationList({ onSelectChat, activeChatId }: ConversationLis
       } catch {}
     }
     idsSnapshot.current = JSON.stringify(Array.from(newIds));
-  }, [echo, user, data?.data, queryClient]);
+  }, [echo, user, data, queryClient]);
 
   if (isLoading) {
     return (
       <div className="p-4 space-y-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 animate-pulse">
+          <div key={i} className="flex items-center gap-4 motion-safe:animate-pulse">
             <div className="w-12 h-12 bg-surface-2 rounded-full"></div>
             <div className="flex-1 space-y-2">
               <div className="h-3 w-1/2 bg-surface-2 rounded"></div>
@@ -66,7 +66,7 @@ export function ConversationList({ onSelectChat, activeChatId }: ConversationLis
     );
   }
 
-  const conversations = data?.data || [];
+  const conversations = data || [];
 
   if (!conversations.length) {
     return (
@@ -101,7 +101,7 @@ export function ConversationList({ onSelectChat, activeChatId }: ConversationLis
           >
             <div className="relative shrink-0">
               {otherUser?.avatar ? (
-                <img src={otherUser.avatar} alt={otherUser.name || 'avatar'} className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+                <Image src={otherUser.avatar} alt={otherUser.name || 'avatar'} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-border" />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-surface-2 border-2 border-border flex items-center justify-center text-lg font-bold text-foreground">
                   {otherUser?.name?.[0] || '?'}

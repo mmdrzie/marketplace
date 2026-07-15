@@ -19,7 +19,7 @@ export default function Error({
     <div className="relative min-h-screen flex items-center justify-center bg-background overflow-hidden px-4">
       {/* بک‌گراند داینامیک و هاله‌های نوری */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px] animate-pulse" style={{ backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)' }}></div>
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px] motion-safe:animate-pulse" style={{ backgroundColor: 'color-mix(in srgb, var(--color-destructive) 10%, transparent)' }}></div>
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full blur-[130px]" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-indigo) 10%, transparent)' }}></div>
         <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20"></div>
       </div>

@@ -14,13 +14,8 @@ import { StatChartCard } from '@/components/common/Charts';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
 import Image from 'next/image';
-import { formatDate, formatRelativeTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import type { User, Listing } from '@/types';
-
-async function fetchDealerProfile(id: string) {
-  const res = await api.get(`/users/${id}/profile`);
-  return res.data.data as User;
-}
 
 export default function DealerStorefrontPage() {
   const { id } = useParams<{ id: string }>();

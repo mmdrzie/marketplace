@@ -29,7 +29,6 @@ export default function ImportedChartsPage() {
   const topModels = useMemo(() => generateTopModels(10), []);
   const forecast = useMemo(() => generateImportForecast(), []);
   const totalVolume = useMemo(() => customsVolumes.reduce((s, m) => s + m.volume, 0), [customsVolumes]);
-  const totalRevenue = useMemo(() => customsVolumes.reduce((s, m) => s + m.revenue, 0), [customsVolumes]);
   const avgPrice = useMemo(() => Math.round(topModels.reduce((s, m) => s + m.avgPrice, 0) / topModels.length), [topModels]);
 
   return (
@@ -50,7 +49,7 @@ export default function ImportedChartsPage() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto">
           <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-6 backdrop-blur-sm shadow-sm">
-            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
             IMPORT MARKET DASHBOARD
           </span>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tighter text-foreground mb-4 leading-tight">

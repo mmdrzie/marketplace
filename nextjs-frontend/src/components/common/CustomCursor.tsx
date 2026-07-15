@@ -18,9 +18,10 @@ export function CustomCursor() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(pointer: coarse)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const style = document.createElement('style');
-    style.textContent = '* { cursor: none !important; }';
+    style.textContent = '* { cursor: none !important; } *:focus-visible { cursor: auto !important; }';
     document.head.appendChild(style);
 
     const show = () => {

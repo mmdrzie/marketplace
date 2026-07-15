@@ -12,21 +12,53 @@ router.post('/presigned', auth(), async (c) => {
 
   if (!filename) throw AppError.validation('Filename is required');
 
-  // For MVP with local storage, return a dummy URL
-  // When Supabase Storage is configured, this will generate actual presigned URLs
+  // Local storage fallback
   if (config.storage.provider === 'local' || !config.storage.s3.endpoint) {
+    const objectKey = `${Date.now()}-${filename}`;
     return c.json({
       success: true,
       data: {
-        url: `/uploads/${Date.now()}-${filename}`,
+        upload_url: `/uploads/${objectKey}`,
         method: 'PUT',
-        fields: {},
+        object_key: objectKey,
+        public_url: `/uploads/${objectKey}`,
       },
     });
   }
 
-  // S3 presigned URL generation (placeholder for when storage provider is configured)
-  throw AppError.internal('S3 storage not yet configured');
+  // Supabase Storage (S3-compatible) presigned URL generation
+  const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+  const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+
+  const s3 = new S3Client({
+    region: config.storage.s3.region,
+    endpoint: config.storage.s3.endpoint,
+    credentials: {
+      accessKeyId: config.storage.s3.accessKey,
+      secretAccessKey: config.storage.s3.secretKey,
+    },
+    forcePathStyle: true,
+  });
+
+  const objectKey = `${Date.now()}-${filename}`;
+
+  const command = new PutObjectCommand({
+    Bucket: config.storage.s3.bucket,
+    Key: objectKey,
+    ContentType: contentType || 'application/octet-stream',
+  });
+
+  const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+
+  return c.json({
+    success: true,
+    data: {
+      upload_url: uploadUrl,
+      method: 'PUT',
+      object_key: objectKey,
+      public_url: `${config.storage.s3.endpoint}/${config.storage.s3.bucket}/${objectKey}`,
+    },
+  });
 });
 
 export { router as uploadRouter };

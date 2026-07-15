@@ -5,14 +5,15 @@ export function errorHandler(): MiddlewareHandler {
   return async (c, next) => {
     try {
       await next();
-    } catch (err: any) {
+    } catch (err: unknown) {
       const isAppError = err && typeof err === 'object' && err.constructor?.name === 'AppError';
 
       if (isAppError) {
-        c.status(err.httpStatus || 500);
+        const appErr = err as { httpStatus?: number; code?: string; message: string };
+        c.status((appErr.httpStatus || 500) as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500);
         return c.json({
           success: false,
-          error: { code: err.code || ErrorCode.INTERNAL_ERROR, message: err.message },
+          error: { code: appErr.code || ErrorCode.INTERNAL_ERROR, message: appErr.message },
         });
       }
 

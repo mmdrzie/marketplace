@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { JSX, Suspense, useEffect, useState, useMemo } from 'react';
+import { JSX, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
@@ -97,23 +97,26 @@ function NotifsCard() {
 }
 
 function DashboardContent() {
-  const { user, phoneVerified, emailVerified } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const phoneVerified = useAuthStore((s) => s.phoneVerified);
+  const emailVerified = useAuthStore((s) => s.emailVerified);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mockActivities, setMockActivities] = useState<{ id: string; type: ActivityType; message: string; created_at: string }[]>([]);
+  const { data: recentListings } = useQuery({
+    queryKey: ['listings', 'recent'],
+    queryFn: async () => { const res = await api.get('/listings', { params: { scope: 'me', limit: 5 } }); return res.data.data; },
+    enabled: !!user,
+  });
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      const now = Date.now();
-      setMockActivities([
-        { id: '1', type: 'listing_created' as ActivityType, message: 'آگهی پراید ۱۱۱ ثبت شد', created_at: new Date(now - 3600000).toISOString() },
-        { id: '2', type: 'message_received' as ActivityType, message: 'پیام جدید از علی رضایی', created_at: new Date(now - 7200000).toISOString() },
-        { id: '3', type: 'listing_sold' as ActivityType, message: 'آگهی پژو ۲۰۶ به فروش رفت', created_at: new Date(now - 86400000).toISOString() },
-        { id: '4', type: 'review_received' as ActivityType, message: 'نظر جدید برای آگهی سمند', created_at: new Date(now - 172800000).toISOString() },
-      ]);
-    }, 0);
-    return () => clearTimeout(t);
-  }, []);
+  const activities = useMemo(() => {
+    if (!recentListings || !Array.isArray(recentListings)) return [];
+    return recentListings.slice(0, 5).map((listing: { id: number | string; title: string; created_at: string; status: string }) => ({
+      id: String(listing.id),
+      type: (listing.status === 'sold' ? 'listing_sold' : 'listing_created') as ActivityType,
+      message: listing.status === 'sold' ? `آگهی ${listing.title} به فروش رفت` : `آگهی ${listing.title} ثبت شد`,
+      created_at: listing.created_at,
+    }));
+  }, [recentListings]);
   const payment = searchParams.get('payment');
 
   const paymentMsg = useMemo(() => {
@@ -122,9 +125,9 @@ function DashboardContent() {
     return null;
   }, [payment]);
 
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: queryKeys.dashboard.stats,
-    queryFn: async () => { const res = await api.get('/me'); return res.data.data; },
+    queryFn: async () => {       const res = await api.get('/auth/me'); return res.data.data; },
     enabled: !!user,
   });
 
@@ -214,7 +217,7 @@ function DashboardContent() {
               <div className={`w-12 h-12 rounded-xl ${item.glow} flex items-center justify-center mb-4 ${item.color} group-hover:scale-110 transition-transform duration-300`}>
                 <Icon path={item.icon} />
               </div>
-              <p className="text-3xl font-bold text-foreground tracking-tighter mb-1">{item.value ?? '0'}</p>
+              <p className="text-3xl font-bold text-foreground tracking-tighter mb-1">{statsLoading ? <span className="inline-block h-8 w-20 bg-surface-2 rounded-lg motion-safe:animate-pulse" /> : (item.value ?? '0')}</p>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{item.label}</p>
             </div>
           ))}
@@ -277,11 +280,11 @@ function DashboardContent() {
           <ErrorBoundary>
             <div className="bg-surface/40 border border-border rounded-3xl p-6 backdrop-blur-sm">
               <h3 className="text-lg font-bold text-foreground mb-6 tracking-tight">فعالیت‌های اخیر</h3>
-              {mockActivities.length > 0 && <ActivityCard activities={mockActivities} />}
+              <ActivityCard activities={activities} />
             </div>
           </ErrorBoundary>
 
-          <NotifsCard />
+          <ErrorBoundary><NotifsCard /></ErrorBoundary>
         </div>
       </div>
     </div>

@@ -17,6 +17,8 @@ export function InfiniteScroll({
   children,
 }: InfiniteScrollProps) {
   const observerRef = useRef<HTMLDivElement>(null);
+  const onLoadMoreRef = useRef(onLoadMore);
+  onLoadMoreRef.current = onLoadMore;
 
   useEffect(() => {
     if (!observerRef.current || !hasMore) return;
@@ -24,7 +26,7 @@ export function InfiniteScroll({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
-          onLoadMore();
+          onLoadMoreRef.current();
         }
       },
       { threshold: 0.1 }
@@ -32,7 +34,7 @@ export function InfiniteScroll({
 
     observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loading, onLoadMore]);
+  }, [hasMore, loading]);
 
   return (
     <div>

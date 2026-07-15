@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import type { ServiceRecord, ServiceType } from '@/store/serviceLogStore';
 import { SERVICE_TYPE_LABELS, SERVICE_TYPE_COLORS, persianDateToNum } from '@/store/serviceLogStore';
 
@@ -33,12 +32,10 @@ export function ServiceLogTimeline({ records, onDelete, isEditable }: ServiceLog
   return (
     <div className="relative">
       {sorted.map((record, idx) => (
-        <motion.div
+        <div
           key={record.id}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: idx * 0.05, duration: 0.3 }}
-          className="relative flex gap-4 pb-6 last:pb-0"
+          className="relative flex gap-4 pb-6 last:pb-0 animate-fade-in-up"
+          style={{ animationDelay: `${idx * 0.05}s`, animationFillMode: 'both' }}
         >
           <div className="flex flex-col items-center">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${SERVICE_TYPE_COLORS[record.type]}`}>
@@ -82,7 +79,7 @@ export function ServiceLogTimeline({ records, onDelete, isEditable }: ServiceLog
             {record.documents.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {record.documents.map((doc, i) => (
-                  <span key={i} className="text-[9px] bg-surface-2 border border-border-subtle px-2 py-0.5 rounded-md text-muted-foreground flex items-center gap-1">
+                  <span key={doc.name} className="text-[9px] bg-surface-2 border border-border-subtle px-2 py-0.5 rounded-md text-muted-foreground flex items-center gap-1">
                     <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                     {doc.name}
                   </span>
@@ -90,7 +87,7 @@ export function ServiceLogTimeline({ records, onDelete, isEditable }: ServiceLog
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );

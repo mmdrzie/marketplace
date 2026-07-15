@@ -59,9 +59,9 @@ export const useAuthStore = create<AuthState>()(
       }),
       {
         name: 'auth-storage',
-        version: 3,
+        version: 5,
         partialize: (state) => ({
-          refreshToken: state.refreshToken,
+          token: state.token,
           user: state.user,
           isAuthenticated: state.isAuthenticated,
           phoneVerified: state.phoneVerified,
@@ -95,23 +95,47 @@ export const useAuthStore = create<AuthState>()(
               _hasHydrated: true,
             } as AuthState;
           }
-          const v2 = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
+          if (version >= 2 && version < 5) {
+            const v = persisted as { token?: string | null; user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
+            return {
+              refreshToken: null,
+              token: v.token ?? null,
+              user: v.user ?? null,
+              isAuthenticated: v.isAuthenticated ?? false,
+              phoneVerified: v.phoneVerified ?? false,
+              emailVerified: v.emailVerified ?? false,
+              pendingAction: v.pendingAction ?? null,
+              _hasHydrated: true,
+            } as AuthState;
+          }
+          const v = persisted as { token?: string | null; user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
           return {
             refreshToken: null,
-            token: null,
-            user: v2.user ?? null,
-            isAuthenticated: v2.isAuthenticated ?? false,
-            phoneVerified: v2.phoneVerified ?? false,
-            emailVerified: v2.emailVerified ?? false,
-            pendingAction: v2.pendingAction ?? null,
+            token: v.token ?? null,
+            user: v.user ?? null,
+            isAuthenticated: v.isAuthenticated ?? false,
+            phoneVerified: v.phoneVerified ?? false,
+            emailVerified: v.emailVerified ?? false,
+            pendingAction: v.pendingAction ?? null,
             _hasHydrated: true,
           } as AuthState;
         },
-        onRehydrateStorage: () => (state, error) => {
-          if (error) {
-            console.error('Auth store rehydration failed:', error);
-          }
+        onRehydrateStorage: () => (state) => {
           state?.setHasHydrated(true);
+          if (state?.user && !state.token) {
+            import('@/lib/api').then(({ default: api }) => {
+              api.post('/auth/refresh', {}, { withCredentials: true }).then((res) => {
+                const newToken = res.data.data?.token || res.data.token;
+                const newRefresh = res.data.data?.refreshToken;
+                const currentUser = useAuthStore.getState().user;
+                if (newToken && currentUser) {
+                  useAuthStore.getState().setAuth(newToken, currentUser, newRefresh);
+                }
+              }).catch(() => {
+                useAuthStore.getState().logout();
+              });
+            });
+          }
         },
       },
     ),

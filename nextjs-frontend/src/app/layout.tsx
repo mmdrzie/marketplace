@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import dynamic from 'next/dynamic';
+import { Vazirmatn } from 'next/font/google';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
-import { EchoProvider } from '@/providers/EchoProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 const LogoutModalProvider = dynamic(() => import('@/components/common/LogoutModalProvider').then(mod => mod.LogoutModalProvider));
 import { ApiErrorHandler } from '@/components/common/ApiErrorHandler';
@@ -10,8 +10,15 @@ import { ScrollToTop } from '@/components/common/ScrollToTop';
 import { ToastContainer } from '@/components/common/Toast';
 import { CompareBar } from '@/components/common/CompareBar';
 import { PWAProvider } from '@/components/common/PWAProvider';
-import { RealtimeNotificationListener } from '@/components/common/RealtimeNotificationListener';
+import { DeviceDetector } from '@/components/common/DeviceDetector';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
+
+const vazirmatn = Vazirmatn({
+  subsets: ['arabic', 'latin'],
+  display: 'swap',
+  variable: '--font-vazirmatn',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -65,29 +72,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
-      <body className="font-vazirmatn antialiased bg-background text-foreground overflow-x-hidden">
+      <body className={`${vazirmatn.variable} font-vazirmatn antialiased bg-background text-foreground overflow-x-hidden`}>
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
-              <EchoProvider>
-                {/* Skip link for keyboard / screen-reader users */}
-                <a
-                  href="#main-content"
-                  className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:shadow-lg"
-                >
-                  پرش به محتوای اصلی
-                </a>
-                <div className="min-h-screen flex flex-col bg-transparent transition-colors duration-300">
-                  {children}
-                </div>
-                <LogoutModalProvider />
-                <ApiErrorHandler />
-                <ScrollToTop />
-                <RealtimeNotificationListener />
-                <ToastContainer />
-                <CompareBar />
-                <PWAProvider />
-              </EchoProvider>
+              {/* Skip link for keyboard / screen-reader users */}
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:right-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:shadow-lg"
+              >
+                پرش به محتوای اصلی
+              </a>
+              <div className="min-h-screen flex flex-col bg-transparent transition-colors duration-300">
+                {children}
+              </div>
+              <LogoutModalProvider />
+              <ApiErrorHandler />
+              <ScrollToTop />
+              <ToastContainer />
+              <CompareBar />
+              <PWAProvider />
+              <DeviceDetector />
+              <Analytics />
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

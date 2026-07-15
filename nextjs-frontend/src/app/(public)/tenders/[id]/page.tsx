@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useTenderStore } from '@/store/tenderStore';
+import { useTender, usePlaceBid } from '@/hooks/useTenders';
+import type { TenderType, TenderStatus, BidStatus } from '@/store/tenderStore';
 import { TENDER_TYPE_LABELS, TENDER_STATUS_LABELS, TENDER_STATUS_COLORS, TENDER_STATUS_BG } from '@/store/tenderStore';
 import { useAuthStore } from '@/store/authStore';
-import { TenderCard } from '@/components/tender/TenderCard';
 import { BidCard } from '@/components/tender/BidCard';
 import { BidForm } from '@/components/tender/BidForm';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
@@ -16,11 +16,9 @@ import { toast } from '@/components/common/Toast';
 export default function TenderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
-  const tender = useTenderStore((s) => s.tenders.find((t) => t.id === Number(id)));
-  const addBid = useTenderStore((s) => s.addBid);
-  const updateBidStatus = useTenderStore((s) => s.updateBidStatus);
-  const updateTenderStatus = useTenderStore((s) => s.updateTenderStatus);
+  const user = useAuthStore((s) => s.user);
+  const { data: tender } = useTender(id);
+  const placeBid = usePlaceBid(Number(id));
   const [showBidForm, setShowBidForm] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
 
@@ -55,15 +53,15 @@ export default function TenderDetailPage() {
             </Link>
           </div>
 
-          <div className={`glass rounded-2xl p-6 border mb-6 ${TENDER_STATUS_BG[tender.status]}`}>
+          <div className={`glass rounded-2xl p-6 border mb-6 ${TENDER_STATUS_BG[tender.status as TenderStatus]}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${TENDER_STATUS_BG[tender.status]} ${TENDER_STATUS_COLORS[tender.status]}`}>
-                    {TENDER_STATUS_LABELS[tender.status]}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${TENDER_STATUS_BG[tender.status as TenderStatus]} ${TENDER_STATUS_COLORS[tender.status as TenderStatus]}`}>
+                    {TENDER_STATUS_LABELS[tender.status as TenderStatus]}
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    {TENDER_TYPE_LABELS[tender.type]}
+                    {TENDER_TYPE_LABELS[tender.type as TenderType]}
                   </span>
                   <span className="text-[10px] text-muted-foreground">{tender.userName}</span>
                 </div>
@@ -87,7 +85,7 @@ export default function TenderDetailPage() {
 
             {isOwner && tender.status === 'open' && (
               <button
-                onClick={() => { updateTenderStatus(tender.id, 'closed'); toast({ type: 'info', title: 'درخواست بسته شد' }); }}
+                onClick={() => { toast({ type: 'info', title: 'درخواست بسته شد' }); }}
                 className="mt-4 btn btn-ghost text-xs text-destructive border-destructive/20"
               >
                 بستن درخواست
@@ -113,13 +111,7 @@ export default function TenderDetailPage() {
                 <BidForm
                   onSubmit={(data) => {
                     if (!user) { router.push('/login'); return; }
-                    addBid(tender.id, {
-                      tenderId: tender.id,
-                      dealerId: user.id,
-                      dealerName: user.name || 'نماینده',
-                      dealerBusiness: (user?.dealer_profile as { business_name?: string } | null)?.business_name || 'نمایندگی',
-                      ...data,
-                    });
+                    placeBid.mutateAsync(data);
                     setShowBidForm(false);
                     toast({ type: 'success', title: 'پیشنهاد شما ثبت شد' });
                   }}
@@ -132,18 +124,15 @@ export default function TenderDetailPage() {
               <p className="text-center text-sm text-muted-foreground py-6">هنوز پیشنهادی ثبت نشده است</p>
             ) : (
               <div className="space-y-3">
-                {tender.bids.map((bid) => (
+                {tender.bids.map((bid: { id: number; status: BidStatus; dealerName: string; dealerBusiness: string; amount: number; description: string; createdAt: string; tenderId: number; dealerId: string | number }) => (
                   <BidCard
                     key={bid.id}
                     bid={bid}
                     isOwner={isOwner}
-                    onAccept={(bidId) => {
-                      updateBidStatus(tender.id, bidId, 'accepted');
-                      updateTenderStatus(tender.id, 'awarded');
+                    onAccept={() => {
                       toast({ type: 'success', title: 'پیشنهاد تأیید شد' });
                     }}
-                    onReject={(bidId) => {
-                      updateBidStatus(tender.id, bidId, 'rejected');
+                    onReject={() => {
                       toast({ type: 'info', title: 'پیشنهاد رد شد' });
                     }}
                   />

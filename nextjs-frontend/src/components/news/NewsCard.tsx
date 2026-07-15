@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Link from 'next/link';
 import type { Article } from '@/types';
 
@@ -10,7 +11,7 @@ const CATEGORY_STYLES: Record<string, { badge: string }> = {
   announcement: { badge: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
-export function NewsCard({ article }: { article: Article }) {
+export const NewsCard = memo(function NewsCard({ article }: { article: Article }) {
   const style = CATEGORY_STYLES[article.category] || CATEGORY_STYLES.guide;
 
   return (
@@ -50,4 +51,4 @@ export function NewsCard({ article }: { article: Article }) {
       </div>
     </Link>
   );
-}
+});

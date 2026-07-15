@@ -1,7 +1,7 @@
 'use client';
 
+import { memo } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import type { CompareItem } from '@/store/compareStore';
 
 const BASE_ATTR_LABELS: Record<string, string> = {
@@ -49,25 +49,25 @@ function attrLabel(key: string): string {
 }
 
 function findBestIndex(values: string[], higherBetter: boolean): number {
-  const nums = values.map((v, i) => (isNumeric(v) ? parseNumeric(v) : null));
+  const nums = values.map((v) => (isNumeric(v) ? parseNumeric(v) : null));
   const filtered = nums.filter((n): n is number => n !== null);
   if (filtered.length < 2) return -1;
   const best = higherBetter ? Math.max(...filtered) : Math.min(...filtered);
   return nums.indexOf(best);
 }
 
-export function SpecComparisonGrid({ items, onRemove }: { items: CompareItem[]; onRemove: (id: number) => void }) {
+const SpecComparisonGrid = memo(function SpecComparisonGrid({ items, onRemove }: { items: CompareItem[]; onRemove: (id: string | number) => void }) {
   const attrKeys = getAllAttrKeys(items);
 
   return (
     <div className="glass rounded-2xl border border-border-subtle overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overscroll-contain scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-right p-4 text-muted-foreground font-medium w-28 md:w-36 shrink-0">مشخصات</th>
+              <th className="text-right p-2 md:p-4 text-muted-foreground font-medium w-20 md:w-36 shrink-0">مشخصات</th>
               {items.map((item) => (
-                <th key={item.id} className="p-4 text-center min-w-[180px]">
+                <th key={item.id} className="p-2 md:p-4 text-center min-w-[160px] md:min-w-[180px]">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-bold text-foreground text-sm">{item.title}</span>
                     <button
@@ -111,11 +111,11 @@ export function SpecComparisonGrid({ items, onRemove }: { items: CompareItem[]; 
 
                 return (
                   <tr key={attr} className="border-b border-border-subtle last:border-0">
-                    <td className="p-4 text-muted-foreground font-medium">{attrLabel(attr)}</td>
+                    <td className="p-2 md:p-4 text-muted-foreground font-medium">{attrLabel(attr)}</td>
                     {items.map((item, idx) => {
                       const pct = ((nums[idx] - minVal) / range) * 100;
                       return (
-                        <td key={item.id} className="p-4 text-center">
+                        <td key={item.id} className="p-2 md:p-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             {bestIdx === idx && (
                               <svg className="h-3 w-3 text-success shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
@@ -125,11 +125,9 @@ export function SpecComparisonGrid({ items, onRemove }: { items: CompareItem[]; 
                             </span>
                           </div>
                           <div className="w-full h-1.5 bg-surface-2 rounded-full mt-1.5 overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${Math.max(pct, 3)}%` }}
-                              transition={{ duration: 0.5, ease: 'easeOut' }}
-                              className={`h-full rounded-full transition-all duration-500 ${
+                            <div
+                              style={{ width: `${Math.max(pct, 3)}%` }}
+                              className={`h-full rounded-full ${
                                 bestIdx === idx ? 'bg-success' : 'bg-primary/30'
                               }`}
                             />
@@ -143,9 +141,9 @@ export function SpecComparisonGrid({ items, onRemove }: { items: CompareItem[]; 
 
               return (
                 <tr key={attr} className="border-b border-border-subtle last:border-0">
-                  <td className="p-4 text-muted-foreground font-medium">{attrLabel(attr)}</td>
+                  <td className="p-2 md:p-4 text-muted-foreground font-medium">{attrLabel(attr)}</td>
                   {items.map((item) => (
-                    <td key={item.id} className="p-4 text-center text-foreground">{getAttr(item, attr)}</td>
+                    <td key={item.id} className="p-2 md:p-4 text-center text-foreground">{getAttr(item, attr)}</td>
                   ))}
                 </tr>
               );
@@ -155,4 +153,6 @@ export function SpecComparisonGrid({ items, onRemove }: { items: CompareItem[]; 
       </div>
     </div>
   );
-}
+});
+
+export { SpecComparisonGrid };

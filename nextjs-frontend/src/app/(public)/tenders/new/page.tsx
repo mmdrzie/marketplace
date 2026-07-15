@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { TenderForm } from '@/components/tender/TenderForm';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';

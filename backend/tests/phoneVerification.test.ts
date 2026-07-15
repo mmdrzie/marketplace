@@ -9,7 +9,7 @@ vi.mock('../src/repositories/verification', () => ({
     findEmailVerificationByHash: vi.fn(),
     markEmailVerified: vi.fn(),
     createPhoneVerification: vi.fn(),
-    findPhoneVerificationByHash: vi.fn(),
+    findLatestPhoneVerification: vi.fn(),
     markPhoneVerified: vi.fn(),
     countRecentByPhone: vi.fn(),
     countRecentByUser: vi.fn(),
@@ -56,7 +56,7 @@ describe('PhoneVerificationService', () => {
   });
 
   it('throws OTP_INVALID for wrong code', async () => {
-    vi.mocked(verificationRepo.findPhoneVerificationByHash).mockResolvedValue({
+    vi.mocked(verificationRepo.findLatestPhoneVerification).mockResolvedValue({
       id: 'v-1',
       otp_hash: '$2b$10$differenthash',
       expires_at: new Date(Date.now() + 60000).toISOString(),

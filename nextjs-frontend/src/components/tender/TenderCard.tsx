@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Link from 'next/link';
 import type { Tender } from '@/store/tenderStore';
 import { TENDER_TYPE_LABELS, TENDER_STATUS_LABELS, TENDER_STATUS_COLORS, TENDER_STATUS_BG } from '@/store/tenderStore';
@@ -9,7 +10,7 @@ interface TenderCardProps {
   showActions?: boolean;
 }
 
-export function TenderCard({ tender, showActions }: TenderCardProps) {
+export const TenderCard = memo(function TenderCard({ tender, showActions }: TenderCardProps) {
   const isExpired = new Date(tender.deadline) < new Date();
 
   return (
@@ -71,4 +72,4 @@ export function TenderCard({ tender, showActions }: TenderCardProps) {
       )}
     </Link>
   );
-}
+});

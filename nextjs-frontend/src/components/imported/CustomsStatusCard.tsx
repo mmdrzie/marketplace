@@ -2,7 +2,7 @@
 
 import { CUSTOMS_STATUS_LABELS } from '@/types/imported';
 import { CountryFlagIcon } from './CountryFlagIcon';
-import type { CustomsStatus, ImportOrigin } from '@/types/imported';
+import type { CustomsStatus } from '@/types/imported';
 
 interface CustomsStatusCardProps {
   country?: string;

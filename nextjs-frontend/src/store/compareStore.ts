@@ -11,8 +11,8 @@ export interface CompareItem extends Listing {
 interface CompareState {
   items: CompareItem[];
   addItem: (listing: CompareItem) => void;
-  removeItem: (id: number) => void;
-  hasItem: (id: number) => boolean;
+  removeItem: (id: string | number) => void;
+  hasItem: (id: string | number) => boolean;
   clearAll: () => void;
 }
 

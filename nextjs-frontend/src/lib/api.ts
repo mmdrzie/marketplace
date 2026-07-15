@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 import axiosRetry from 'axios-retry';
 import { useAuthStore } from '@/store/authStore';
+import type { ApiResponse } from '@/types/api';
 
 type RefreshPromise = Promise<string | null> | null;
 type ErrorCallback = (error: AxiosError) => void;
@@ -12,13 +13,15 @@ export function setOnApiError(callback: ErrorCallback | null) {
 }
 
 export function getApiErrorMessage(error: AxiosError): string {
+  const status = error.response?.status;
+  if (status && status >= 500) return 'خطایی در ارتباط با سرور رخ داد';
   const data = error.response?.data as
     | { error?: { message?: string } }
     | { message?: string }
     | undefined;
   if (data && 'error' in data && data.error?.message) return data.error.message;
   const msg = (data as { message?: string } | undefined)?.message;
-  return msg || (error.response?.status === 404 ? 'منبع مورد نظر یافت نشد' : 'خطایی در ارتباط با سرور رخ داد');
+  return msg || (status === 404 ? 'منبع مورد نظر یافت نشد' : 'خطایی در ارتباط با سرور رخ داد');
 }
 
 const api = axios.create({
@@ -37,7 +40,6 @@ axiosRetry(api, {
   retryCondition: (error) => {
     return (
       axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-      error.response?.status === 429 ||
       (error.response?.status !== undefined && error.response.status >= 500)
     );
   },
@@ -106,18 +108,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
-export interface ApiResponse<T> {
-  data: T;
-  meta?: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    from: number;
-    to: number;
-  };
-}
 
 export async function apiGet<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
   const res = await api.get<ApiResponse<T>>(url, config);

@@ -32,7 +32,7 @@ export default function AdminSettingsPage() {
   });
 
   if (isLoading) {
-    return <div className="space-y-3">{[...Array(8)].map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl animate-pulse" />)}</div>;
+    return <div className="space-y-3">{[...Array(8)].map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl motion-safe:animate-pulse" />)}</div>;
   }
 
   return (

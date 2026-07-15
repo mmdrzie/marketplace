@@ -37,8 +37,7 @@ export class PhoneVerificationService {
   }
 
   async verifyOtp(userId: string, phone: string, code: string): Promise<void> {
-    const otpHash = await bcrypt.hash(code, 10);
-    const stored = await verificationRepo.findPhoneVerificationByHash(otpHash, userId);
+    const stored = await verificationRepo.findLatestPhoneVerification(userId, phone);
     if (!stored) {
       throw AppError.otpInvalid();
     }

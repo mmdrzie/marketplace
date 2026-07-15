@@ -7,7 +7,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className }: SkeletonProps) {
-  return <div className={cn('animate-pulse bg-surface/40 border border-border rounded-2xl', className)} />;
+  return <div className={cn('motion-safe:animate-pulse bg-surface/40 border border-border rounded-2xl', className)} />;
 }
 
 export function SkeletonText({ className }: SkeletonProps) {
@@ -19,7 +19,7 @@ export function SkeletonCard({ className }: SkeletonProps) {
 }
 
 export function SkeletonAvatar({ className }: SkeletonProps) {
-  return <div className={cn('w-10 h-10 rounded-full bg-surface-2 animate-pulse shrink-0', className)} />;
+  return <div className={cn('w-10 h-10 rounded-full bg-surface-2 motion-safe:animate-pulse shrink-0', className)} />;
 }
 
 export function SkeletonListings({ count = 4 }: { count?: number }) {

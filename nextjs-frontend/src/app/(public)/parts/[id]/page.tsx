@@ -2,7 +2,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
-import { usePartStore } from '@/store/partStore';
+import { usePart } from '@/hooks/useParts';
 
 const CATEGORY_BADGE_CLASS: Record<string, { className: string; style?: React.CSSProperties }> = {
   original: { className: 'bg-primary/10 text-primary border-primary/20' },
@@ -20,8 +20,17 @@ const CATEGORY_BADGE_LABEL: Record<string, string> = {
 
 export default function PartDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const getPart = usePartStore((s) => s.getPart);
-  const part = getPart(Number(id));
+  const { data: part, isLoading } = usePart(id);
+
+  if (isLoading) {
+    return (
+      <div className="relative min-h-screen bg-background text-foreground overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!part) {
     return (
@@ -101,7 +110,7 @@ export default function PartDetailPage({ params }: { params: Promise<{ id: strin
             <div className="glass rounded-2xl p-5 border border-border-subtle space-y-3">
               <h3 className="text-sm font-bold text-foreground">مدل‌های سازگار</h3>
               <div className="flex flex-wrap gap-2">
-                {part.compatibility.split(',').map((model) => (
+                {part.compatibility.split(',').map((model: string) => (
                   <span key={model.trim()} className="text-xs bg-surface-2 border border-border px-3 py-1 rounded-full text-foreground">
                     {model.trim()}
                   </span>

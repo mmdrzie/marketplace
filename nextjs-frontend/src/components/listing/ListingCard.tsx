@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo } from 'react';
 import Link from 'next/link';
 import { Listing } from '@/types';
 import { PriceDisplay } from '@/components/common/PriceDisplay';
@@ -16,15 +16,18 @@ import { cn } from '@/lib/utils';
 interface ListingCardProps {
   listing: Listing;
   showStatus?: boolean;
+  priority?: boolean;
 }
 
-export function ListingCard({ listing, showStatus = false }: ListingCardProps) {
-  const { addItem, removeItem, hasItem } = useCompareStore();
+export const ListingCard = memo(function ListingCard({ listing, showStatus = false, priority = false }: ListingCardProps) {
+  const addItem = useCompareStore((s) => s.addItem);
+  const removeItem = useCompareStore((s) => s.removeItem);
+  const isInCompare = useCompareStore((s) => s.items.some((i) => i.id === listing.id));
 
   const toggleCompare = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (hasItem(listing.id)) {
+    if (isInCompare) {
       removeItem(listing.id);
       toast({ type: 'info', title: 'از مقایسه حذف شد', message: listing.title });
     } else if (useCompareStore.getState().items.length >= 4) {
@@ -48,6 +51,7 @@ export function ListingCard({ listing, showStatus = false }: ListingCardProps) {
               src={listing.primary_image}
               alt={listing.title}
               fill
+              priority={priority}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
             />
@@ -126,17 +130,17 @@ export function ListingCard({ listing, showStatus = false }: ListingCardProps) {
           <button
             onClick={toggleCompare}
             className={cn(
-              'w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 border',
-              hasItem(listing.id)
+              'w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 border',
+              isInCompare
                 ? 'bg-primary/10 border-primary/30 text-primary'
                 : 'border-transparent text-muted-foreground hover:bg-primary/10 hover:border-primary/20 hover:text-primary'
             )}
-            title={hasItem(listing.id) ? 'حذف از مقایسه' : 'افزودن به مقایسه'}
+            title={isInCompare ? 'حذف از مقایسه' : 'افزودن به مقایسه'}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="3" width="6" height="18" rx="1" />
               <rect x="16" y="3" width="6" height="18" rx="1" />
-              {hasItem(listing.id) && <line x1="8" y1="12" x2="16" y2="12" />}
+              {isInCompare && <line x1="8" y1="12" x2="16" y2="12" />}
             </svg>
           </button>
 
@@ -152,4 +156,4 @@ export function ListingCard({ listing, showStatus = false }: ListingCardProps) {
       </div>
     </div>
   );
-}
+});

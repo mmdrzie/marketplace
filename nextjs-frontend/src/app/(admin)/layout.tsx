@@ -1,22 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { useLogoutModal } from '@/store/logoutModalStore';
+import { EchoProvider } from '@/providers/EchoProvider';
+import { RealtimeNotificationListener } from '@/components/common/RealtimeNotificationListener';
 import Link from 'next/link';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 function SvgIcon({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-5 w-5'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-5 w-5'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useIsAuthenticated();
   const router = useRouter();
   const pathname = usePathname();
   const openLogoutModal = useLogoutModal((s) => s.open);
@@ -43,11 +46,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
+    <EchoProvider>
     <div className="relative min-h-screen flex bg-background text-foreground">
       <div className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full blur-[150px] -z-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-destructive) 5%, transparent)' }} />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[130px] -z-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 5%, transparent)' }} />
 
-      <aside className={`fixed md:sticky top-0 md:h-screen inset-y-0 right-0 z-40 w-72 transform transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
+      <aside className={`fixed md:sticky top-0 md:h-screen inset-y-0 right-0 z-40 w-72 max-w-[85vw] transform transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
         <div className="h-full glass rounded-l-3xl border-l border-border-subtle shadow-2xl flex flex-col">
           <div className="p-5 border-b border-border">
             <div className="flex items-center gap-3">
@@ -58,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-sm font-bold text-foreground truncate">{user?.name || 'مدیر'}</p>
                 <p className="text-xs text-muted-foreground truncate">مدیر سیستم</p>
               </div>
-              <button onClick={() => setSidebarOpen(false)} className="md:hidden btn btn-ghost btn-sm shrink-0">
+              <button onClick={() => setSidebarOpen(false)} className="md:hidden btn btn-ghost btn-sm shrink-0" aria-label="بستن منو">
                 <SvgIcon><path d="M18 6L6 18M6 6l12 12" /></SvgIcon>
               </button>
             </div>
@@ -117,16 +121,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <main className="flex-1 min-h-screen relative z-10 flex flex-col">
         <div className="flex items-center justify-between gap-3 p-4 md:hidden border-b border-border bg-surface backdrop-blur-xl sticky top-0 z-20">
-          <button onClick={() => setSidebarOpen(true)} className="btn btn-ghost btn-sm">
+          <button onClick={() => setSidebarOpen(true)} className="btn btn-ghost btn-sm" aria-label="باز کردن منو">
             <SvgIcon><path d="M4 6h16M4 12h16M4 18h16" /></SvgIcon>
           </button>
           <span className="font-bold text-base text-foreground">پنل مدیریت</span>
-          <Link href="/" className="btn btn-ghost btn-sm">
+          <Link href="/" className="btn btn-ghost btn-sm" aria-label="صفحه اصلی">
             <SvgIcon><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></SvgIcon>
           </Link>
         </div>
-        <div className="flex-1 p-4 md:p-8">{children}</div>
+        <div className="flex-1 p-4 md:p-8"><ErrorBoundary>{children}</ErrorBoundary></div>
       </main>
     </div>
+      <RealtimeNotificationListener />
+    </EchoProvider>
   );
 }

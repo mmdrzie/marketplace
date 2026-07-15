@@ -2,15 +2,21 @@
 
 import { CustomCursor } from '@/components/common/CustomCursor';
 import { ParticleBackground } from '@/components/common/ParticleBackground';
+import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default function CursorTestPage() {
+  const isTouch = useIsTouchDevice();
+  const reducedMotion = usePrefersReducedMotion();
+  const disableEffects = isTouch || reducedMotion;
+
   return (
     <>
-      <CustomCursor />
-      <ParticleBackground className="fixed inset-0 z-0 w-full h-full" />
+      {!disableEffects && <CustomCursor />}
+      {!disableEffects && <ParticleBackground className="fixed inset-0 z-0 w-full h-full" />}
 
       <div className="relative z-10 min-h-screen bg-background/60 text-foreground p-8">
         <div className="max-w-3xl mx-auto space-y-12">

@@ -2,8 +2,10 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { useEscrowStore } from '@/store/escrowStore';
+import { useEscrowDeal, useUpdateEscrowDeal } from '@/hooks/useEscrow';
+import type { DealStatus } from '@/store/escrowStore';
 import { DEAL_STATUS_LABELS, DEAL_STATUS_COLORS, DEAL_STATUS_BG } from '@/store/escrowStore';
+import { Skeleton } from '@/components/common/Skeleton';
 import { EscrowTimeline } from '@/components/escrow/EscrowTimeline';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
@@ -12,9 +14,19 @@ import { toast } from '@/components/common/Toast';
 export default function DealDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
-  const deal = useEscrowStore((s) => s.getDeal(Number(id)));
-  const updateStatus = useEscrowStore((s) => s.updateStatus);
+  const user = useAuthStore((s) => s.user);
+  const { data: deal, isLoading } = useEscrowDeal(id);
+  const updateDeal = useUpdateEscrowDeal();
+
+  if (isLoading) {
+    return (
+      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+        <div className="max-w-3xl mx-auto px-4 py-12">
+          <Skeleton className="h-8 w-48 mb-6" />
+        </div>
+      </div>
+    );
+  }
 
   if (!deal) {
     return (
@@ -34,7 +46,7 @@ export default function DealDetailPage() {
     {
       label: 'تأیید پرداخت',
       action: () => {
-        updateStatus(deal.id, 'payment_held');
+        updateDeal.mutateAsync({ id, data: { status: 'payment_held' } });
         toast({ type: 'success', title: 'وجه با موفقیت بلوکه شد' });
       },
       variant: 'btn btn-primary',
@@ -43,7 +55,7 @@ export default function DealDetailPage() {
     {
       label: 'تأیید تحویل',
       action: () => {
-        updateStatus(deal.id, 'under_review');
+        updateDeal.mutateAsync({ id, data: { status: 'under_review' } });
         toast({ type: 'success', title: 'تحویل تأیید شد. در انتظار بررسی اسناد' });
       },
       variant: 'btn btn-primary',
@@ -52,7 +64,7 @@ export default function DealDetailPage() {
     {
       label: 'آزادسازی وجه',
       action: () => {
-        updateStatus(deal.id, 'released');
+        updateDeal.mutateAsync({ id, data: { status: 'released' } });
         toast({ type: 'success', title: 'وجه به فروشنده آزاد شد' });
       },
       variant: 'btn btn-success',
@@ -61,7 +73,7 @@ export default function DealDetailPage() {
     {
       label: 'لغو معامله',
       action: () => {
-        updateStatus(deal.id, 'cancelled');
+        updateDeal.mutateAsync({ id, data: { status: 'cancelled' } });
         toast({ type: 'info', title: 'معامله لغو شد' });
       },
       variant: 'btn btn-danger',
@@ -86,11 +98,11 @@ export default function DealDetailPage() {
           </button>
 
           {/* کارت اطلاعات معامله */}
-          <div className={`glass rounded-3xl p-6 md:p-8 border ${DEAL_STATUS_BG[deal.status]} shadow-sm`}>
+          <div className={`glass rounded-3xl p-6 md:p-8 border ${DEAL_STATUS_BG[deal.status as DealStatus]} shadow-sm`}>
             <div className="flex items-start justify-between gap-4 mb-2">
               <h1 className="text-xl md:text-2xl font-bold tracking-tighter text-foreground">{deal.listingTitle}</h1>
-              <span className={`text-[11px] font-bold px-3 py-1 rounded-full border ${DEAL_STATUS_COLORS[deal.status]} whitespace-nowrap shrink-0`}>
-                {DEAL_STATUS_LABELS[deal.status]}
+              <span className={`text-[11px] font-bold px-3 py-1 rounded-full border ${DEAL_STATUS_COLORS[deal.status as DealStatus]} whitespace-nowrap shrink-0`}>
+                {DEAL_STATUS_LABELS[deal.status as DealStatus]}
               </span>
             </div>
             <div className="text-sm text-muted-foreground font-light">

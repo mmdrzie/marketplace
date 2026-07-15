@@ -8,26 +8,22 @@ import { FadeIn } from '@/components/common/MotionDiv';
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('');
+  const token = searchParams.get('token');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(token ? 'loading' : 'error');
+  const [message, setMessage] = useState(token ? '' : 'لینک تأیید نامعتبر است');
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token) {
-      setStatus('error');
-      setMessage('لینک تأیید نامعتبر است');
-      return;
-    }
-    api.post('/auth/verify-email', { token })
+    if (!token) return;
+    api.get(`/email/verify/${token}`)
       .then(() => {
         setStatus('success');
         setMessage('ایمیل شما با موفقیت تأیید شد');
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         setStatus('error');
-        setMessage(err?.response?.data?.error?.message || 'تأیید ایمیل با خطا مواجه شد');
+        setMessage((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message || 'تأیید ایمیل با خطا مواجه شد');
       });
-  }, [searchParams]);
+  }, [token]);
 
   const redirect = searchParams.get('redirect') || '/';
 

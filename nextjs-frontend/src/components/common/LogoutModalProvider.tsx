@@ -5,7 +5,9 @@ import { useAuthStore } from '@/store/authStore';
 import { useEffect, useRef } from 'react';
 
 export function LogoutModalProvider() {
-  const { isOpen, onConfirm, close } = useLogoutModal();
+  const isOpen = useLogoutModal((s) => s.isOpen);
+  const onConfirm = useLogoutModal((s) => s.onConfirm);
+  const close = useLogoutModal((s) => s.close);
   const logout = useAuthStore((s) => s.logout);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +24,36 @@ export function LogoutModalProvider() {
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
+  // Focus trap
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    previouslyFocusedRef.current = document.activeElement as HTMLElement;
+    const dialog = dialogRef.current;
+    if (dialog) {
+      const focusable = dialog.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length > 0) focusable[0].focus();
+    }
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !dialog) return;
+      const focusable = dialog.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handleTab);
+    return () => {
+      document.removeEventListener('keydown', handleTab);
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleConfirm = () => {
@@ -35,6 +67,9 @@ export function LogoutModalProvider() {
       <div className="absolute inset-0 bg-overlay backdrop-blur-md animate-fade-in" onClick={close} />
       <div
         ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="logout-dialog-title"
         className="relative w-full max-w-sm animate-scale-in"
       >
         <div className="bg-surface-2/95 backdrop-blur-2xl rounded-3xl p-8 border border-border shadow-2xl shadow-black/50 text-center">
@@ -46,7 +81,7 @@ export function LogoutModalProvider() {
             </svg>
           </div>
 
-          <h3 className="text-xl font-bold text-foreground mb-2">خروج از حساب</h3>
+          <h3 id="logout-dialog-title" className="text-xl font-bold text-foreground mb-2">خروج از حساب</h3>
           <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
             آیا از خروج خود اطمینان دارید؟ برای استفاده مجدد نیاز به ورود خواهید داشت.
           </p>

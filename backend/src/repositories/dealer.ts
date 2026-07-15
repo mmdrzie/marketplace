@@ -62,7 +62,7 @@ export class DealerRepository {
 
   async getStats(userId: string) {
     const db = await getDb();
-    const [listingsRes, reviewsRes] = await Promise.all([
+    const [listingsRes, reviewsRes, todayViewsRes, contactsRes, unreadRes, activitiesRes] = await Promise.all([
       db.query(
         `SELECT
            COUNT(*) as total_listings,
@@ -77,10 +77,46 @@ export class DealerRepository {
          FROM dealer_reviews WHERE dealer_id = $1`,
         [userId],
       ),
+      db.query(
+        `SELECT COALESCE(SUM(v.views), 0) as today_views
+         FROM listing_views_daily v
+         JOIN listings l ON l.id = v.listing_id
+         WHERE l.user_id = $1 AND v.date = CURRENT_DATE`,
+        [userId],
+      ),
+      db.query(
+        `SELECT COUNT(*) as today_contacts
+         FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE (c.buyer_id = $1 OR c.seller_id = $1)
+           AND m.sender_id != $1
+           AND m.created_at >= CURRENT_DATE`,
+        [userId],
+      ),
+      db.query(
+        `SELECT COUNT(*) as unread_messages
+         FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE (c.buyer_id = $1 OR c.seller_id = $1)
+           AND m.sender_id != $1
+           AND m.is_read = false`,
+        [userId],
+      ),
+      db.query(
+        `SELECT id, title, status, created_at
+         FROM listings
+         WHERE user_id = $1 AND deleted_at IS NULL
+         ORDER BY created_at DESC
+         LIMIT 5`,
+        [userId],
+      ),
     ]);
 
     const l = listingsRes.rows[0] as { total_listings: string; active_listings: string; sold_listings: string; total_views: string };
     const r = reviewsRes.rows[0] as { avg_rating: string; total_reviews: string };
+    const tv = todayViewsRes.rows[0] as { today_views: string };
+    const tc = contactsRes.rows[0] as { today_contacts: string };
+    const um = unreadRes.rows[0] as { unread_messages: string };
 
     return {
       total_listings: parseInt(l.total_listings, 10),
@@ -89,6 +125,15 @@ export class DealerRepository {
       total_views: parseInt(l.total_views, 10),
       avg_rating: parseFloat(r.avg_rating),
       total_reviews: parseInt(r.total_reviews, 10),
+      today_views: parseInt(tv.today_views, 10),
+      today_contacts: parseInt(tc.today_contacts, 10),
+      unread_messages: parseInt(um.unread_messages, 10),
+      recent_activities: (activitiesRes.rows as Array<{ id: number; title: string; status: string; created_at: string }>).map((a) => ({
+        id: a.id,
+        description: `ثبت آگهی «${a.title}»`,
+        status: a.status,
+        created_at: a.created_at,
+      })),
     };
   }
 

@@ -34,7 +34,20 @@ services:
     volumes:
       - meili_data:/meili_data
 
+  app:
+    image: node:22-alpine
+    container_name: marketplace_app
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+      - meilisearch
+
 volumes:
   postgres_data:
   redis_data:
   meili_data:
+  uploads_data:

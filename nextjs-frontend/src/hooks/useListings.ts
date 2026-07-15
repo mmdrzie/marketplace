@@ -5,6 +5,11 @@ import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import type { ListingDetail } from '@/types';
 
+interface ListingsQueryData {
+  data?: Array<{ id: string; status?: string }>;
+  [key: string]: unknown;
+}
+
 export function useListings(params?: Record<string, unknown>) {
   return useQuery({
     queryKey: queryKeys.listings.list(params),
@@ -82,7 +87,7 @@ export function useCreateListing() {
 export function useUpdateListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
+    mutationFn: async ({ id, data }: { id: string | number; data: Record<string, unknown> }) => {
       const res = await api.put(`/listings/${id}`, data);
       return res.data.data;
     },
@@ -98,17 +103,17 @@ export function useUpdateListing() {
 export function useDeleteListing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: string | number) => {
       await api.delete(`/listings/${id}`);
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.listings.my });
       const previous = queryClient.getQueryData(queryKeys.listings.my);
-      queryClient.setQueryData(queryKeys.listings.my, (old: any) => {
+      queryClient.setQueryData(queryKeys.listings.my, (old: ListingsQueryData | undefined) => {
         if (!old?.data) return old;
         return {
           ...old,
-          data: old.data.filter((item: any) => item.id !== id),
+          data: old.data.filter((item) => item.id !== id),
         };
       });
       return { previous };
@@ -153,11 +158,11 @@ export function useMarkSold() {
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.listings.my });
       const previous = queryClient.getQueryData(queryKeys.listings.my);
-      queryClient.setQueryData(queryKeys.listings.my, (old: any) => {
+      queryClient.setQueryData(queryKeys.listings.my, (old: ListingsQueryData | undefined) => {
         if (!old?.data) return old;
         return {
           ...old,
-          data: old.data.map((item: any) =>
+          data: old.data.map((item) =>
             item.id === id ? { ...item, status: 'sold' } : item
           ),
         };
@@ -185,11 +190,11 @@ export function useRenewListing() {
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.listings.my });
       const previous = queryClient.getQueryData(queryKeys.listings.my);
-      queryClient.setQueryData(queryKeys.listings.my, (old: any) => {
+      queryClient.setQueryData(queryKeys.listings.my, (old: ListingsQueryData | undefined) => {
         if (!old?.data) return old;
         return {
           ...old,
-          data: old.data.map((item: any) =>
+          data: old.data.map((item) =>
             item.id === id ? { ...item, status: 'published' } : item
           ),
         };

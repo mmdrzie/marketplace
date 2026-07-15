@@ -13,8 +13,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }}></div>
         
         {/* هاله‌های نوری با انیمیشن */}
-        <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-[150px] bg-primary/10 pointer-events-none animate-pulse"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[130px] bg-primary/5 pointer-events-none animate-pulse [animation-delay:1s]"></div>
+        <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-[150px] bg-primary/10 pointer-events-none motion-safe:animate-pulse"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[130px] bg-primary/5 pointer-events-none motion-safe:animate-pulse [animation-delay:1s]"></div>
 
         <div className="relative z-10 flex flex-col justify-center p-16">
           <h2 className="text-5xl font-bold tracking-tighter text-foreground mb-6 leading-tight">
@@ -44,7 +44,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* ستون فرم احراز هویت */}
       <div className="flex-1 flex items-center justify-center p-6 relative z-10">
         {/* هاله نوری برای ستون فرم با انیمیشن */}
-        <div className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] bg-primary/5 pointer-events-none animate-pulse [animation-delay:0.5s]"></div>
+        <div className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full blur-[120px] bg-primary/5 pointer-events-none motion-safe:animate-pulse [animation-delay:0.5s]"></div>
         
         <div className="w-full max-w-sm">
           {/* لوگو */}

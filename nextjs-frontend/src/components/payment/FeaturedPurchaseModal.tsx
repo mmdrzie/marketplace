@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 interface FeaturedPurchaseModalProps {
-  listingId: number;
+  listingId: string | number;
   listingTitle: string;
   onClose: () => void;
 }

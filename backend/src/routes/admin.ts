@@ -6,6 +6,10 @@ import { adminAuth } from '../middleware/adminAuth.js';
 import { AppError } from '../errors.js';
 import { getDb } from '../config/database.js';
 import bcrypt from 'bcryptjs';
+import { categoryRepo } from '../repositories/category.js';
+import { attributeRepo } from '../repositories/attribute.js';
+import { provinceRepo } from '../repositories/province.js';
+import { createCategorySchema, updateCategorySchema, createAttributeSchema, updateAttributeSchema, createProvinceSchema, updateProvinceSchema, createCitySchema } from '../validation/categories.js';
 
 const router = new Hono();
 
@@ -188,6 +192,102 @@ router.put('/reports/:id', zValidator('json', reportStatusSchema), async (c) => 
   const { status } = c.req.valid('json');
   const db = await getDb();
   await db.query('UPDATE reports SET status = $1 WHERE id = $2', [status, id]);
+  return c.json({ success: true, data: null });
+});
+
+// Admin: create category
+router.post('/categories', zValidator('json', createCategorySchema), async (c) => {
+  const body = c.req.valid('json');
+  const existing = await categoryRepo.findBySlug(body.slug);
+  if (existing) throw AppError.resourceConflict('Slug already exists');
+  const category = await categoryRepo.create(body);
+  return c.json({ success: true, data: category }, 201);
+});
+
+// Admin: update category
+router.put('/categories/:id', zValidator('json', updateCategorySchema), async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  const existing = await categoryRepo.findById(id);
+  if (!existing) throw AppError.notFound('Category not found');
+  const category = await categoryRepo.update(id, c.req.valid('json'));
+  return c.json({ success: true, data: category });
+});
+
+// Admin: delete category
+router.delete('/categories/:id', async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  const existing = await categoryRepo.findById(id);
+  if (!existing) throw AppError.notFound('Category not found');
+  await categoryRepo.delete(id);
+  return c.json({ success: true, data: null });
+});
+
+// Admin: create attribute for category
+router.post('/categories/:id/attributes', zValidator('json', createAttributeSchema), async (c) => {
+  const categoryId = parseInt(c.req.param('id'), 10);
+  const category = await categoryRepo.findById(categoryId);
+  if (!category) throw AppError.notFound('Category not found');
+  const body = c.req.valid('json');
+  const attribute = await attributeRepo.create({ ...body, category_id: categoryId });
+  return c.json({ success: true, data: attribute }, 201);
+});
+
+// Admin: update attribute
+router.put('/attributes/:id', zValidator('json', updateAttributeSchema), async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  const existing = await attributeRepo.findById(id);
+  if (!existing) throw AppError.notFound('Attribute not found');
+  const attribute = await attributeRepo.update(id, c.req.valid('json'));
+  return c.json({ success: true, data: attribute });
+});
+
+// Admin: delete attribute
+router.delete('/attributes/:id', async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  const existing = await attributeRepo.findById(id);
+  if (!existing) throw AppError.notFound('Attribute not found');
+  await attributeRepo.delete(id);
+  return c.json({ success: true, data: null });
+});
+
+// Admin: create province
+router.post('/provinces', zValidator('json', createProvinceSchema), async (c) => {
+  const province = await provinceRepo.create(c.req.valid('json'));
+  return c.json({ success: true, data: province }, 201);
+});
+
+// Admin: update province
+router.put('/provinces/:id', zValidator('json', updateProvinceSchema), async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  const existing = await provinceRepo.findById(id);
+  if (!existing) throw AppError.notFound('Province not found');
+  const province = await provinceRepo.update(id, c.req.valid('json'));
+  return c.json({ success: true, data: province });
+});
+
+// Admin: delete province
+router.delete('/provinces/:id', async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  const existing = await provinceRepo.findById(id);
+  if (!existing) throw AppError.notFound('Province not found');
+  await provinceRepo.delete(id);
+  return c.json({ success: true, data: null });
+});
+
+// Admin: create city in province
+router.post('/provinces/:id/cities', zValidator('json', createCitySchema), async (c) => {
+  const provinceId = parseInt(c.req.param('id'), 10);
+  const province = await provinceRepo.findById(provinceId);
+  if (!province) throw AppError.notFound('Province not found');
+  const { name } = c.req.valid('json');
+  const city = await provinceRepo.createCity(provinceId, name);
+  return c.json({ success: true, data: city }, 201);
+});
+
+// Admin: delete city
+router.delete('/cities/:id', async (c) => {
+  const id = parseInt(c.req.param('id'), 10);
+  await provinceRepo.deleteCity(id);
   return c.json({ success: true, data: null });
 });
 

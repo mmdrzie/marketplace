@@ -20,6 +20,16 @@ router.post('/send-verify', auth(), rateLimiter('email:verify'), zValidator('jso
   return c.json({ success: true, data: null });
 });
 
+const verifySchema = z.object({
+  token: z.string(),
+});
+
+router.post('/verify', zValidator('json', verifySchema), async (c) => {
+  const { token } = c.req.valid('json');
+  await emailVerificationService.verify(token);
+  return c.json({ success: true, data: null });
+});
+
 router.get('/verify/:token', async (c) => {
   const token = c.req.param('token');
   await emailVerificationService.verify(token);

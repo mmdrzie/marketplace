@@ -15,6 +15,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { useDebounce } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ICON_PATHS } from '@/lib/icons';
+import { GlassSelect } from '@/components/common/GlassSelect';
 import { SkeletonListings } from '@/components/common/Skeleton';
 
 const Icon = ({ d, className = "w-5 h-5" }: { d: string; className?: string }) => (
@@ -190,7 +191,7 @@ export default function SearchPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               ADVANCED SEARCH
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">کاوش هوشمند در بازار</h1>
@@ -238,27 +239,23 @@ export default function SearchPage() {
                   </svg>
                   <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">وارداتی</span>
                 </div>
-                <select
+                <GlassSelect
                   value={filters.attributeFilters.origin || ''}
-                  onChange={(e) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, origin: e.target.value } })}
-                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/50"
-                >
-                  <option value="">همه خودروها</option>
-                  <option value="وارداتی (طرح نوین)">وارداتی (طرح نوین)</option>
-                  <option value="وارداتی (شمال)">وارداتی (شمال)</option>
-                  <option value="وارداتی (منطقه آزاد)">وارداتی (منطقه آزاد)</option>
-                  <option value="وارداتی (تهران)">وارداتی (تهران)</option>
-                </select>
-                <select
+                  onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, origin: v } })}
+                  options={[
+                    { value: 'وارداتی (طرح نوین)', label: 'وارداتی (طرح نوین)' },
+                    { value: 'وارداتی (شمال)', label: 'وارداتی (شمال)' },
+                    { value: 'وارداتی (منطقه آزاد)', label: 'وارداتی (منطقه آزاد)' },
+                    { value: 'وارداتی (تهران)', label: 'وارداتی (تهران)' },
+                  ]}
+                  placeholder="همه خودروها"
+                />
+                <GlassSelect
                   value={filters.attributeFilters.import_country || ''}
-                  onChange={(e) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, import_country: e.target.value } })}
-                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/50"
-                >
-                  <option value="">کشور مبدأ</option>
-                  {['آلمان','ژاپن','کره جنوبی','چین','آمریکا','فرانسه','ایتالیا','انگلستان','سوئد','ترکیه','هند'].map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                  onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, import_country: v } })}
+                  options={['آلمان','ژاپن','کره جنوبی','چین','آمریکا','فرانسه','ایتالیا','انگلستان','سوئد','ترکیه','هند'].map((c) => ({ value: c, label: c }))}
+                  placeholder="کشور مبدأ"
+                />
               </div>
             </div>
           </aside>
@@ -401,7 +398,7 @@ export default function SearchPage() {
               <motion.div
                 initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute right-0 top-0 bottom-0 w-80 max-w-[85%] glass border-l border-border p-6 overflow-y-auto"
+                className="absolute right-0 top-0 bottom-0 w-80 max-w-[85%] glass border-l border-border p-6 overflow-y-auto overscroll-contain"
               >
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
                   <div className="flex items-center gap-3">
@@ -419,7 +416,7 @@ export default function SearchPage() {
                 </div>
                 <FilterPanel
                   filters={filters}
-                  onFilterChange={(newFilters) => { updateFilters(newFilters); setShowMobileFilter(false); }}
+                  onFilterChange={(newFilters) => { updateFilters(newFilters); }}
                   categories={categories}
                   provinces={provinces}
                 />
@@ -430,28 +427,30 @@ export default function SearchPage() {
                     </svg>
                     <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">وارداتی</span>
                   </div>
-                  <select
+                  <GlassSelect
                     value={filters.attributeFilters.origin || ''}
-                    onChange={(e) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, origin: e.target.value } })}
-                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/50"
-                  >
-                    <option value="">همه خودروها</option>
-                    <option value="وارداتی (طرح نوین)">وارداتی (طرح نوین)</option>
-                    <option value="وارداتی (شمال)">وارداتی (شمال)</option>
-                    <option value="وارداتی (منطقه آزاد)">وارداتی (منطقه آزاد)</option>
-                    <option value="وارداتی (تهران)">وارداتی (تهران)</option>
-                  </select>
-                  <select
+                    onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, origin: v } })}
+                    options={[
+                      { value: 'وارداتی (طرح نوین)', label: 'وارداتی (طرح نوین)' },
+                      { value: 'وارداتی (شمال)', label: 'وارداتی (شمال)' },
+                      { value: 'وارداتی (منطقه آزاد)', label: 'وارداتی (منطقه آزاد)' },
+                      { value: 'وارداتی (تهران)', label: 'وارداتی (تهران)' },
+                    ]}
+                    placeholder="همه خودروها"
+                  />
+                  <GlassSelect
                     value={filters.attributeFilters.import_country || ''}
-                    onChange={(e) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, import_country: e.target.value } })}
-                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/50"
-                  >
-                    <option value="">کشور مبدأ</option>
-                    {['آلمان','ژاپن','کره جنوبی','چین','آمریکا','فرانسه','ایتالیا','انگلستان','سوئد','ترکیه','هند'].map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                    onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, import_country: v } })}
+                    options={['آلمان','ژاپن','کره جنوبی','چین','آمریکا','فرانسه','ایتالیا','انگلستان','سوئد','ترکیه','هند'].map((c) => ({ value: c, label: c }))}
+                    placeholder="کشور مبدأ"
+                  />
                 </div>
+                <button
+                  onClick={() => setShowMobileFilter(false)}
+                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors"
+                >
+                  اعمال فیلترها
+                </button>
               </motion.div>
             </motion.div>
           )}

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -30,10 +30,10 @@ function Field({ label, icon, children, required, hint }: { label: string; icon:
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  user: 'کاربر عادی',
-  dealer: 'نماینده فروش',
-  agency: 'بنگاه',
-  admin: 'مدیر سیستم',
+  user: '????? ????',
+  dealer: '??????? ????',
+  agency: '?????',
+  admin: '???? ?????',
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -60,7 +60,8 @@ const inputClass = "w-full h-12 pr-12 pl-4 rounded-xl bg-surface-2/50 border bor
 const textareaClass = "w-full pr-12 pl-4 pt-3 rounded-xl bg-surface-2/50 border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 resize-none";
 
 export default function SettingsPage() {
-  const { user, setUser } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -96,12 +97,12 @@ export default function SettingsPage() {
         payload.business_address = businessAddress;
         if (businessDesc) payload.business_description = businessDesc;
       }
-      const res = await api.put('/me', payload);
+      const res = await api.put('/auth/me', payload);
       setUser(res.data.data);
-      toast({ type: 'success', title: 'تغییرات با موفقیت ذخیره شد' });
+      toast({ type: 'success', title: '??????? ?? ?????? ????? ??' });
     } catch (e) {
       console.error('Failed to save settings', e);
-      toast({ type: 'error', title: 'خطا در ذخیره تغییرات' });
+      toast({ type: 'error', title: '??? ?? ????? ???????' });
     } finally {
       setSaving(false);
     }
@@ -122,12 +123,12 @@ export default function SettingsPage() {
       const res = await api.post('/me/avatar', { object_key });
       setUser(res.data.data);
       setAvatarPreview(null);
-      toast({ type: 'success', title: 'تصویر پروفایل آپدیت شد' });
+      toast({ type: 'success', title: '????? ??????? ????? ??' });
     } catch {
       if (avatarUrlRef.current) URL.revokeObjectURL(avatarUrlRef.current);
       avatarUrlRef.current = null;
       setAvatarPreview(null);
-      toast({ type: 'error', title: 'خطا در آپلود عکس' });
+      toast({ type: 'error', title: '??? ?? ????? ???' });
     } finally {
       setAvatarUploading(false);
     }
@@ -138,29 +139,29 @@ export default function SettingsPage() {
   return (
     <FadeIn>
       <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-        {/* پس‌زمینه داینامیک معماری */}
+        {/* ???????? ???????? ?????? */}
         <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] z-0 pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl mx-auto w-full px-4 py-12 md:py-16 space-y-8">
           
-          {/* هدر صفحه */}
+          {/* ??? ???? */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
                 ACCOUNT SETTINGS
               </span>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">تنظیمات حساب</h1>
-              <p className="text-muted-foreground mt-2 text-sm md:text-base font-light">پروفایل و اطلاعات خود را مدیریت کنید.</p>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">??????? ????</h1>
+              <p className="text-muted-foreground mt-2 text-sm md:text-base font-light">??????? ? ??????? ??? ?? ?????? ????.</p>
             </div>
           </div>
 
-          {/* کارت فرم اصلی */}
+          {/* ???? ??? ???? */}
           <div className="glass rounded-3xl p-6 md:p-10 shadow-xl border border-border-subtle">
             
-            {/* بخش آپلود آواتار */}
+            {/* ??? ????? ?????? */}
             <div className="mb-10 flex flex-col items-center">
               <div className="relative group">
                 <div className="w-28 h-28 rounded-full p-1 bg-primary/10 shadow-lg">
@@ -173,7 +174,7 @@ export default function SettingsPage() {
                     {!avatarUploading && (
                       <button type="button" onClick={() => inputRef.current?.click()} className="absolute inset-0 bg-overlay/60 backdrop-blur-sm flex flex-col items-center justify-center text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-1">
                         <Svg d={I.camera} className="h-6 w-6" />
-                        <span className="text-[10px] font-medium">تغییر عکس</span>
+                        <span className="text-[10px] font-medium">????? ???</span>
                       </button>
                     )}
                     {avatarUploading && (
@@ -187,10 +188,10 @@ export default function SettingsPage() {
               <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
               {!avatarUploading && (
                 <button type="button" onClick={() => inputRef.current?.click()} className="mt-4 text-sm text-primary font-medium hover:text-primary/80 transition-colors">
-                  تغییر تصویر پروفایل
+                  ????? ????? ???????
                 </button>
               )}
-              <p className="text-xs text-muted-foreground mt-2">فرمت‌های مجاز: JPG, PNG, WEBP</p>
+              <p className="text-xs text-muted-foreground mt-2">???????? ????: JPG, PNG, WEBP</p>
               {user?.role && (
                 <span className={'mt-3 text-[10px] font-bold px-3 py-1 rounded-full border ' + (ROLE_COLORS[user.role] || ROLE_COLORS.user)}>
                   {ROLE_LABELS[user.role] || user.role}
@@ -198,80 +199,80 @@ export default function SettingsPage() {
               )}
             </div>
 
-            {/* فرم اطلاعات */}
+            {/* ??? ??????? */}
             <form onSubmit={handleSubmit} className="space-y-8">
               
-              {/* اطلاعات شخصی */}
+              {/* ??????? ???? */}
               <div className="border-b border-border pb-8">
                 <h3 className="text-sm font-bold text-foreground mb-6 uppercase tracking-wider flex items-center gap-2">
                   <Svg d={I.user} className="w-4 h-4 text-primary" />
-                  اطلاعات شخصی
+                  ??????? ????
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <Field label="نام و نام خانوادگی" icon={<Svg d={I.user} />} required>
-                    <input value={name} onChange={e => setName(e.target.value)} className={inputClass} placeholder="نام خود را وارد کنید" />
+                  <Field label="??? ? ??? ????????" icon={<Svg d={I.user} />} required>
+                    <input value={name} onChange={e => setName(e.target.value)} className={inputClass} placeholder="??? ??? ?? ???? ????" />
                   </Field>
-                  <Field label="شماره موبایل" icon={<Svg d={I.phone} />} required hint="در صورت تغییر، شماره جدید باید تأیید شود">
-                    <input value={phone} onChange={e => setPhone(e.target.value)} className={inputClass} placeholder="۰۹۱۲۳۴۵۶۷۸۹" />
+                  <Field label="????? ??????" icon={<Svg d={I.phone} />} required hint="?? ???? ?????? ????? ???? ???? ????? ???">
+                    <input value={phone} onChange={e => setPhone(e.target.value)} className={inputClass} placeholder="???????????" />
                   </Field>
-                  <Field label="ایمیل" icon={<Svg d={I.mail} />}>
+                  <Field label="?????" icon={<Svg d={I.mail} />}>
                     <input value={email} onChange={e => setEmail(e.target.value)} type="email" className={inputClass} placeholder="example@email.com" />
                   </Field>
-                  <Field label="شهر" icon={<Svg d={I.map} />}>
-                    <input value={city} onChange={e => setCity(e.target.value)} className={inputClass} placeholder="تهران" />
+                  <Field label="???" icon={<Svg d={I.map} />}>
+                    <input value={city} onChange={e => setCity(e.target.value)} className={inputClass} placeholder="?????" />
                   </Field>
                   <div className="md:col-span-2">
-                    <Field label="درباره من" icon={<Svg d={I.bio} />}>
-                      <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className={textareaClass} placeholder="توضیح کوتاهی درباره خودتان..." />
+                    <Field label="?????? ??" icon={<Svg d={I.bio} />}>
+                      <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className={textareaClass} placeholder="????? ?????? ?????? ??????..." />
                     </Field>
                   </div>
                 </div>
               </div>
 
-              {/* اطلاعات کسب‌وکار */}
+              {/* ??????? ???????? */}
               {isDealer && (
                 <div className="border-b border-border pb-8">
                   <h3 className="text-sm font-bold text-foreground mb-6 uppercase tracking-wider flex items-center gap-2">
                     <Svg d={I.building} className="w-4 h-4 text-primary" />
-                    اطلاعات کسب‌وکار
+                    ??????? ????????
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <Field label="نام کسب‌وکار" icon={<Svg d={I.building} />} required>
-                      <input value={businessName} onChange={e => setBusinessName(e.target.value)} className={inputClass} placeholder="نمایندگی ..." />
+                    <Field label="??? ????????" icon={<Svg d={I.building} />} required>
+                      <input value={businessName} onChange={e => setBusinessName(e.target.value)} className={inputClass} placeholder="???????? ..." />
                     </Field>
-                    <Field label="کد نمایندگی" icon={<Svg d={I.hash} />} required hint="کد اختصاصی نمایندگی">
-                      <input value={dealerCode} onChange={e => setDealerCode(e.target.value)} className={inputClass} placeholder="مثال: DL-۰۰۱" />
+                    <Field label="?? ????????" icon={<Svg d={I.hash} />} required hint="?? ??????? ????????">
+                      <input value={dealerCode} onChange={e => setDealerCode(e.target.value)} className={inputClass} placeholder="????: DL-???" />
                     </Field>
                     <div className="md:col-span-2">
-                      <Field label="آدرس" icon={<Svg d={I.map} />} required>
-                        <input value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} className={inputClass} placeholder="آدرس کسب‌وکار" />
+                      <Field label="????" icon={<Svg d={I.map} />} required>
+                        <input value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} className={inputClass} placeholder="???? ????????" />
                       </Field>
                     </div>
                     <div className="md:col-span-2">
-                      <Field label="توضیحات" icon={<Svg d={I.bio} />}>
-                        <textarea value={businessDesc} onChange={e => setBusinessDesc(e.target.value)} rows={3} className={textareaClass} placeholder="توضیحات درباره کسب‌وکار..." />
+                      <Field label="???????" icon={<Svg d={I.bio} />}>
+                        <textarea value={businessDesc} onChange={e => setBusinessDesc(e.target.value)} rows={3} className={textareaClass} placeholder="??????? ?????? ????????..." />
                       </Field>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* لینک به تنظیمات اعلان */}
+              {/* ???? ?? ??????? ????? */}
               <div className="pt-2 pb-6 border-b border-border mb-6">
                 <a href="/dashboard/settings/notifications" className="inline-flex items-center gap-2 text-sm text-primary font-medium hover:text-primary/80 transition-colors">
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0" /></svg>
-                  تنظیمات اعلان‌ها
+                  ??????? ????????
                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
                 </a>
               </div>
 
-              {/* دکمه ذخیره */}
+              {/* ???? ????? */}
               <div className="flex items-center gap-3 pt-2">
                 <button type="submit" disabled={saving} className="h-12 px-8 rounded-xl btn btn-primary font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2">
                   {saving ? (
-                    <><div className="follow-the-leader scale-50"><div></div><div></div><div></div><div></div><div></div></div> در حال ذخیره...</>
+                    <><div className="follow-the-leader scale-50"><div></div><div></div><div></div><div></div><div></div></div> ?? ??? ?????...</>
                   ) : (
-                    <><Svg d={I.check} className="h-4 w-4" /> ذخیره تغییرات</>
+                    <><Svg d={I.check} className="h-4 w-4" /> ????? ???????</>
                   )}
                 </button>
               </div>

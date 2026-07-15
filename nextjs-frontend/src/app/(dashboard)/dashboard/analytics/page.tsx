@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
@@ -10,7 +10,6 @@ import { PriceDisplay } from '@/components/common/PriceDisplay';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { cn, formatRelativeTime } from '@/lib/utils';
-import { generateViewsSeries, generateMessagesSeries } from '@/lib/chartData';
 import Image from 'next/image';
 import type { Listing } from '@/types';
 
@@ -29,18 +28,36 @@ export default function AnalyticsPage() {
   });
 
   const listings: Listing[] = data?.data ?? [];
-  const selected = listings.find((l) => l.id === selectedId) || listings[0];
+  const selectedIdStr = String(selectedId);
+  const selected = listings.find((l) => l.id === selectedIdStr) || listings[0];
+
+  const { data: stats } = useQuery({
+    queryKey: ['listing-stats', selectedId],
+    queryFn: async () => {
+      const res = await api.get(`/listings/${selectedId}/stats`);
+      return res.data.data;
+    },
+    enabled: !!selectedId && listings.length > 0,
+    staleTime: 30000,
+    retry: 2,
+  });
 
   const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
-  const chartData = useMemo(() => ({
-    views: generateViewsSeries(12 + (selectedId % 5) * 3, days),
-    messages: generateMessagesSeries(3 + (selectedId % 3), days),
-  }), [selectedId, days]);
+  const dailyViews = stats?.daily_views as Array<{ date: string; views: number }> | undefined;
+  const views = Array.from({ length: days }, (_, i) => {
+    if (!dailyViews) return 1;
+    const d = new Date();
+    d.setDate(d.getDate() - (days - 1 - i));
+    const key = d.toISOString().slice(0, 10);
+    const match = dailyViews.find((dv) => dv.date === key);
+    return match ? match.views : 0;
+  });
+  const hasRealData = views.some((v) => v > 0);
+  const chartViews = hasRealData ? views : Array.from({ length: days }, () => 1);
 
-  const views = chartData.views;
-  const msgs = chartData.messages;
-  const convRate = views.length ? Math.round((msgs.reduce((a, b) => a + b, 0) / views.reduce((a, b) => a + b, 0)) * 100) : 0;
-  const totalViews = views.reduce((a, b) => a + b, 0);
+  const totalViews = chartViews.reduce((a, b) => a + b, 0);
+  const totalMessages = stats?.total_messages || 0;
+  const convRate = totalViews ? Math.round((totalMessages / totalViews) * 100) : 0;
 
   return (
     <FadeIn>
@@ -58,10 +75,10 @@ export default function AnalyticsPage() {
           {listings.map((l) => (
             <button
               key={l.id}
-              onClick={() => setSelectedId(l.id)}
+               onClick={() => setSelectedId(Number(l.id))}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border transition-all shrink-0',
-                  selectedId === l.id
+                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border t...',
+                  selectedId === Number(l.id)
                       ? 'bg-primary/15 border-primary/30 text-primary'
                   : 'bg-surface-2 border-border-subtle text-muted-foreground hover:text-foreground',
               )}
@@ -108,8 +125,8 @@ export default function AnalyticsPage() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatChartCard title="بازدید کل" value={totalViews.toLocaleString('fa-IR')} trend={15} chartData={views} color="var(--color-accent-blue)" />
-          <StatChartCard title="پیام دریافتی" value={msgs.reduce((a, b) => a + b, 0).toLocaleString('fa-IR')} trend={8} chartData={msgs} color="var(--color-success)" />
+          <StatChartCard title="بازدید کل" value={totalViews.toLocaleString('fa-IR')} trend={15} chartData={chartViews} color="var(--color-accent-blue)" />
+          <StatChartCard title="پیام دریافتی" value={totalMessages.toLocaleString('fa-IR')} trend={8} chartData={chartViews} color="var(--color-success)" />
           <StatChartCard title="نرخ تبدیل" value={`${convRate}%`} trend={-2} color="var(--color-warning)" />
           <StatChartCard title="میانگین روزانه" value={Math.round(totalViews / (period === '7d' ? 7 : period === '30d' ? 30 : 90)).toLocaleString('fa-IR')} color="var(--color-accent-indigo)" />
         </div>
@@ -119,21 +136,21 @@ export default function AnalyticsPage() {
           <div className="lg:col-span-2 glass rounded-3xl p-6 border border-border-subtle">
             <h3 className="text-sm font-bold text-foreground mb-4">روند بازدید</h3>
             <div className="h-44 flex items-end gap-1.5">
-              {views.map((v, i) => {
-                const max = Math.max(...views);
+              {chartViews.map((v, i) => {
+                const max = Math.max(...chartViews);
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
                     <div
                       className="w-full rounded-sm transition-all"
-                      style={{ height: `${(v / max) * 100}%`, background: i === views.length - 1 ? 'var(--color-accent-blue)' : 'color-mix(in srgb, var(--color-accent-blue) 30%, transparent)' }}
+                      style={{ height: `${(v / max) * 100}%`, background: i === chartViews.length - 1 ? 'var(--color-accent-blue)' : 'color-mix(in srgb, var(--color-accent-blue) 30%, transparent)' }}
                     />
                   </div>
                 );
               })}
             </div>
             <div className="flex items-center justify-between mt-3 text-[11px] text-muted-foreground">
-              <span>بیشترین: {Math.max(...views).toLocaleString('fa-IR')}</span>
-              <span>کمترین: {Math.min(...views).toLocaleString('fa-IR')}</span>
+              <span>بیشترین: {Math.max(...chartViews).toLocaleString('fa-IR')}</span>
+              <span>کمترین: {Math.min(...chartViews).toLocaleString('fa-IR')}</span>
             </div>
           </div>
 

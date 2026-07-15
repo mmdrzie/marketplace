@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
@@ -12,7 +13,7 @@ interface RelatedListingsProps {
   excludeSlug: string;
 }
 
-export function RelatedListings({ categoryId, excludeSlug }: RelatedListingsProps) {
+const RelatedListings = memo(function RelatedListings({ categoryId, excludeSlug }: RelatedListingsProps) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.listings.related(categoryId),
     queryFn: async () => {
@@ -61,4 +62,6 @@ export function RelatedListings({ categoryId, excludeSlug }: RelatedListingsProp
       <ListingGrid listings={filtered} />
     </div>
   );
-}
+});
+
+export { RelatedListings };

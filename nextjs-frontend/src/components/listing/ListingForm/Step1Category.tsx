@@ -48,12 +48,28 @@ interface Step1CategoryProps {
 }
 
 export function Step1Category({ selected, onSelect, disabled }: Step1CategoryProps) {
-  const { data: categories, isLoading } = useQuery({
+  const { data: categories, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.categories.all,
     queryFn: async () => { const res = await api.get('/categories'); return res.data.data as Category[]; },
     retry: 2,
     staleTime: 60000,
   });
+
+  if (isError) {
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">1</div>
+            <span className="text-[11px] font-bold tracking-widest text-primary uppercase">STEP 1</span>
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tighter text-foreground mb-2">خطا در بارگذاری</h2>
+          <p className="text-muted-foreground text-sm font-light mb-4">امکان بارگذاری دسته‌بندی‌ها وجود ندارد</p>
+          <button onClick={() => refetch()} className="btn btn-primary btn-sm">تلاش مجدد</button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -68,7 +84,7 @@ export function Step1Category({ selected, onSelect, disabled }: Step1CategoryPro
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col items-center justify-center gap-4 p-6 rounded-2xl bg-surface/40 border border-border-subtle animate-pulse">
+            <div key={i} className="flex flex-col items-center justify-center gap-4 p-6 rounded-2xl bg-surface/40 border border-border-subtle motion-safe:animate-pulse">
               <div className="w-8 h-8 rounded-xl bg-border-subtle" />
               <div className="h-4 w-20 rounded bg-border-subtle" />
             </div>

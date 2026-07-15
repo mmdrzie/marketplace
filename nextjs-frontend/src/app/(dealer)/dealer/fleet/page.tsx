@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useFleetStore, VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_BG, VEHICLE_STATUS_DOT } from '@/store/fleetStore';
+import { useFleet } from '@/hooks/useFleet';
+import { VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_DOT } from '@/store/fleetStore';
 import type { VehicleStatus } from '@/store/fleetStore';
 import { FleetSummaryCard } from '@/components/fleet/FleetSummaryCard';
 import { FleetMap } from '@/components/fleet/FleetMap';
@@ -10,20 +11,25 @@ import { FuelChart } from '@/components/fleet/FuelChart';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FadeIn } from '@/components/common/MotionDiv';
+import { SkeletonListings } from '@/components/common/Skeleton';
 
 export default function FleetPage() {
-  const vehicles = useFleetStore((s) => s.vehicles);
+  const { data: vehicles, isLoading } = useFleet();
   const [tab, setTab] = useState<VehicleStatus | 'all'>('all');
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const filtered = tab === 'all' ? vehicles : vehicles.filter((v) => v.status === tab);
+  const vehicleList = vehicles ?? [];
+  const filtered = tab === 'all' ? vehicleList : (vehicleList as Array<{ status: string }>).filter((v) => v.status === tab);
 
-  const activeCount = vehicles.filter((v) => v.status === 'published').length;
-  const maintenanceCount = vehicles.filter((v) => v.status === 'maintenance').length;
-  const idleCount = vehicles.filter((v) => v.status === 'idle').length;
-  const totalValue = vehicles.reduce((s, v) => s + v.currentValue, 0);
+  const activeCount = (vehicleList as Array<{ status: string }>).filter((v) => v.status === 'active').length;
+  const maintenanceCount = vehicleList.filter((v: { status: string }) => v.status === 'maintenance').length;
+  const idleCount = vehicleList.filter((v: { status: string }) => v.status === 'idle').length;
+  const totalValue = vehicleList.reduce((s: number, v: { currentValue: number }) => s + v.currentValue, 0);
 
-  const allFuelData = vehicles.flatMap((v) => v.monthlyFuelData).reduce<Record<string, { consumption: number; cost: number }>>((acc, d) => {
+  type FleetVehicleData = { status: string; currentValue: number; monthlyFuelData?: Array<{ month: string; consumption: number; cost: number }> };
+  const fleetData = vehicleList as FleetVehicleData[];
+
+  const allFuelData = fleetData.flatMap((v) => v.monthlyFuelData ?? []).reduce<Record<string, { consumption: number; cost: number }>>((acc, d) => {
     if (!acc[d.month]) acc[d.month] = { consumption: 0, cost: 0 };
     acc[d.month].consumption += d.consumption;
     acc[d.month].cost += d.cost;
@@ -31,7 +37,17 @@ export default function FleetPage() {
   }, {});
   const combinedFuel = Object.entries(allFuelData).map(([month, data]) => ({ month, ...data }));
 
-  const totalFuelCost = vehicles.reduce((s, v) => s + v.monthlyFuelData.reduce((s2, d) => s2 + d.cost, 0), 0);
+  const totalFuelCost = fleetData.reduce((s, v) => s + (v.monthlyFuelData ?? []).reduce((s2: number, d: { cost: number }) => s2 + d.cost, 0), 0);
+
+  if (isLoading) {
+    return (
+      <div className="relative min-h-screen bg-background text-foreground">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
+          <SkeletonListings count={8} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <FadeIn>
@@ -71,7 +87,7 @@ export default function FleetPage() {
             />
           </div>
 
-          <FleetMap vehicles={vehicles} selectedId={selectedId} onSelect={setSelectedId} />
+          <FleetMap vehicles={vehicleList} selectedId={selectedId} onSelect={setSelectedId} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
             <FuelChart data={combinedFuel} />
@@ -108,7 +124,7 @@ export default function FleetPage() {
             />
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((vehicle) => (
+            {filtered.map((vehicle: { id: number; status: VehicleStatus; plateNumber: string; name: string; brand: string; model: string; year: number; location: { address: string }; totalHours: number }) => (
               <Link
                 key={vehicle.id}
                 href={`/dealer/fleet/${vehicle.id}`}

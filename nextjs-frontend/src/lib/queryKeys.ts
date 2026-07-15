@@ -2,11 +2,11 @@ export const queryKeys = {
   listings: {
     all: ['listings'] as const,
     latest: ['listings', 'latest'] as const,
-    list: (params?: Record<string, unknown>) => ['listings', params] as const,
-    detail: (slug: string) => ['listing', slug] as const,
-    my: ['my-listings'] as const,
-    dealer: (status?: string) => ['dealer-listings', status] as const,
-    allListings: (page: string | number, params?: string) => ['all-listings', params, page] as const,
+    list: (params?: Record<string, unknown>) => ['listings', 'list', params] as const,
+    detail: (slug: string) => ['listings', 'detail', slug] as const,
+    my: ['listings', 'my'] as const,
+    dealer: (status?: string) => ['listings', 'dealer', status] as const,
+    allListings: (page: string | number, params?: string) => ['listings', 'all', params, page] as const,
     related: (categoryId: number | string) => ['listings', 'related', categoryId] as const,
   },
   search: {
@@ -14,18 +14,18 @@ export const queryKeys = {
   },
   auth: {
     me: ['auth', 'me'] as const,
-    notifications: ['notification-preferences'] as const,
+    notifications: ['auth', 'notification-preferences'] as const,
   },
   articles: {
     all: ['articles'] as const,
     list: (params?: Record<string, unknown>) => ['articles', params] as const,
-    detail: (slug: string) => ['article', slug] as const,
+    detail: (slug: string) => ['articles', 'detail', slug] as const,
   },
   categories: {
     all: ['categories'] as const,
     tree: ['categories', 'tree'] as const,
-    provinces: ['provinces'] as const,
-    cities: (provinceId: number | string | null) => ['cities', provinceId] as const,
+    provinces: ['categories', 'provinces'] as const,
+    cities: (provinceId: number | string | null) => ['categories', 'cities', provinceId] as const,
   },
   attributes: {
     byCategory: (categoryId: number | string | null) => ['attributes', categoryId] as const,
@@ -55,7 +55,7 @@ export const queryKeys = {
   dashboard: {
     stats: ['dashboard', 'stats'] as const,
     analytics: ['dashboard', 'analytics'] as const,
-    wallet: ['wallet'] as const,
+    wallet: ['dashboard', 'wallet'] as const,
   },
   admin: {
     users: (search?: string, role?: string) => ['admin-users', search, role] as const,

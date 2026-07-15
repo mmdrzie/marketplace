@@ -51,8 +51,8 @@ export default function DealerEditListingPage() {
     description: listing.description,
     price: listing.price,
     price_type: listing.price_type,
-    province_id: (listing as any).province_id ?? 0,
-    city_id: (listing as any).city_id ?? 0,
+    province_id: listing.province_id ?? 0,
+    city_id: listing.city_id ?? 0,
     attributes: Object.fromEntries(
       (listing.attributes ?? []).map((a) => [a.name, a.value])
     ),

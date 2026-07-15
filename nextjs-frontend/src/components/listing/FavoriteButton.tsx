@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useToggleFavorite } from '@/hooks/useFavorites';
 import { toast } from '@/components/common/Toast';
 
-export function FavoriteButton({ listingId, className, size = 'md' }: { listingId: number; className?: string; size?: 'sm' | 'md' | 'lg' }) {
+export const FavoriteButton = memo(function FavoriteButton({ listingId, className, size = 'md' }: { listingId: string | number; className?: string; size?: 'sm' | 'md' | 'lg' }) {
   const [isFav, setIsFav] = useState(false);
   const toggleFav = useToggleFavorite();
 
@@ -30,7 +30,7 @@ export function FavoriteButton({ listingId, className, size = 'md' }: { listingI
     <button
       onClick={toggle}
       disabled={toggleFav.isPending}
-      className={`rounded-xl flex items-center justify-center transition-all duration-200 bg-background/60 border border-border-subtle ${size === 'sm' ? 'w-7 h-7' : size === 'lg' ? 'w-10 h-10' : 'w-8 h-8'} ${isFav ? 'text-destructive border-destructive/40 bg-destructive/10' : 'text-muted-foreground hover:text-destructive hover:border-destructive/30'} ${className || ''}`}
+      className={`rounded-xl flex items-center justify-center transition-all duration-200 bg-background/60 border border-border-subtle ${size === 'sm' ? 'w-9 h-9' : size === 'lg' ? 'w-11 h-11' : 'w-10 h-10'} ${isFav ? 'text-destructive border-destructive/40 bg-destructive/10' : 'text-muted-foreground hover:text-destructive hover:border-destructive/30'} ${className || ''}`}
       title={isFav ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها'}
     >
       {toggleFav.isPending ? (
@@ -45,4 +45,4 @@ export function FavoriteButton({ listingId, className, size = 'md' }: { listingI
       )}
     </button>
   );
-}
+});

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import api from '@/lib/api';
 import type { User } from '@/types';
 import { queryKeys } from '@/lib/queryKeys';
+import { toast } from '@/components/common/Toast';
 
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
@@ -25,25 +26,29 @@ export default function AdminUsersPage() {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ id, role }: { id: string | number; role: string }) => { await api.put(`/admin/users/${id}/role`, { role }); },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }); toast({ type: 'success', title: 'نقش کاربر تغییر کرد' }); },
+    onError: () => { toast({ type: 'error', title: 'خطا', message: 'تغییر نقش با مشکل مواجه شد' }); },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string | number; status: string }) => { await api.put(`/admin/users/${id}/status`, { status }); },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }); toast({ type: 'success', title: 'وضعیت کاربر تغییر کرد' }); },
+    onError: () => { toast({ type: 'error', title: 'خطا', message: 'تغییر وضعیت با مشکل مواجه شد' }); },
   });
 
   const createUserMutation = useMutation({
     mutationFn: async (data: { name: string; phone: string; password: string; role: string }) => { await api.post('/admin/users', data); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }); setShowAddModal(false); setAddForm({ name: '', phone: '', password: '', role: 'user' }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }); setShowAddModal(false); setAddForm({ name: '', phone: '', password: '', role: 'user' }); toast({ type: 'success', title: 'کاربر ایجاد شد' }); },
+    onError: () => { toast({ type: 'error', title: 'خطا', message: 'ایجاد کاربر با مشکل مواجه شد' }); },
   });
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: string | number) => { await api.delete(`/admin/users/${id}`); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }); setDeleteTarget(null); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() }); setDeleteTarget(null); toast({ type: 'success', title: 'کاربر حذف شد' }); },
+    onError: () => { toast({ type: 'error', title: 'خطا', message: 'حذف کاربر با مشکل مواجه شد' }); },
   });
 
-  const users = data?.data || [];
+  const users = useMemo(() => data?.data || [], [data]);
 
   const exportCSV = useCallback(() => {
     const headers = ['id', 'نام', 'موبایل', 'نقش', 'وضعیت', 'تاریخ عضویت'];
@@ -92,7 +97,7 @@ export default function AdminUsersPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-14 bg-surface-2 rounded-xl animate-pulse" />)}</div>
+        <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-14 bg-surface-2 rounded-xl motion-safe:animate-pulse" />)}</div>
       ) : (
         <div className="glass rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -113,7 +118,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-foreground">{user.name || '---'}</td>
                     <td className="px-4 py-3 font-mono text-xs text-foreground">{user.phone}</td>
                     <td className="px-4 py-3">
-                      <select value={user.role} onChange={(e) => updateRoleMutation.mutate({ id: user.id, role: e.target.value })} className="text-xs border border-border-subtle rounded-lg px-2 py-1 bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground">
+                      <select value={user.role} onChange={(e) => updateRoleMutation.mutate({ id: user.id, role: e.target.value })} className="text-xs glass-input rounded-lg px-2 py-1 text-foreground">
                         <option value="user">کاربر عادی</option>
                         <option value="dealer">نمایندگی</option>
                         <option value="agency">بنگاه</option>
@@ -132,7 +137,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(user.created_at).toLocaleDateString('fa-IR')}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <select value={user.status ?? ''} onChange={(e) => updateStatusMutation.mutate({ id: user.id, status: e.target.value })} className="text-xs border border-border-subtle rounded-lg px-2 py-1 bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground">
+                        <select value={user.status ?? ''} onChange={(e) => updateStatusMutation.mutate({ id: user.id, status: e.target.value })} className="text-xs glass-input rounded-lg px-2 py-1 text-foreground">
                           <option value="active">فعال</option>
                           <option value="suspended">تعلیق</option>
                           <option value="banned">مسدود</option>

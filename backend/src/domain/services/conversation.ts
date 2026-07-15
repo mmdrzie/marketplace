@@ -11,7 +11,7 @@ export class ConversationService {
   }
 
   async getById(id: number, user: AuthUser) {
-    const conversation = await conversationRepo.findById(id);
+    const conversation = await conversationRepo.findByIdDetailed(id);
     if (!conversation) throw AppError.notFound('Conversation not found');
     if (conversation.buyer_id !== user.id && conversation.seller_id !== user.id) {
       throw AppError.forbidden('You are not a participant in this conversation');
@@ -40,7 +40,8 @@ export class ConversationService {
         senderId: input.user.id,
         body: input.message,
       });
-      return { ...existing, messages };
+      const detailed = await conversationRepo.findByIdDetailed(existing.id);
+      return { ...detailed, messages };
     }
 
     const conversation = await conversationRepo.create({
@@ -59,7 +60,8 @@ export class ConversationService {
       sellerId: listing.user_id,
     });
 
-    return { ...conversation, messages };
+    const detailed = await conversationRepo.findByIdDetailed(conversation.id);
+    return { ...detailed, messages };
   }
 
   async sendMessage(input: { conversationId: number; body: string; user: AuthUser }) {

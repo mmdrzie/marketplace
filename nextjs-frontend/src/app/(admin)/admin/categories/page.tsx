@@ -13,7 +13,7 @@ export default function AdminCategoriesPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.admin.categories,
-    queryFn: async () => { const res = await api.get('/admin/categories'); return res.data; },
+    queryFn: async () => { const res = await api.get('/categories'); return res.data; },
     staleTime: 60000,
   });
 
@@ -38,7 +38,7 @@ export default function AdminCategoriesPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl animate-pulse" />)}</div>
+        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 bg-surface-2 rounded-xl motion-safe:animate-pulse" />)}</div>
       ) : (
         <div className="glass rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">

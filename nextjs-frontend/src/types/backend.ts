@@ -28,14 +28,14 @@ export interface BackendDealerProfile {
 export interface BackendListing {
   id: string;
   user_id: string;
-  category_id: number | null;
+  category_id: number;
   province_id: number | null;
   city_id: number | null;
   city_name: string | null;
   title: string;
   slug: string;
-  description: string | null;
-  price: number | null;
+  description: string;
+  price: number;
   price_type: 'fixed' | 'negotiable' | 'auction';
   status: 'draft' | 'pending' | 'published' | 'rejected' | 'sold' | 'archived';
   is_featured: boolean;
@@ -118,12 +118,17 @@ export interface BackendConversation {
   id: string;
   listing_id: string;
   listing_title: string;
+  listing_slug: string;
+  listing_image: string | null;
   buyer_id: string;
   buyer_name: string;
+  buyer_avatar: string | null;
   seller_id: string;
   seller_name: string;
-  last_message: BackendMessage | null;
+  seller_avatar: string | null;
+  last_message: string | null;
   last_message_at: string | null;
+  unread_count: string;
   created_at: string;
   messages?: BackendMessage[];
 }
@@ -164,14 +169,4 @@ export interface BackendArticle {
   reading_time: number;
   published_at: string;
   created_at: string;
-}
-
-export interface BackendDealerStats {
-  total_listings: number;
-  active_listings: number;
-  total_views: number;
-  total_contacts: number;
-  total_favorites: number;
-  subscription_plan: string;
-  listings_limit: number;
 }

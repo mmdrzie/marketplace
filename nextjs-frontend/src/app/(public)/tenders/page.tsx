@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTenderStore } from '@/store/tenderStore';
+import { useTenders } from '@/hooks/useTenders';
 import { TenderCard } from '@/components/tender/TenderCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
-import { GlassSelect } from '@/components/common/GlassSelect';
 import { FadeIn } from '@/components/common/MotionDiv';
-import type { TenderType } from '@/store/tenderStore';
+import { SkeletonListings } from '@/components/common/Skeleton';
 import { TENDER_TYPE_LABELS } from '@/store/tenderStore';
 
 export default function TendersPage() {
-  const tenders = useTenderStore((s) => s.tenders);
+  const { data: tenders, isLoading, error } = useTenders();
+  const tenderList = tenders ?? [];
   const [filterType, setFilterType] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const open = tenders.filter((t) => t.status === 'open');
-  const other = tenders.filter((t) => t.status !== 'open');
+  const open = tenderList.filter((t: { status: string }) => t.status === 'open');
+  const other = tenderList.filter((t: { status: string }) => t.status !== 'open');
 
   const filtered = [...open, ...other].filter((t) => {
     if (filterType !== 'all' && t.type !== filterType) return false;
@@ -70,7 +70,16 @@ export default function TendersPage() {
             </div>
           </div>
 
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <SkeletonListings count={6} />
+          ) : error ? (
+            <div className="text-center py-20">
+              <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4 text-destructive">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
+              </div>
+              <p className="text-destructive font-medium">خطا در بارگذاری درخواست‌ها</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <EmptyState
               title="درخواستی یافت نشد"
               description="هیچ درخواست مناقصه‌ای با این فیلترها وجود ندارد"

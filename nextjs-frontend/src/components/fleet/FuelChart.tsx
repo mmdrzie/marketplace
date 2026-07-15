@@ -25,7 +25,7 @@ export function FuelChart({ data, className = '' }: FuelChartProps) {
         {data.map((d, i) => {
           const h = (d.consumption / maxConsumption) * 100;
           return (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+            <div key={d.month} className="flex-1 flex flex-col items-center gap-1.5">
               <span className="text-[9px] text-muted-foreground">{d.consumption.toLocaleString('fa-IR')}</span>
               <motion.div
                 initial={{ height: 0 }}

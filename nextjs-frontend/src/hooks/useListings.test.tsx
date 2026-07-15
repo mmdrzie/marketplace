@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useListings, useListing, useCreateListing, useDeleteListing } from './useListings';
+import { useListings } from './useListings';
 
 const mockApiGet = vi.hoisted(() => vi.fn());
 const mockApiPost = vi.hoisted(() => vi.fn());
@@ -49,14 +49,4 @@ describe('useListings', () => {
     expect(mockApiGet).toHaveBeenCalledWith('/listings', { params: { page: 1 } });
   });
 
-  it('falls back to mock data on error', async () => {
-    mockApiGet.mockRejectedValue(new Error('Network Error'));
-
-    const { result } = renderHook(() => useListings(), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toBeDefined();
-  });
 });

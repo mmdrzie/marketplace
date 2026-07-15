@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
+import { GlassSelect } from '@/components/common/GlassSelect';
 import { ModernLineChart } from '@/components/common/Charts';
 import { cn } from '@/lib/utils';
 
@@ -129,7 +130,7 @@ export default function CarVsCarPage() {
 
           <div className="mb-10 mt-4">
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               CAR VS CAR
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">مقایسه تخصصی خودروها</h1>
@@ -140,18 +141,14 @@ export default function CarVsCarPage() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-10">
             <div className="md:col-span-2">
               <label className="text-[11px] text-muted-foreground mb-2 block uppercase tracking-wider">خودرو اول</label>
-              <select value={car1} onChange={(e) => setCar1(e.target.value)} className="w-full bg-surface-2/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors">
-                {ALL_NAMES.filter((n) => n !== car2).map((n) => (<option key={n} value={n}>{n}</option>))}
-              </select>
+              <GlassSelect value={car1} onChange={setCar1} options={ALL_NAMES.filter((n: string) => n !== car2).map((n: string) => ({ value: n, label: n }))} placeholder="انتخاب خودرو" />
             </div>
             <div className="text-center text-muted-foreground pb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
             </div>
             <div className="md:col-span-2">
               <label className="text-[11px] text-muted-foreground mb-2 block uppercase tracking-wider">خودرو دوم</label>
-              <select value={car2} onChange={(e) => setCar2(e.target.value)} className="w-full bg-surface-2/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors">
-                {ALL_NAMES.filter((n) => n !== car1).map((n) => (<option key={n} value={n}>{n}</option>))}
-              </select>
+              <GlassSelect value={car2} onChange={setCar2} options={ALL_NAMES.filter((n: string) => n !== car1).map((n: string) => ({ value: n, label: n }))} placeholder="انتخاب خودرو" />
             </div>
           </div>
 

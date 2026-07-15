@@ -10,7 +10,7 @@ import { queryKeys } from '@/lib/queryKeys';
 
 export default function ModerationPage() {
   const queryClient = useQueryClient();
-  const [rejectTarget, setRejectTarget] = useState<{ id: number; title: string } | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ id: string | number; title: string } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [detailTarget, setDetailTarget] = useState<ListingDetail | null>(null);
 
@@ -21,13 +21,13 @@ export default function ModerationPage() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (id: number) => { await api.patch(`/listings/${id}`, { action: 'approve' }); },
+    mutationFn: async (id: string | number) => { await api.patch(`/listings/${id}`, { action: 'approve' }); },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.admin.pending });
       const previous = queryClient.getQueryData(queryKeys.admin.pending);
-      queryClient.setQueryData(queryKeys.admin.pending, (old: any) => {
+      queryClient.setQueryData(queryKeys.admin.pending, (old: { data?: Array<{ id: number }> } | undefined) => {
         if (!old?.data) return old;
-        return { ...old, data: old.data.filter((item: any) => item.id !== id) };
+        return { ...old, data: old.data.filter((item) => item.id !== id) };
       });
       return { previous };
     },
@@ -40,13 +40,13 @@ export default function ModerationPage() {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: async ({ id, reason }: { id: number; reason: string }) => { await api.patch(`/listings/${id}`, { action: 'reject', reason }); },
+    mutationFn: async ({ id, reason }: { id: string | number; reason: string }) => { await api.patch(`/listings/${id}`, { action: 'reject', reason }); },
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.admin.pending });
       const previous = queryClient.getQueryData(queryKeys.admin.pending);
-      queryClient.setQueryData(queryKeys.admin.pending, (old: any) => {
+      queryClient.setQueryData(queryKeys.admin.pending, (old: { data?: Array<{ id: number }> } | undefined) => {
         if (!old?.data) return old;
-        return { ...old, data: old.data.filter((item: any) => item.id !== id) };
+        return { ...old, data: old.data.filter((item) => item.id !== id) };
       });
       return { previous };
     },
@@ -65,7 +65,7 @@ export default function ModerationPage() {
       <h1 className="text-2xl font-bold text-foreground">مدیریت آگهی‌ها</h1>
 
       {isLoading ? (
-        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-surface-2 rounded-2xl animate-pulse" />)}</div>
+        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-surface-2 rounded-2xl motion-safe:animate-pulse" />)}</div>
       ) : listings.length === 0 ? (
         <div className="glass rounded-2xl p-12 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center">

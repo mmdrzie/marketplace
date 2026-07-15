@@ -13,7 +13,7 @@ export function PWAProvider() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('[PWA] SW registration failed:', err));
     }
 
     const handler = (e: Event) => {

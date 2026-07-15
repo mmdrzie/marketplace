@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
-import { FadeIn, SlideUp } from '@/components/common/MotionDiv';
+import { FadeIn } from '@/components/common/MotionDiv';
+import { SlideUp } from '@/components/common/MotionDiv.client';
+import { GlassSelect } from '@/components/common/GlassSelect';
 import { ModernLineChart } from '@/components/common/Charts';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -106,7 +108,7 @@ export default function PriceEstimatorPage() {
 
           <div className="mb-12 mt-4">
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm shadow-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               PRICE ESTIMATOR PRO
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">موتور برآورد قیمت</h1>
@@ -205,9 +207,7 @@ export default function PriceEstimatorPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div>
                         <label className="text-[11px] text-muted-foreground mb-3 block uppercase tracking-wider">سال ساخت</label>
-                        <select value={form.year} onChange={(e) => update({ year: Number(e.target.value) })} className="w-full bg-surface-2/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors">
-                          {years.map((y) => (<option key={y} value={y}>{y}</option>))}
-                        </select>
+                        <GlassSelect value={String(form.year)} onChange={(v) => update({ year: Number(v) })} options={years.map((y: number) => ({ value: String(y), label: String(y) }))} placeholder="سال ساخت" />
                       </div>
                       <div>
                         <label className="text-[11px] text-muted-foreground mb-3 block uppercase tracking-wider">کارکرد (کیلومتر)</label>

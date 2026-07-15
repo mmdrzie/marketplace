@@ -1,14 +1,18 @@
 import type { NextConfig } from "next";
+const path = require("node:path");
 
 let bundleAnalyzer: (config: NextConfig) => NextConfig = (c) => c;
 
 if (process.env.ANALYZE === 'true') {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { default: withBundleAnalyzer } = require('@next/bundle-analyzer');
+  const withBundleAnalyzer = require('@next/bundle-analyzer');
   bundleAnalyzer = withBundleAnalyzer({ enabled: true });
 }
 
 const nextConfig: NextConfig = bundleAnalyzer({
+  turbopack: {
+    root: path.resolve(__dirname, ".."),
+  },
   images: {
     remotePatterns: [
       {
@@ -22,8 +26,6 @@ const nextConfig: NextConfig = bundleAnalyzer({
   },
   experimental: {
     optimizePackageImports: ['@tanstack/react-query', 'react-icons', 'framer-motion'],
-    optimizeServerReact: true,
-    scrollRestoration: true,
   },
   allowedDevOrigins: ['192.168.0.191', process.env.NEXT_PUBLIC_DEV_ORIGIN].filter(Boolean) as string[],
 });

@@ -14,7 +14,7 @@ export default function WalletPage() {
   const { data: profile, isLoading } = useQuery({
     queryKey: queryKeys.dashboard.wallet,
     queryFn: async () => {
-      const res = await api.get('/me');
+      const res = await api.get('/auth/me');
       return res.data.data;
     },
   });

@@ -3,23 +3,22 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import {
-  motion, AnimatePresence, useMotionValue, useSpring, useTransform,
-  animate, useInView, useScroll, useMotionTemplate,
-} from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { NewsCard } from '@/components/news/NewsCard';
 import { useArticles } from '@/hooks/useArticles';
+import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import type { Article, Category } from '@/types';
 import { throttle } from '@/lib/utils';
 import { ICON_PATHS } from '@/lib/icons';
 import dynamic from 'next/dynamic';
 import { Skeleton, SkeletonText, SkeletonCard, SkeletonListings } from '@/components/common/Skeleton';
-const ParticleBackground = dynamic(() => import('@/components/common/ParticleBackground').then(mod => mod.ParticleBackground), { ssr: false });
+import { SlideUp, ScaleIn } from '@/components/common/MotionDiv.client';
 const CustomCursor = dynamic(() => import('@/components/common/CustomCursor').then(mod => mod.CustomCursor), { ssr: false });
+const ParticleBackground = dynamic(() => import('@/components/common/ParticleBackground').then(mod => mod.ParticleBackground), { ssr: false });
 
 /* ============ Icons ============ */
 const Icon = ({ d, className = 'w-5 h-5' }: { d: string; className?: string }) => (
@@ -77,90 +76,63 @@ const MARKET_TICKER = [
 
 const CountUp = ({ value, suffix }: { value: number; suffix: string }) => {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-40px' });
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    if (!isInView) return;
-    const controls = animate(0, value, {
-      duration: 2.2,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => setDisplay(Math.floor(v)),
-    });
-    return () => controls.stop();
-  }, [isInView, value]);
+    const el = ref.current;
+    if (!el) return;
+    let frame: number;
+    let start: number | null = null;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      const duration = 2200;
+      const step = (ts: number) => {
+        if (!start) start = ts;
+        const elapsed = ts - start;
+        const t = Math.min(elapsed / duration, 1);
+        const ease = 1 - (1 - t) * (1 - t) * (1 - t);
+        setDisplay(Math.floor(ease * value));
+        if (t < 1) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+      observer.disconnect();
+    }, { rootMargin: '-40px' });
+    observer.observe(el);
+    return () => { observer.disconnect(); if (frame) cancelAnimationFrame(frame); };
+  }, [value]);
 
   return <span ref={ref}>{display.toLocaleString('fa-IR')}{suffix}</span>;
 };
 
 const MagneticButton = ({ children, href, variant = 'glass' }: { children: React.ReactNode; href: string; variant?: 'primary' | 'glass' }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const xs = useSpring(x, { stiffness: 150, damping: 15 });
-  const ys = useSpring(y, { stiffness: 150, damping: 15 });
-
   return (
-    <motion.div
-      ref={ref}
-      onMouseMove={(e) => {
-        const r = ref.current?.getBoundingClientRect();
-        if (!r) return;
-        x.set((e.clientX - r.left - r.width / 2) * 0.3);
-        y.set((e.clientY - r.top - r.height / 2) * 0.3);
-      }}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      style={{ x: xs, y: ys }}
-      className="inline-block"
-      whileTap={{ scale: 0.96 }}
-    >
+    <div className="inline-block active:scale-[0.97] transition-transform duration-150">
       <Link href={href} className={`btn btn-lg group relative overflow-hidden ${variant === 'primary' ? 'btn-primary shadow-[0_0_30px_-8px_var(--color-primary)]' : 'btn-glass'} animate-glow-pulse`}>
         {variant === 'primary' && (
           <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         )}
         {children}
       </Link>
-    </motion.div>
+    </div>
   );
 };
 
-/** 3D Tilt + Spotlight card */
+/** 3D Tilt + Spotlight card — CSS-only */
 const TiltSpotlightCard = ({ children, href }: { children: React.ReactNode; href: string }) => {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const rotX = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
-  const rotY = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
-
-  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${mouseX}px ${mouseY}px, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 80%)`;
-
-  const handleMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    const px = e.clientX - r.left;
-    const py = e.clientY - r.top;
-    mouseX.set(px);
-    mouseY.set(py);
-    rotY.set(((px / r.width) - 0.5) * -10);
-    rotX.set(((py / r.height) - 0.5) * 10);
-  };
-
   return (
-    <motion.div style={{ perspective: 800 }} className="h-full">
-      <motion.div style={{ rotateX: rotX, rotateY: rotY, transformStyle: 'preserve-3d' }} className="h-full">
+    <div className="group h-full" style={{ perspective: '800px' }}>
+      <div className="h-full transition-all duration-300 ease-out group-hover:[transform:rotateY(-5deg)_rotateX(5deg)]" style={{ transformStyle: 'preserve-3d' }}>
         <Link
-          ref={ref}
           href={href}
-          onMouseMove={handleMove}
-          onMouseLeave={() => { rotX.set(0); rotY.set(0); }}
-          className="group relative bg-surface/40 border border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:bg-surface transition-colors duration-300 h-full overflow-hidden"
+          className="relative bg-surface/40 border border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:bg-surface transition-colors duration-300 h-full overflow-hidden"
         >
-          <motion.div className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: spotlight }} />
+          <div className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_50%_50%,color-mix(in_srgb,var(--color-primary)_16%,transparent),transparent_80%)]" />
           <div style={{ transform: 'translateZ(30px)' }} className="flex flex-col items-center">
             {children}
           </div>
         </Link>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
@@ -188,7 +160,7 @@ const Typewriter = ({ words }: { words: string[] }) => {
   return (
     <span className="text-transparent bg-clip-text bg-gradient-to-l from-primary via-primary/85 to-primary/60">
       {words[index].substring(0, subIndex)}
-      <span className="animate-pulse text-primary">|</span>
+      <span className="motion-safe:animate-pulse text-primary">|</span>
     </span>
   );
 };
@@ -197,27 +169,19 @@ const Typewriter = ({ words }: { words: string[] }) => {
 const AnimatedWords = ({ text, className = '' }: { text: string; className?: string }) => (
   <span className={className}>
     {text.split(' ').map((word, i) => (
-      <motion.span
+      <span
         key={i}
-        initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-        transition={{ duration: 0.6, delay: 0.15 + i * 0.09, ease: [0.16, 1, 0.3, 1] }}
-        className="inline-block ml-[0.28em]"
+        className="inline-block ml-[0.28em] animate-fade-in-up"
+        style={{ animationDelay: `${0.15 + i * 0.09}s`, animationFillMode: 'both' }}
       >
         {word}
-      </motion.span>
+      </span>
     ))}
   </span>
 );
 
 const SectionHeader = ({ eyebrow, title, cta }: { eyebrow: string; title: string; cta?: { href: string; label: string } }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: '-60px' }}
-    transition={{ duration: 0.6 }}
-    className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b border-border pb-6"
-  >
+  <SlideUp rootMargin="-60px" className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b border-border pb-6">
     <div>
       <span className="inline-flex items-center gap-2 text-[11px] text-primary uppercase tracking-[0.2em] font-medium mb-3">
         <span className="w-6 h-px bg-gradient-to-l from-primary to-transparent" />
@@ -231,11 +195,11 @@ const SectionHeader = ({ eyebrow, title, cta }: { eyebrow: string; title: string
         <Icon d={ICON_PATHS.arrow} className="w-4 h-4 rotate-180 transition-transform group-hover:-translate-x-1" />
       </Link>
     )}
-  </motion.div>
+  </SlideUp>
 );
 
 const CardSkeleton = () => (
-  <div className="bg-surface/40 border border-border rounded-2xl p-6 h-full animate-pulse">
+  <div className="bg-surface/40 border border-border rounded-2xl p-6 h-full motion-safe:animate-pulse">
     <Skeleton className="w-12 h-12 rounded-xl mb-4 mx-auto" />
     <SkeletonText className="w-3/4 mx-auto mb-2" />
     <SkeletonText className="w-1/2 mx-auto" />
@@ -245,34 +209,38 @@ const CardSkeleton = () => (
 /* ============ Page ============ */
 
 export default function HomePage() {
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useAuthStore((s) => !!s.token);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickQuery, setQuickQuery] = useState('');
   const [showTop, setShowTop] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const heroRef = useRef<HTMLElement>(null);
+  const isTouch = useIsTouchDevice();
+  const reducedMotion = usePrefersReducedMotion();
+  const disableEffects = isTouch || reducedMotion;
 
   /* progress bar */
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
-
-  /* hero parallax */
-  const { scrollYProgress: heroProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const heroY = useTransform(heroProgress, [0, 1], [0, 120]);
-  const heroOpacity = useTransform(heroProgress, [0, 0.8], [1, 0]);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   /* cursor glow */
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const background = useMotionTemplate`radial-gradient(600px circle at ${mouseX}px ${mouseY}px, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 80%)`;
+  const [glowBg, setGlowBg] = useState('');
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => { mouseX.set(e.clientX); mouseY.set(e.clientY); };
-    const onScroll = throttle(() => setShowTop(window.scrollY > 800), 100);
-    window.addEventListener('mousemove', onMove);
+    const onScroll = throttle(() => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(max > 0 ? window.scrollY / max : 0);
+      setShowTop(window.scrollY > 800);
+    }, 100);
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('scroll', onScroll); };
-  }, [mouseX, mouseY]);
+    if (!disableEffects) {
+      const onMove = (e: MouseEvent) => {
+        setGlowBg(`radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 80%)`);
+      };
+      window.addEventListener('mousemove', onMove);
+      return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('mousemove', onMove); };
+    }
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [disableEffects]);
 
   /* keyboard: ESC close, Ctrl+K open — reset query & focus on open */
   useEffect(() => {
@@ -298,7 +266,7 @@ export default function HomePage() {
   }, [quickQuery]);
 
   /* data */
-  const { data: apiCategories, isLoading: catLoading } = useQuery({
+  const { data: apiCategories, isLoading: catLoading, isError: catError } = useQuery({
     queryKey: queryKeys.categories.all,
     queryFn: async () => (await api.get('/categories')).data.data,
     staleTime: 300000,
@@ -315,16 +283,15 @@ export default function HomePage() {
 
   return (
     <>
-      {/* custom cursor — outside relative wrapper for stacking context */}
-      <CustomCursor />
+      {!disableEffects && <CustomCursor />}
 
       <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-foreground overflow-x-hidden relative flex flex-col">
 
       {/* scroll progress */}
-      <motion.div style={{ scaleX }} className="fixed top-0 inset-x-0 h-[3px] bg-gradient-to-l from-primary via-primary/80 to-primary origin-right z-50 shadow-[0_0_12px_var(--color-primary)]" />
+      <div className="fixed top-0 inset-x-0 h-[3px] bg-gradient-to-l from-primary via-primary/80 to-primary origin-right z-50 transition-transform duration-75" style={{ transform: `scaleX(${scrollProgress})` }} />
 
-      {/* cursor glow */}
-      <motion.div style={{ background }} className="fixed inset-0 z-0 pointer-events-none" />
+      {/* cursor glow — only on desktop */}
+      {!disableEffects && <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: glowBg }} />}
 
       {/* grid pattern with radial mask */}
       <div
@@ -337,27 +304,21 @@ export default function HomePage() {
         }}
       />
 
-      {/* interactive particles */}
-      <ParticleBackground className="fixed inset-0 z-[1] w-full h-full" />
+      {/* interactive particles — فقط دسکتاپ (بهینه‌سازی CPU) */}
+      {!disableEffects && <ParticleBackground className="fixed inset-0 z-[1] w-full h-full" />}
 
       {/* ===== 1. HERO ===== */}
       <section ref={heroRef} className="relative z-10 min-h-[88vh] flex flex-col items-center justify-center pt-24 pb-24 px-4">
-        {/* aurora blobs */}
+        {/* aurora blobs — فقط دسکتاپ */}
+        {!disableEffects && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-          <motion.div
-            animate={{ x: [0, 60, -40, 0], y: [0, -40, 30, 0], scale: [1, 1.15, 0.95, 1] }}
-            transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-[-10%] right-[15%] w-[480px] h-[480px] rounded-full bg-primary/15 blur-[130px]"
-          />
-          <motion.div
-            animate={{ x: [0, -50, 40, 0], y: [0, 50, -30, 0], scale: [1, 0.9, 1.1, 1] }}
-            transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute bottom-[-15%] left-[10%] w-[420px] h-[420px] rounded-full bg-primary/10 blur-[120px]"
-          />
+          <div className="absolute top-[15%] right-[15%] w-[480px] h-[480px] rounded-full bg-primary/12 blur-[120px]" style={{ animation: 'aurora-1 22s ease-in-out infinite' }} />
+          <div className="absolute bottom-[-15%] left-[10%] w-[420px] h-[420px] rounded-full bg-primary/10 blur-[120px]" style={{ animation: 'aurora-2 26s ease-in-out infinite' }} />
         </div>
+        )}
 
-        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative max-w-5xl mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="relative max-w-5xl mx-auto text-center">
+          <div className="animate-fade-in-up">
             <span className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-8 border border-border/60 hover:border-primary/30 transition-colors">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-60" />
@@ -365,24 +326,21 @@ export default function HomePage() {
               </span>
               نسل جدید پلتفرم‌های معامله خودرو و ماشین‌آلات
             </span>
-          </motion.div>
+          </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tighter mb-6 leading-[1.05]">
             <AnimatedWords text="بازارگاه مدرن" className="text-gradient" />
             <br />
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+            <span className="animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
               <Typewriter words={['خودرو و ماشین‌آلات', 'ماشین‌آلات سنگین', 'تجهیزات راهسازی', 'ماشین‌آلات کشاورزی']} />
-            </motion.span>
+            </span>
           </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-light leading-relaxed"
-          >
+          <p className="animate-fade-in-up text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-light leading-relaxed" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
             خرید، فروش و اجاره انواع خودرو سواری، ماشین‌آلات سنگین، راهسازی و کشاورزی با بالاترین استانداردهای امنیتی و کاربری.
-          </motion.p>
+          </p>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.55 }} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="animate-fade-in-up flex flex-col sm:flex-row gap-4 justify-center items-center" style={{ animationDelay: '0.55s', animationFillMode: 'both' }}>
             <MagneticButton href="/dashboard/listings/new" variant="glass">
               <Icon d={ICON_PATHS.plus} className="w-4 h-4 transition-transform group-hover:rotate-90 duration-300" />
               ثبت آگهی رایگان
@@ -391,9 +349,9 @@ export default function HomePage() {
               <Icon d={ICON_PATHS.search} className="w-4 h-4" />
               کاوش در بازار
             </MagneticButton>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.7 }}>
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link href="/listings" className="btn btn-primary btn-sm">
                 <Icon d={ICON_PATHS.grid} className="w-4 h-4" /> همه آگهی‌ها
@@ -404,18 +362,15 @@ export default function HomePage() {
                 </Link>
               )}
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* scroll hint */}
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
-          <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }} className="w-6 h-10 rounded-full border-2 border-border flex items-start justify-center p-1.5">
+        <div className="animate-fade-in absolute bottom-8 left-1/2 -translate-x-1/2" style={{ animationDelay: '1.4s', animationFillMode: 'both' }}>
+          <div className="w-6 h-10 rounded-full border-2 border-border flex items-start justify-center p-1.5" style={{ animation: 'scrollHint 1.8s ease-in-out infinite' }}>
             <div className="w-1 h-2 rounded-full bg-primary" />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </section>
 
       {/* ===== 2. TICKER ===== */}
@@ -445,15 +400,12 @@ export default function HomePage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {catLoading
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
-            : (categories as Category[])?.slice(0, 8).map((cat, i) => (
-              <motion.div
-                key={cat.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                className="h-full"
-              >
+            : catError ? (
+              <div className="col-span-4 text-center py-12">
+                <p className="text-sm text-muted-foreground">خطا در بارگذاری دسته‌بندی‌ها</p>
+              </div>
+            ) : (categories as Category[])?.slice(0, 8).map((cat, i) => (
+              <SlideUp key={cat.id} delay={i * 0.05} rootMargin="-40px" className="h-full">
                 <TiltSpotlightCard href={`/categories/${cat.slug}`}>
                   <div className="relative z-10 w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-primary mb-4 group-hover:scale-110 group-hover:border-primary/50 group-hover:shadow-[0_0_20px_-6px_var(--color-primary)] transition-all duration-300">
                     <Icon d={ICON_PATHS[cat.slug as keyof typeof ICON_PATHS] || ICON_PATHS.default} className="w-6 h-6" />
@@ -465,7 +417,7 @@ export default function HomePage() {
                     </div>
                   )}
                 </TiltSpotlightCard>
-              </motion.div>
+              </SlideUp>
             ))}
         </div>
       </section>
@@ -477,16 +429,10 @@ export default function HomePage() {
           <SkeletonListings count={8} />
         ) : (
           latest?.data?.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.7 }}
-              className="relative bg-surface/20 border border-border rounded-3xl p-4 md:p-6 overflow-hidden"
-            >
+            <SlideUp rootMargin="-60px" className="relative bg-surface/20 border border-border rounded-3xl p-4 md:p-6 overflow-hidden">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
               <ListingGrid listings={latest.data} />
-            </motion.div>
+            </SlideUp>
           )
         )}
       </section>
@@ -503,12 +449,10 @@ export default function HomePage() {
           {/* connector line */}
           <div className="hidden md:block absolute top-8 right-[16%] left-[16%] h-px bg-gradient-to-r from-transparent via-border to-transparent" aria-hidden />
           {STEPS.map((step, i) => (
-            <motion.div
+            <SlideUp
               key={step.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.6, delay: i * 0.15 }}
+              delay={i * 0.15}
+              rootMargin="-60px"
               className="relative flex flex-col items-center text-center"
             >
               <div className="relative z-10 w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center text-primary mb-5 shadow-[0_0_25px_-10px_var(--color-primary)]">
@@ -519,7 +463,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px]">{step.desc}</p>
-            </motion.div>
+            </SlideUp>
           ))}
         </div>
       </section>
@@ -531,15 +475,9 @@ export default function HomePage() {
           {artLoading
             ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
             : (homeArticles as Article[])?.slice(0, 4).map((article, i) => (
-              <motion.div
-                key={article.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-              >
+              <SlideUp key={article.id} delay={i * 0.08} rootMargin="-40px">
                 <NewsCard article={article} />
-              </motion.div>
+              </SlideUp>
             ))}
         </div>
       </section>
@@ -554,12 +492,10 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-fr">
           {FEATURES.map((feature, i) => (
-            <motion.div
+            <SlideUp
               key={feature.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              delay={i * 0.1}
+              rootMargin="-40px"
               className={`group relative bg-gradient-to-br from-card to-surface/30 border border-border rounded-2xl p-8 hover:border-primary/40 transition-all duration-300 overflow-hidden ${feature.size}`}
             >
               <span className="absolute top-6 left-6 text-5xl font-black text-foreground/[0.04] group-hover:text-primary/10 transition-colors select-none">
@@ -574,20 +510,14 @@ export default function HomePage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
               </div>
               <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.div>
+            </SlideUp>
           ))}
         </div>
       </section>
 
       {/* ===== 8. STATS ===== */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 py-20 w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.7 }}
-          className="relative border border-border rounded-3xl bg-surface/20 backdrop-blur-sm overflow-hidden"
-        >
+        <SlideUp rootMargin="-60px" className="relative border border-border rounded-3xl bg-surface/20 backdrop-blur-sm overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-x-reverse divide-border">
             {STATS.map((stat, i) => (
@@ -600,24 +530,14 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </SlideUp>
       </section>
 
       {/* ===== 9. CTA ===== */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 py-20 w-full">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.7 }}
-          className="relative bg-gradient-to-r from-card via-primary/10 to-card border border-border rounded-3xl p-12 md:p-20 overflow-hidden text-center"
-        >
+        <ScaleIn rootMargin="-60px" className="relative bg-gradient-to-r from-card via-primary/10 to-card border border-border rounded-3xl p-12 md:p-20 overflow-hidden text-center">
           <div className="absolute inset-0 opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-          <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px]"
-          />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px] motion-safe:animate-pulse-slow" />
           <div className="relative z-10 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 tracking-tight leading-tight">آینده معامله ماشین‌آلات، همین حالا آغاز شد.</h2>
             <p className="text-muted-foreground mb-10 leading-relaxed">به شبکه‌ای از حرفه‌ای‌ترین خریداران و فروشندگان ایران بپیوندید و تجربه‌ای متفاوت از امنیت و سرعت داشته باشید.</p>
@@ -637,96 +557,76 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-        </motion.div>
+        </ScaleIn>
       </section>
 
       {/* ===== BACK TO TOP ===== */}
-      <AnimatePresence>
-        {showTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-6 left-6 z-50 w-11 h-11 rounded-xl bg-surface border border-border text-foreground flex items-center justify-center hover:border-primary/50 hover:text-primary shadow-lg backdrop-blur-md transition-colors"
-            aria-label="بازگشت به بالا"
-          >
-            <Icon d={ICON_PATHS.chevronUp} className="w-5 h-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-6 left-6 z-50 w-11 h-11 rounded-xl bg-surface border border-border text-foreground flex items-center justify-center hover:border-primary/50 hover:text-primary shadow-lg backdrop-blur-md transition-all duration-200"
+        style={{ opacity: showTop ? 1 : 0, pointerEvents: showTop ? 'auto' : 'none', transform: showTop ? 'scale(1)' : 'scale(0.8) translateY(10px)' }}
+        aria-label="بازگشت به بالا"
+      >
+        <Icon d={ICON_PATHS.chevronUp} className="w-5 h-5" />
+      </button>
 
       {/* ===== COMMAND PALETTE ===== */}
-      <AnimatePresence mode="wait">
-        {quickOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] p-4">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-overlay backdrop-blur-sm"
-              onClick={() => setQuickOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-              className="relative z-10 w-full max-w-2xl bg-surface-1/90 border border-border/50 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden"
-              role="dialog" aria-modal="true"
-            >
-              <div className="p-4 border-b border-border/30 flex items-center gap-3 bg-surface-2/40">
-                <Icon d={ICON_PATHS.search} className="w-5 h-5 text-muted-foreground shrink-0" />
-                <input
-                  ref={searchInputRef}
-                  value={quickQuery}
-                  onChange={(e) => setQuickQuery(e.target.value)}
-                  placeholder="جستجو در ابزارها و صفحات..."
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                />
-                <button onClick={() => setQuickOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-surface-3 transition-colors text-muted-foreground" aria-label="بستن">
-                  <Icon d={ICON_PATHS.close} className="w-4 h-4" />
-                </button>
-              </div>
+      {quickOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] p-4 animate-fade-in">
+          <div className="fixed inset-0 bg-overlay backdrop-blur-sm" onClick={() => setQuickOpen(false)} />
+          <div className="relative z-10 w-full max-w-2xl bg-surface-1/90 border border-border/50 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden animate-scale-in" role="dialog" aria-modal="true">
+            <div className="p-4 border-b border-border/30 flex items-center gap-3 bg-surface-2/40">
+              <Icon d={ICON_PATHS.search} className="w-5 h-5 text-muted-foreground shrink-0" />
+              <input
+                ref={searchInputRef}
+                value={quickQuery}
+                onChange={(e) => setQuickQuery(e.target.value)}
+                placeholder="جستجو در ابزارها و صفحات..."
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+              />
+              <button onClick={() => setQuickOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-surface-3 transition-colors text-muted-foreground" aria-label="بستن">
+                <Icon d={ICON_PATHS.close} className="w-4 h-4" />
+              </button>
+            </div>
 
-              <div className="p-4 max-h-[50vh] overflow-y-auto">
-                {filteredLinks.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {filteredLinks.map((link, i) => (
-                      <motion.div
-                        key={link.href}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.03 }}
+            <div className="p-4 max-h-[50vh] overflow-y-auto">
+              {filteredLinks.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {filteredLinks.map((link, i) => (
+                    <div
+                      key={link.href}
+                      className="animate-fade-in-up"
+                      style={{ animationDelay: `${i * 30}ms`, animationFillMode: 'both' }}
+                    >
+                      <Link
+                        href={link.href}
+                        onClick={() => setQuickOpen(false)}
+                        className="group flex flex-col items-start gap-3 p-4 rounded-xl border border-border/30 hover:border-primary/30 bg-surface-2/30 hover:bg-primary/5 transition-all h-full"
                       >
-                        <Link
-                          href={link.href}
-                          onClick={() => setQuickOpen(false)}
-                          className="group flex flex-col items-start gap-3 p-4 rounded-xl border border-border/30 hover:border-primary/30 bg-surface-2/30 hover:bg-primary/5 transition-all h-full"
-                        >
-                          <div className="w-9 h-9 rounded-lg bg-surface-2 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                            <Icon d={link.icon} className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-                          </div>
-                          <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">{link.label}</span>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-10 text-center text-sm text-muted-foreground">
-                    نتیجه‌ای برای «{quickQuery}» یافت نشد.
-                  </div>
-                )}
-              </div>
+                        <div className="w-9 h-9 rounded-lg bg-surface-2 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
+                          <Icon d={link.icon} className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">{link.label}</span>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-sm text-muted-foreground">
+                  نتیجه‌ای برای «{quickQuery}» یافت نشد.
+                </div>
+              )}
+            </div>
 
-              <div className="px-5 py-3 border-t border-border/30 bg-surface-2/20 text-[11px] text-muted-foreground flex justify-between items-center">
-                <span className="flex items-center gap-2">
-                  <kbd className="bg-surface-2 border border-border rounded px-1.5 py-0.5 font-sans">ESC</kbd> برای بستن
-                </span>
-                <span>پلتفرم تخصصی بازارگاه</span>
-              </div>
-            </motion.div>
+            <div className="px-5 py-3 border-t border-border/30 bg-surface-2/20 text-[11px] text-muted-foreground flex justify-between items-center">
+              <span className="flex items-center gap-2">
+                <kbd className="bg-surface-2 border border-border rounded px-1.5 py-0.5 font-sans">ESC</kbd> برای بستن
+              </span>
+              <span>پلتفرم تخصصی بازارگاه</span>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
     </>
   );

@@ -15,9 +15,8 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 }
 
 export default function DealerDashboardPage() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const isAgency = user?.role === 'agency';
-  const accent = isAgency ? 'warning' : 'success';
   const accentBg = isAgency ? 'bg-warning/10' : 'bg-success/10';
   const accentText = isAgency ? 'text-warning' : 'text-success';
 

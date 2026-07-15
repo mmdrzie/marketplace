@@ -30,13 +30,20 @@ export function Footer() {
             
             {/* شبکه‌های اجتماعی */}
             <div className="flex gap-3 pt-4">
-              {['ایتا', 'بله', 'آپارات'].map((social) => (
-                <span 
-                  key={social}
-                  className="w-10 h-10 rounded-xl bg-surface-2/50 border border-border-subtle flex items-center justify-center text-[10px] font-bold text-muted-foreground cursor-default"
+              {[
+                { name: 'ایتا', url: 'https://eitaa.com/teamdecision' },
+                { name: 'بله', url: 'https://ble.ir/teamdecision' },
+                { name: 'آپارات', url: 'https://aparat.com/teamdecision' },
+              ].map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-xl bg-surface-2/50 border border-border-subtle flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:text-primary hover:border-primary/30 transition-all"
                 >
-                  {social}
-                </span>
+                  {social.name}
+                </a>
               ))}
             </div>
           </div>

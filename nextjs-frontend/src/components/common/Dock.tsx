@@ -24,8 +24,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn, throttle } from '@/lib/utils';
 import { useTheme } from 'next-themes';
-import { useAuthStore } from '@/store/authStore';
+import { useIsAuthenticated, useUser } from '@/store/authStore';
 import { UserMenuButton } from './UserMenuButton';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 const DEFAULT_MAGNIFICATION = 80;
 const DEFAULT_DISTANCE = 180;
@@ -105,13 +106,13 @@ function DockPanel({
       onMouseLeave={() => {
         mouseX.set(Infinity);
       }}
-      className={cn(
-        'mx-auto flex w-fit items-center gap-2',
-        className
-      )}
-      style={{ height: panelHeight }}
-      role="toolbar"
-      aria-label="Application dock"
+         className={cn(
+          'mx-auto flex w-fit items-center gap-2 z-50',
+          className
+        )}
+        style={{ height: panelHeight }}
+        role="toolbar"
+        aria-label="Application dock"
     >
       <DockProvider value={{ mouseX, spring, distance, magnification }}>
         {children}
@@ -257,7 +258,8 @@ const NAV_LINKS: NavLink[] = [
 export function Dock() {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -269,11 +271,13 @@ export function Dock() {
   const lastScrollY = useRef(0);
 
   const isDark = mounted && resolvedTheme === 'dark';
+  const reducedMotion = usePrefersReducedMotion();
 
   const dockY = useMotionValue(0);
-  const dockYSpring = useSpring(dockY, { stiffness: 200, damping: 25 });
+  const dockYSpring = useSpring(dockY, { stiffness: reducedMotion ? 500 : 200, damping: reducedMotion ? 50 : 25 });
 
   useEffect(() => {
+    if (reducedMotion) return;
     const handleScroll = throttle(() => {
       const currentScrollY = window.scrollY;
 
@@ -290,7 +294,7 @@ export function Dock() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [dockY]);
+  }, [dockY, reducedMotion]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -319,7 +323,7 @@ export function Dock() {
     <>
       <motion.div
         style={{ y: dockYSpring }}
-        className="fixed top-0 inset-x-0 z-50 pt-14"
+        className="max-md:hidden fixed top-0 inset-x-0 z-50 pt-14"
       >
         <div className="flex justify-center">
             <DockPanel>
@@ -393,7 +397,7 @@ export function Dock() {
               if (!link.href) return null;
               const active = isActive(link.href!);
               return (
-                <Link key={link.href} href={link.href!} className="relative">
+                <Link key={link.href} href={link.href!} className="relative" aria-label={link.label}>
                   <DockItem className={cn(active ? 'text-primary' : '')}>
                     <DockIcon className={cn(active ? 'text-primary' : '')}>
                       <SvgIcon className="h-5 w-5">{link.icon}</SvgIcon>
@@ -445,7 +449,7 @@ export function Dock() {
                 </button>
               </div>
 
-              <div className="p-4 max-h-[50vh] overflow-y-auto">
+              <div className="p-4 max-h-[50vh] overflow-y-auto overscroll-contain">
                 {filteredLinks.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {filteredLinks.map((link, i) => (

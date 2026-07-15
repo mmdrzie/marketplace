@@ -9,6 +9,7 @@ import { PriceDisplay } from '@/components/common/PriceDisplay';
 import type { ListingDetail } from '@/types';
 import Image from 'next/image';
 import { queryKeys } from '@/lib/queryKeys';
+import { toast } from '@/components/common/Toast';
 
 function SvgIcon({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -34,7 +35,7 @@ export default function AdminAllListingsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [detailTarget, setDetailTarget] = useState<ListingDetail | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string | number; title: string } | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.listings.allListings(page, statusFilter),
@@ -44,36 +45,39 @@ export default function AdminAllListingsPage() {
     },
   });
 
-  const total = data?.meta?.total || 0;
   const lastPage = data?.meta?.last_page || 1;
+  const listingsQueryKey = queryKeys.listings.allListings(page, statusFilter);
 
   const approveMutation = useMutation({
-    mutationFn: async (id: number) => { await api.patch(`/listings/${id}`, { action: 'approve' }); },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['all-listings'] }),
+    mutationFn: async (id: string | number) => { await api.patch(`/listings/${id}`, { action: 'approve' }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: listingsQueryKey }); toast({ type: 'success', title: 'آگهی تایید شد' }); },
+    onError: () => { toast({ type: 'error', title: 'خطا', message: 'تایید آگهی با مشکل مواجه شد' }); },
   });
 
   const rejectMutation = useMutation({
-    mutationFn: async ({ id, reason }: { id: number; reason: string }) => { await api.patch(`/listings/${id}`, { action: 'reject', reason }); },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['all-listings'] }),
+    mutationFn: async (id: string | number) => { await api.patch(`/listings/${id}`, { action: 'reject' }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: listingsQueryKey }); toast({ type: 'info', title: 'آگهی رد شد' }); },
+    onError: () => { toast({ type: 'error', title: 'خطا', message: 'رد آگهی با مشکل مواجه شد' }); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => { await api.delete(`/listings/${id}`); },
+    mutationFn: async (id: string | number) => { await api.delete(`/listings/${id}`); },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['all-listings'] });
-      const previous = queryClient.getQueryData(['all-listings']);
-      queryClient.setQueryData(['all-listings'], (old: any) => {
+      await queryClient.cancelQueries({ queryKey: listingsQueryKey });
+      const previous = queryClient.getQueryData(listingsQueryKey);
+      queryClient.setQueryData(listingsQueryKey, (old: { data?: Array<{ id: number }> } | undefined) => {
         if (!old?.data) return old;
-        return { ...old, data: old.data.filter((item: any) => item.id !== id) };
+        return { ...old, data: old.data.filter((item) => item.id !== id) };
       });
       return { previous };
     },
     onError: (err, variables, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(['all-listings'], context.previous);
+        queryClient.setQueryData(listingsQueryKey, context.previous);
       }
+      toast({ type: 'error', title: 'خطا', message: 'حذف آگهی با مشکل مواجه شد' });
     },
-    onSettled: () => { queryClient.invalidateQueries({ queryKey: ['all-listings'] }); setDeleteTarget(null); },
+    onSettled: () => { queryClient.invalidateQueries({ queryKey: listingsQueryKey }); setDeleteTarget(null); },
   });
 
   const listings = data?.data || [];
@@ -107,7 +111,7 @@ export default function AdminAllListingsPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-surface-2 rounded-2xl animate-pulse" />)}</div>
+        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-surface-2 rounded-2xl motion-safe:animate-pulse" />)}</div>
       ) : isError ? (
         <div className="glass rounded-2xl p-12 text-center">
           <p className="text-sm text-muted-foreground mb-3">خطا در بارگذاری آگهی‌ها</p>
@@ -156,7 +160,7 @@ export default function AdminAllListingsPage() {
                       <button onClick={() => approveMutation.mutate(item.id)} disabled={approveMutation.isPending} className="px-3 py-1.5 btn btn-success btn-sm text-xs">
                         تایید
                       </button>
-                      <button onClick={() => setDeleteTarget({ id: item.id, title: item.title })} className="px-3 py-1.5 btn btn-danger btn-sm text-xs">
+                      <button onClick={() => rejectMutation.mutate(item.id)} disabled={rejectMutation.isPending} className="px-3 py-1.5 btn btn-danger btn-sm text-xs">
                         رد
                       </button>
                     </>

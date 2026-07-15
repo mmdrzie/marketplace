@@ -45,9 +45,14 @@ export interface ListingFilters {
   userId?: string;
   category?: string;
   province?: string;
+  city_id?: string;
   status?: string;
   min_price?: number;
   max_price?: number;
+  brand?: string;
+  model?: string;
+  year_from?: string;
+  year_to?: string;
   sort?: string;
   page?: number;
   perPage?: number;
@@ -62,7 +67,7 @@ export class ListingRepository {
     if (filters.scope === 'me' && filters.userId) {
       wheres.push(`l.user_id = $${p++}`);
       params.push(filters.userId);
-    } else {
+    } else if (!filters.status) {
       wheres.push(`l.status = $${p++}`);
       params.push('published');
     }
@@ -72,10 +77,11 @@ export class ListingRepository {
       params.push(filters.category);
     }
     if (filters.province) {
-      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = $${p++})`);
+      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = ${p++} OR id::text = ${p++})`);
+      params.push(filters.province);
       params.push(filters.province);
     }
-    if (filters.status && filters.scope === 'me') {
+    if (filters.status) {
       wheres.push(`l.status = $${p++}`);
       params.push(filters.status);
     }
@@ -87,6 +93,26 @@ export class ListingRepository {
       wheres.push(`l.price <= $${p++}`);
       params.push(filters.max_price);
     }
+    if (filters.city_id) {
+      wheres.push(`l.city_id = $${p++}`);
+      params.push(parseInt(filters.city_id, 10));
+    }
+    if (filters.brand) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND la_b.value ILIKE $${p++})`);
+      params.push(`%${filters.brand}%`);
+    }
+    if (filters.model) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_m JOIN attributes a_m ON a_m.id = la_m.attribute_id WHERE la_m.listing_id = l.id AND a_m.name = 'model' AND la_m.value ILIKE $${p++})`);
+      params.push(`%${filters.model}%`);
+    }
+    if (filters.year_from) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yf JOIN attributes a_yf ON a_yf.id = la_yf.attribute_id WHERE la_yf.listing_id = l.id AND a_yf.name = 'year' AND la_yf.value::int >= $${p++})`);
+      params.push(parseInt(filters.year_from, 10));
+    }
+    if (filters.year_to) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND a_yt.value::int <= $${p++})`);
+      params.push(parseInt(filters.year_to, 10));
+    }
 
     const where = wheres.join(' AND ');
 
@@ -95,6 +121,7 @@ export class ListingRepository {
     else if (filters.sort === 'price_desc') orderBy = 'ORDER BY l.price DESC';
     else if (filters.sort === 'oldest') orderBy = 'ORDER BY l.created_at ASC';
     else if (filters.sort === 'views') orderBy = 'ORDER BY l.views DESC';
+    else if (filters.sort === 'title') orderBy = 'ORDER BY l.title ASC';
 
     const page = filters.page || 1;
     const perPage = filters.perPage || 24;
@@ -105,10 +132,13 @@ export class ListingRepository {
     const total = parseInt((countRes.rows[0] as { total: string }).total, 10);
 
     const { rows } = await db.query(
-      `SELECT l.*, c.name as category_name, c.slug as category_slug, p.name as province_name
+      `SELECT l.*, c.name as category_name, c.slug as category_slug, p.name as province_name,
+              u.id as seller_id, u.name as seller_name, ci.name as city_name
        FROM listings l
        LEFT JOIN categories c ON c.id = l.category_id
        LEFT JOIN provinces p ON p.id = l.province_id
+       LEFT JOIN users u ON u.id = l.user_id
+       LEFT JOIN cities ci ON ci.id = l.city_id
        WHERE ${where} ${orderBy} LIMIT $${p++} OFFSET $${p++}`,
       [...params, perPage, offset],
     );
@@ -122,11 +152,13 @@ export class ListingRepository {
       `SELECT l.*,
               c.name as category_name, c.slug as category_slug,
               p.name as province_name,
-              u.name as seller_name, u.avatar as seller_avatar
+              u.id as seller_id, u.name as seller_name, u.avatar as seller_avatar,
+              ci.name as city_name
        FROM listings l
        LEFT JOIN categories c ON c.id = l.category_id
        LEFT JOIN provinces p ON p.id = l.province_id
        LEFT JOIN users u ON u.id = l.user_id
+       LEFT JOIN cities ci ON ci.id = l.city_id
        WHERE l.slug = $1 AND l.deleted_at IS NULL`,
       [slug],
     );
@@ -253,7 +285,7 @@ export class ListingRepository {
     await db.query('DELETE FROM listing_images WHERE id = $1', [id]);
   }
 
-  async search(q: string, filters: Omit<ListingFilters, 'scope'>): Promise<{ data: ListingRow[]; total: number }> {
+  async search(q: string, filters: Omit<ListingFilters, 'scope'>): Promise<{ data: ListingRow[]; total: number; page: number; lastPage: number }> {
     const term = `%${q}%`;
     const wheres: string[] = ['l.deleted_at IS NULL', 'l.status = $1', '(l.title ILIKE $2 OR l.description ILIKE $3)'];
     const params: unknown[] = ['published', term, term];
@@ -264,7 +296,8 @@ export class ListingRepository {
       params.push(filters.category);
     }
     if (filters.province) {
-      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = $${p++})`);
+      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = ${p++} OR id::text = ${p++})`);
+      params.push(filters.province);
       params.push(filters.province);
     }
     if (filters.min_price !== undefined) {
@@ -275,8 +308,40 @@ export class ListingRepository {
       wheres.push(`l.price <= $${p++}`);
       params.push(filters.max_price);
     }
+    if (filters.city_id) {
+      wheres.push(`l.city_id = $${p++}`);
+      params.push(parseInt(filters.city_id, 10));
+    }
+    if (filters.brand) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND la_b.value ILIKE $${p++})`);
+      params.push(`%${filters.brand}%`);
+    }
+    if (filters.model) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_m JOIN attributes a_m ON a_m.id = la_m.attribute_id WHERE la_m.listing_id = l.id AND a_m.name = 'model' AND la_m.value ILIKE $${p++})`);
+      params.push(`%${filters.model}%`);
+    }
+    if (filters.year_from) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yf JOIN attributes a_yf ON a_yf.id = la_yf.attribute_id WHERE la_yf.listing_id = l.id AND a_yf.name = 'year' AND la_yf.value::int >= $${p++})`);
+      params.push(parseInt(filters.year_from, 10));
+    }
+    if (filters.year_to) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND a_yt.value::int <= $${p++})`);
+      params.push(parseInt(filters.year_to, 10));
+    }
 
     const where = wheres.join(' AND ');
+
+    let orderBy = 'ORDER BY CASE WHEN l.title ILIKE $2 THEN 0 WHEN l.description ILIKE $2 THEN 1 ELSE 2 END, l.created_at DESC';
+    if (filters.sort === 'price_asc') orderBy = 'ORDER BY l.price ASC';
+    else if (filters.sort === 'price_desc') orderBy = 'ORDER BY l.price DESC';
+    else if (filters.sort === 'oldest') orderBy = 'ORDER BY l.created_at ASC';
+    else if (filters.sort === 'newest') orderBy = 'ORDER BY l.created_at DESC';
+    else if (filters.sort === 'views') orderBy = 'ORDER BY l.views DESC';
+    else if (filters.sort === 'title') orderBy = 'ORDER BY l.title ASC';
+
+    const page = filters.page || 1;
+    const perPage = filters.perPage || 24;
+    const offset = (page - 1) * perPage;
 
     const db = await getDb();
     const countRes = await db.query(`SELECT COUNT(*) as total FROM listings l WHERE ${where}`, params);
@@ -286,14 +351,12 @@ export class ListingRepository {
       `SELECT l.*
        FROM listings l
        WHERE ${where}
-       ORDER BY
-         CASE WHEN l.title ILIKE $2 THEN 0 WHEN l.description ILIKE $2 THEN 1 ELSE 2 END,
-         l.created_at DESC
-       LIMIT 24`,
-      params,
+       ${orderBy}
+       LIMIT $${p++} OFFSET $${p++}`,
+      [...params, perPage, offset],
     );
 
-    return { data: rows as ListingRow[], total };
+    return { data: rows as ListingRow[], total, page, lastPage: Math.ceil(total / perPage) };
   }
 }
 

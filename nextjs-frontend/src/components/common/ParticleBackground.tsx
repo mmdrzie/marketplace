@@ -82,7 +82,7 @@ export function ParticleBackground({ className }: { className?: string }) {
           size: 0.4 + Math.random() * 1.5,
           opacity: 0.5 + Math.random() * 0.35,
           phase: Math.random() * Math.PI * 2,
-          speed: 0.3 + Math.random() * 0.7,
+          speed: 1.5 + Math.random() * 3.0,
           r: col[0], g: col[1], b: col[2],
         });
       }
@@ -127,6 +127,8 @@ export function ParticleBackground({ className }: { className?: string }) {
     aliveRef.current = true;
     const maxDist = Math.min(dim.w, dim.h) * 0.25;
 
+    let lastTime = 0;
+
     function loop() {
       if (!aliveRef.current) return;
 
@@ -134,19 +136,23 @@ export function ParticleBackground({ className }: { className?: string }) {
       const cx = cursorRef.current.x;
       const cy = cursorRef.current.y;
       const parts = partsRef.current;
-      const t = performance.now();
+      const now = performance.now();
+
+      if (lastTime === 0) lastTime = now;
+      const dt = Math.min((now - lastTime) / 16.67, 3);
+      lastTime = now;
 
       for (let i = 0; i < parts.length; i++) {
         const p = parts[i];
 
-        const driftX = Math.sin(t * 0.0003 * p.speed + p.phase * 1.1) * 0.08;
-        const driftY = Math.cos(t * 0.00025 * p.speed + p.phase) * 0.08;
+        const driftX = Math.sin(now * 0.004 * p.speed + p.phase * 1.1) * 1.2;
+        const driftY = Math.cos(now * 0.0036 * p.speed + p.phase) * 1.2;
 
         const ax = p.ox + driftX;
         const ay = p.oy + driftY;
 
-        p.vx += (ax - p.x) * 0.008;
-        p.vy += (ay - p.y) * 0.008;
+        p.vx += (ax - p.x) * 0.008 * dt;
+        p.vy += (ay - p.y) * 0.008 * dt;
 
         const dx = p.x - cx;
         const dy = p.y - cy;
@@ -154,17 +160,17 @@ export function ParticleBackground({ className }: { className?: string }) {
         const radius = 300;
         if (d2 < radius * radius && d2 > 4) {
           const d = Math.sqrt(d2);
-          const f = (1 - d / radius) * (1 - d / radius) * 1.5;
+          const f = (1 - d / radius) * (1 - d / radius) * 2.5;
           const angle = Math.atan2(dy, dx);
-          p.vx -= Math.cos(angle) * f;
-          p.vy -= Math.sin(angle) * f;
+          p.vx -= Math.cos(angle) * f * dt;
+          p.vy -= Math.sin(angle) * f * dt;
         }
 
-        p.vx *= 0.94;
-        p.vy *= 0.94;
+        p.vx *= Math.pow(0.94, dt);
+        p.vy *= Math.pow(0.94, dt);
 
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
 
         const dxo = p.x - p.ox;
         const dyo = p.y - p.oy;

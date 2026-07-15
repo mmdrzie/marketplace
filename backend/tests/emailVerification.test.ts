@@ -6,10 +6,10 @@ import { ErrorCode } from '../src/shared';
 vi.mock('../src/repositories/verification', () => ({
   verificationRepo: {
     createEmailVerification: vi.fn(),
-    findEmailVerificationByHash: vi.fn(),
+    findLatestEmailVerification: vi.fn(),
     markEmailVerified: vi.fn(),
     createPhoneVerification: vi.fn(),
-    findPhoneVerificationByHash: vi.fn(),
+    findLatestPhoneVerification: vi.fn(),
     markPhoneVerified: vi.fn(),
     countRecentByPhone: vi.fn(),
     countRecentByUser: vi.fn(),
@@ -29,6 +29,10 @@ vi.mock('../src/services/email', () => ({
 
 import { verificationRepo } from '../src/repositories/verification';
 
+beforeAll(() => {
+  process.env.JWT_SECRET = 'test-secret-at-least-32-chars-long-for-testing';
+});
+
 describe('EmailVerificationService', () => {
   let service: EmailVerificationService;
 
@@ -43,7 +47,7 @@ describe('EmailVerificationService', () => {
   });
 
   it('throws INVALID_TOKEN for expired or invalid token on verify', async () => {
-    vi.mocked(verificationRepo.findEmailVerificationByHash).mockResolvedValue(undefined);
+    vi.mocked(verificationRepo.findLatestEmailVerification).mockResolvedValue(undefined);
 
     await expect(service.verify('bad-token')).rejects.toMatchObject({
       code: ErrorCode.INVALID_TOKEN,

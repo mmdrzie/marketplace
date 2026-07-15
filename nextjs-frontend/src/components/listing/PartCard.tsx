@@ -1,8 +1,8 @@
 'use client';
 
+import { memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 
 interface CompatiblePart {
   id: number;
@@ -19,13 +19,10 @@ interface PartCardProps {
   part: CompatiblePart;
 }
 
-export function PartCard({ part }: PartCardProps) {
+const PartCard = memo(function PartCard({ part }: PartCardProps) {
   return (
     <Link href={`/parts/${part.id}`}>
-      <motion.div
-        whileHover={{ y: -2 }}
-        className="glass rounded-2xl p-3 border border-border-subtle hover:border-primary/20 transition-all duration-200 cursor-pointer"
-      >
+      <div className="glass rounded-2xl p-3 border border-border-subtle hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
         <div className="w-full aspect-square bg-surface-2 rounded-xl mb-2.5 flex items-center justify-center overflow-hidden relative">
           {part.image ? (
             <Image src={part.image} alt={part.name} fill sizes="200px" className="object-cover" />
@@ -44,7 +41,9 @@ export function PartCard({ part }: PartCardProps) {
           <span className="text-xs font-black text-foreground">{part.price.toLocaleString('fa-IR')}<span className="text-[9px] text-muted-foreground font-normal mr-0.5">تومان</span></span>
           <span className="text-[8px] text-muted-foreground" title="مدل‌های سازگار">{part.compatibility}</span>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
-}
+});
+
+export { PartCard };

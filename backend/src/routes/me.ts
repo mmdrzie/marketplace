@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { authService } from '../domain/services/auth.js';
 import { auth } from '../middleware/auth.js';
+import { updateProfileSchema } from '../validation/auth.js';
 import { AppError } from '../errors.js';
 
 const router = new Hono();
@@ -13,10 +14,7 @@ router.get('/', auth(), async (c) => {
   return c.json({ success: true, data: profile });
 });
 
-router.put('/', auth(), zValidator('json', z.object({
-  name: z.string().optional(),
-  avatar: z.string().nullable().optional(),
-})), async (c) => {
+router.put('/', auth(), zValidator('json', updateProfileSchema), async (c) => {
   const user = c.get('user');
   const data = c.req.valid('json');
   const profile = await authService.updateProfile(user.id, data);

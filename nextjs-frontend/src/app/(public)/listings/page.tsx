@@ -9,7 +9,8 @@ import { queryKeys } from '@/lib/queryKeys';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { EmptyState } from '@/components/common/EmptyState';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import { FadeIn, StaggerContainer } from '@/components/common/MotionDiv';
+import { FadeIn } from '@/components/common/MotionDiv';
+import { StaggerContainer } from '@/components/common/MotionDiv.client';
 import type { Category } from '@/types';
 import { HEAVY_BRANDS } from '@/lib/brands';
 import { SkeletonListings } from '@/components/common/Skeleton';
@@ -85,7 +86,7 @@ export default function AllListingsPage() {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, pathname, router, searchParams]);
 
   const { data: apiProvinces } = useQuery({
     queryKey: queryKeys.categories.provinces,
@@ -157,7 +158,7 @@ export default function AllListingsPage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
                 BROWSE LISTINGS
               </span>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground">
@@ -283,7 +284,7 @@ export default function AllListingsPage() {
                 <motion.div
                   initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute end-0 top-0 bottom-0 w-80 max-w-[85%] glass border-s border-border p-6 overflow-y-auto"
+                  className="absolute end-0 top-0 bottom-0 w-80 max-w-[85%] glass border-s border-border p-6 overflow-y-auto overscroll-contain"
                 >
                   <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
                     <span className="font-bold text-foreground">فیلترها</span>
@@ -297,25 +298,25 @@ export default function AllListingsPage() {
                   <div className="space-y-4">
                     <GlassSelect
                       value={categorySlug}
-                      onChange={(val) => { setParam('category_slug', val); setShowMobileFilter(false); }}
+                      onChange={(val) => { setParam('category_slug', val); }}
                       options={(categories as Category[])?.map((c) => ({ value: c.slug, label: c.name })) || []}
                       placeholder="همه دسته‌بندی‌ها"
                     />
                     <GlassSelect
                       value={provinceId}
-                      onChange={(val) => { setParam('province_id', val); setShowMobileFilter(false); }}
+                      onChange={(val) => { setParam('province_id', val); }}
                       options={(provinces as Array<{ id: number; name: string }>)?.map((p) => ({ value: String(p.id), label: p.name })) || []}
                       placeholder="همه استان‌ها"
                     />
                     <GlassSelect
                       value={brand}
-                      onChange={(val) => { setParam('brand', val); setParam('model', ''); setShowMobileFilter(false); }}
+                      onChange={(val) => { setParam('brand', val); setParam('model', ''); }}
                       options={BRANDS.map((b) => ({ value: b, label: b }))}
                       placeholder="همه برندها"
                     />
                     <GlassSelect
                       value={model}
-                      onChange={(val) => { setParam('model', val); setShowMobileFilter(false); }}
+                      onChange={(val) => { setParam('model', val); }}
                       options={(brand ? (MODELS_BY_BRAND[brand] || []) : []).map((m) => ({ value: m, label: m }))}
                       placeholder="همه مدل‌ها"
                       disabled={!brand}
@@ -323,20 +324,20 @@ export default function AllListingsPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <GlassSelect
                         value={yearFrom}
-                        onChange={(val) => { setParam('year_from', val); setShowMobileFilter(false); }}
+                        onChange={(val) => { setParam('year_from', val); }}
                         options={YEARS.map((y) => ({ value: y, label: y }))}
                         placeholder="سال از"
                       />
                       <GlassSelect
                         value={yearTo}
-                        onChange={(val) => { setParam('year_to', val); setShowMobileFilter(false); }}
+                        onChange={(val) => { setParam('year_to', val); }}
                         options={YEARS.map((y) => ({ value: y, label: y }))}
                         placeholder="سال تا"
                       />
                     </div>
                     <GlassSelect
                       value={sort}
-                      onChange={(val) => { setParam('sort', val); setShowMobileFilter(false); }}
+                      onChange={(val) => { setParam('sort', val); }}
                       options={[
                         { value: 'newest', label: 'جدیدترین' },
                         { value: 'oldest', label: 'قدیمی‌ترین' },
@@ -346,6 +347,12 @@ export default function AllListingsPage() {
                       placeholder="مرتب‌سازی"
                     />
                   </div>
+                  <button
+                    onClick={() => setShowMobileFilter(false)}
+                    className="w-full mt-4 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors"
+                  >
+                    اعمال فیلترها
+                  </button>
                 </motion.div>
               </motion.div>
             )}

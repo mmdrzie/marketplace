@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { User } from '@/types';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,14 +10,15 @@ interface SellerCardProps {
   seller: User;
 }
 
-export function SellerCard({ seller }: SellerCardProps) {
+const SellerCard = memo(function SellerCard({ seller }: SellerCardProps) {
   const isDealer = seller.role === 'dealer' || seller.role === 'agency';
   const dp = seller.dealer_profile;
   const link = isDealer ? `/dealers/${seller.id}` : `/users/${seller.id}`;
   const displayName = isDealer && dp?.business_name ? dp.business_name : seller.name || 'کاربر';
   const displayLogo = isDealer && dp?.logo ? dp.logo : seller.avatar;
-  const score = getScore(dp?.is_verified, 8, !!dp?.subscription_plan);
-  const tier = getTier(8);
+  const dealsCount = (seller as { reviews_count?: number })?.reviews_count || 0;
+  const score = getScore(dp?.is_verified, dealsCount, !!dp?.subscription_plan);
+  const tier = getTier(dealsCount);
 
   return (
     <Link
@@ -101,4 +103,6 @@ export function SellerCard({ seller }: SellerCardProps) {
       </div>
     </Link>
   );
-}
+});
+
+export { SellerCard };

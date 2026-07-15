@@ -39,59 +39,30 @@ function clearRefreshCookie(c: Context) {
 }
 
 router.post('/register', rateLimiter('register'), zValidator('json', registerSchema), async (c) => {
-  try {
-    const { email, password, name } = c.req.valid('json');
-    const result = await authService.register({ email, password, name });
-    setRefreshCookie(c, result.refreshToken);
-    return c.json({ success: true, data: { token: result.token, refreshToken: result.refreshToken, user: result.user } }, 201);
-  } catch (err: unknown) {
-    if (err && typeof err === 'object' && 'code' in err && 'httpStatus' in err) {
-      const appErr = err as { code: string; httpStatus: number; message: string };
-      return c.json({ success: false, error: { code: appErr.code, message: appErr.message } }, appErr.httpStatus as 401 | 403 | 404 | 409 | 422 | 429 | 500);
-    }
-    console.error('[register] unhandled:', err);
-    return c.json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500);
-  }
+  const { email, password, name } = c.req.valid('json');
+  const result = await authService.register({ email, password, name });
+  setRefreshCookie(c, result.refreshToken);
+  return c.json({ success: true, data: { token: result.token, user: result.user } }, 201);
 });
 
 router.post('/login', rateLimiter('login'), zValidator('json', loginSchema), async (c) => {
-  try {
-    const { email, password } = c.req.valid('json');
-    const result = await authService.login({ email, password });
-    setRefreshCookie(c, result.refreshToken);
-    return c.json({ success: true, data: { token: result.token, refreshToken: result.refreshToken, user: result.user } });
-  } catch (err: unknown) {
-    if (err && typeof err === 'object' && 'code' in err && 'httpStatus' in err) {
-      const appErr = err as { code: string; httpStatus: number; message: string };
-      return c.json({ success: false, error: { code: appErr.code, message: appErr.message } }, appErr.httpStatus as 401 | 403 | 404 | 409 | 422 | 429 | 500);
-    }
-    console.error('[login] unhandled:', err);
-    return c.json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500);
-  }
+  const { email, password } = c.req.valid('json');
+  const result = await authService.login({ email, password });
+  setRefreshCookie(c, result.refreshToken);
+  return c.json({ success: true, data: { token: result.token, user: result.user } });
 });
 
 router.post('/refresh', async (c) => {
-  try {
-    const cookie = c.req.header('Cookie') || '';
-    const match = cookie.match(new RegExp(`(?:^|;\\s*)${REFRESH_COOKIE}=([^;]*)`));
-    const body = await c.req.json().catch(() => ({}));
-    const refreshToken = match?.[1] || body.refreshToken;
+  const cookie = c.req.header('Cookie') || '';
+  const match = cookie.match(new RegExp(`(?:^|;\\s*)${REFRESH_COOKIE}=([^;]*)`));
+  const body = await c.req.json().catch(() => ({}));
+  const refreshToken = match?.[1] || body.refreshToken;
 
-    if (!refreshToken) {
-      return c.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'No refresh token' } }, 401);
-    }
+  if (!refreshToken) throw AppError.unauthorized('No refresh token');
 
-    const result = await authService.refresh(refreshToken);
-    setRefreshCookie(c, result.refreshToken);
-    return c.json({ success: true, data: { token: result.token, refreshToken: result.refreshToken } });
-  } catch (err: unknown) {
-    if (err && typeof err === 'object' && 'code' in err && 'httpStatus' in err) {
-      const appErr = err as { code: string; httpStatus: number; message: string };
-      return c.json({ success: false, error: { code: appErr.code, message: appErr.message } }, appErr.httpStatus as 401 | 403 | 404 | 409 | 422 | 429 | 500);
-    }
-    console.error('[refresh] unhandled:', err);
-    return c.json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500);
-  }
+  const result = await authService.refresh(refreshToken);
+  setRefreshCookie(c, result.refreshToken);
+  return c.json({ success: true, data: { token: result.token } });
 });
 
 router.post('/logout', async (c) => {

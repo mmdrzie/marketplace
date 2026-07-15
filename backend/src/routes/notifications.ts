@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { auth } from '../middleware/auth.js';
 import { getDb } from '../config/database.js';
+import { AppError } from '../errors.js';
 
 const router = new Hono();
 
@@ -50,6 +51,23 @@ router.put('/:id/read', async (c) => {
     'UPDATE notifications SET is_read = true, read_at = NOW() WHERE id = $1 AND user_id = $2',
     [id, c.get('user').id],
   );
+  return c.json({ success: true, data: null });
+});
+
+// POST /notifications/push-subscribe — save push subscription
+router.post('/push-subscribe', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const { subscription } = body as { subscription?: string };
+  if (!subscription) throw AppError.validation('Subscription is required');
+
+  const db = await getDb();
+  await db.query(
+    `INSERT INTO push_subscriptions (user_id, subscription, created_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (user_id) DO UPDATE SET subscription = $2, updated_at = NOW()`,
+    [c.get('user').id, subscription],
+  );
+
   return c.json({ success: true, data: null });
 });
 

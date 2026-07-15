@@ -32,7 +32,7 @@ export default function MessagesPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               MESSAGES
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">صندوق پیام‌ها</h1>

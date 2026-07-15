@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
-import { FadeIn, SlideUp, StaggerContainer, StaggerItem } from '@/components/common/MotionDiv';
+import { FadeIn, StaggerItem } from '@/components/common/MotionDiv';
+import { SlideUp, StaggerContainer } from '@/components/common/MotionDiv.client';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -88,7 +89,7 @@ export default function CarMatchmakerPage() {
 
           <div className="mb-10 mt-4">
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               CAR FINDER
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">مشاور خرید خودرو</h1>

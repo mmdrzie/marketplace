@@ -84,7 +84,7 @@ export default function ComparePage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12 mt-4">
             <div>
               <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm shadow-sm">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
                 COMPARE LISTINGS
               </span>
               <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">مقایسه آگهی‌ها</h1>
@@ -117,12 +117,12 @@ export default function ComparePage() {
                     <span className="w-1 h-4 bg-primary rounded-full"></span>
                     مقایسه فنی (رادار)
                   </h3>
-                  <div className="flex justify-center">
+                  <div className="flex justify-center w-full max-w-full">
                     <RadarChart
                       series={radarSeries}
                       categories={numericAttrs.map((a) => a.label)}
                       size={320}
-                      className="mx-auto"
+                      className="mx-auto w-full"
                     />
                   </div>
                 </div>

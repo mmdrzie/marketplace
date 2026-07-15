@@ -3,12 +3,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
+import { transformConversation } from '@/lib/transformers';
 export function useConversations() {
   return useQuery({
     queryKey: queryKeys.conversations.all,
     queryFn: async () => {
       const res = await api.get('/conversations');
-      return res.data;
+      return (res.data.data as Parameters<typeof transformConversation>[0][]).map(transformConversation);
     },
     retry: 2,
   });
@@ -19,7 +20,7 @@ export function useConversation(id: number) {
     queryKey: queryKeys.conversations.detail(id),
     queryFn: async () => {
       const res = await api.get(`/conversations/${id}`);
-      return res.data.data;
+      return transformConversation(res.data.data);
     },
     enabled: !!id,
     retry: 2,
@@ -31,7 +32,7 @@ export function useStartConversation() {
   return useMutation({
     mutationFn: async (data: { listing_id: number; message: string }) => {
       const res = await api.post('/conversations', data);
-      return res.data.data;
+      return transformConversation(res.data.data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });

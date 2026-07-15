@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { useAuth } from '@/hooks/useAuth';
 
 function ResetPasswordForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const { resetPassword, loading, error } = useAuth();

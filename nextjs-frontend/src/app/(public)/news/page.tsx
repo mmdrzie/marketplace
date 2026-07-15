@@ -1,12 +1,11 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useArticles } from '@/hooks/useArticles';
 import { NewsCard } from '@/components/news/NewsCard';
 import { ArticleSidebar } from '@/components/news/ArticleSidebar';
-import { FadeIn, StaggerContainer, StaggerItem } from '@/components/common/MotionDiv';
-import type { Article } from '@/types';
+import { FadeIn, StaggerItem } from '@/components/common/MotionDiv';
+import { StaggerContainer } from '@/components/common/MotionDiv.client';
 import { SkeletonCard } from '@/components/common/Skeleton';
 
 export default function NewsPage() {
@@ -48,7 +47,7 @@ export default function NewsPage() {
           {/* هدر صفحه */}
           <div className="flex flex-col items-center text-center mb-12">
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               ARTICLES & NEWS
             </span>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground mb-2">اخبار و مقالات</h1>

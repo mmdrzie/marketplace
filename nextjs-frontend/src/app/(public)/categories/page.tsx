@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
-import { FadeIn, StaggerContainer, StaggerItem } from '@/components/common/MotionDiv';
-import { SkeletonCard } from '@/components/common/Skeleton';
+import { FadeIn, StaggerItem } from '@/components/common/MotionDiv';
+import { StaggerContainer } from '@/components/common/MotionDiv.client';
 import type { Category } from '@/types';
 import { Skeleton } from '@/components/common/Skeleton';
 import { ICON_PATHS } from '@/lib/icons';
@@ -30,7 +30,7 @@ const GUIDE_ITEMS = [
 ];
 
 export default function CategoriesPage() {
-  const { data: apiCategories, isLoading, isError } = useQuery({
+  const { data: apiCategories, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.categories.all,
     queryFn: async () => { const res = await api.get('/categories'); return res.data.data; },
     retry: 1,
@@ -52,7 +52,7 @@ export default function CategoriesPage() {
           {/* هدر صفحه */}
           <div className="text-center max-w-2xl mx-auto">
             <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-8 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
               EXPLORE CATEGORIES
             </span>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground mb-4 leading-tight">
@@ -64,11 +64,20 @@ export default function CategoriesPage() {
           </div>
 
           {/* گرید دسته‌بندی‌ها */}
-          {isLoading && !categories ? (
+          {isLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {Array.from({ length: 14 }).map((_, i) => (
                 <Skeleton key={i} className="h-48" />
               ))}
+            </div>
+          ) : isError ? (
+            <div className="text-center py-16">
+              <p className="text-sm text-muted-foreground mb-4">خطا در بارگذاری دسته‌بندی‌ها</p>
+              <button onClick={() => refetch()} className="btn btn-primary btn-sm">تلاش مجدد</button>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-sm text-muted-foreground">هیچ دسته‌بندی‌ای یافت نشد.</p>
             </div>
           ) : (
             <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
