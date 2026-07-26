@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { forwardRef, useState, useRef, useEffect, useCallback, useMemo, useId } from 'react';
 
 export interface GlassOption {
   value: string;
@@ -23,6 +23,7 @@ export const GlassSelect = forwardRef<HTMLDivElement, GlassSelectProps>(function
   const buttonRef = useRef<HTMLButtonElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const baseId = useId();
 
   const highlightedIndexRef = useRef(highlightedIndex);
   useEffect(() => { highlightedIndexRef.current = highlightedIndex; }, [highlightedIndex]);
@@ -92,10 +93,10 @@ export const GlassSelect = forwardRef<HTMLDivElement, GlassSelectProps>(function
 
   useEffect(() => {
     if (open && highlightedIndex >= 0) {
-      const optionElement = document.getElementById(`option-${highlightedIndex}`);
+      const optionElement = document.getElementById(`${baseId}-option-${highlightedIndex}`);
       optionElement?.scrollIntoView({ block: 'nearest' });
     }
-  }, [open, highlightedIndex]);
+  }, [open, highlightedIndex, baseId]);
 
   const selected = useMemo(() => options.find((o) => o.value === value), [options, value]);
 
@@ -104,13 +105,13 @@ export const GlassSelect = forwardRef<HTMLDivElement, GlassSelectProps>(function
       <button
         ref={buttonRef}
         type="button"
-        id="glass-select-trigger"
+        id={`${baseId}-trigger`}
         onClick={() => !disabled && openMenu()}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-controls="glass-select-options"
-        aria-activedescendant={highlightedIndex >= 0 ? `option-${highlightedIndex}` : undefined}
+        aria-controls={`${baseId}-options`}
+        aria-activedescendant={highlightedIndex >= 0 ? `${baseId}-option-${highlightedIndex}` : undefined}
         className="w-full flex items-center justify-between gap-2 px-4 py-3 glass-input rounded-xl text-sm text-foreground cursor-pointer transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
       >
         <span className={selected ? 'text-foreground' : 'text-muted-foreground'}>
@@ -129,9 +130,9 @@ export const GlassSelect = forwardRef<HTMLDivElement, GlassSelectProps>(function
           <div className="fixed inset-0 z-40" onClick={close} />
           <div
             ref={optionsRef}
-            id="glass-select-options"
+            id={`${baseId}-options`}
             role="listbox"
-            aria-labelledby="glass-select-trigger"
+            aria-labelledby={`${baseId}-trigger`}
             className="absolute z-50 inset-x-0 top-full mt-1.5 glass rounded-xl border border-border-subtle shadow-2xl overflow-y-auto max-h-60 animate-dropdown scrollbar-dropdown"
           >
             {options.length === 0 ? (
@@ -140,7 +141,7 @@ export const GlassSelect = forwardRef<HTMLDivElement, GlassSelectProps>(function
               options.map((option, index) => (
                 <button
                   key={option.value}
-                  id={`option-${index}`}
+                  id={`${baseId}-option-${index}`}
                   type="button"
                   role="option"
                   aria-selected={option.value === value}

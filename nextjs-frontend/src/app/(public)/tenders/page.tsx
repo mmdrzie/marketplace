@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { SkeletonListings } from '@/components/common/Skeleton';
-import { TENDER_TYPE_LABELS } from '@/store/tenderStore';
+import { TENDER_TYPE_LABELS } from '@/store/tender';
 
 export default function TendersPage() {
   const { data: tenders, isLoading, error } = useTenders();

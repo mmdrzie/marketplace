@@ -5,7 +5,7 @@ export interface BackendUser {
   phone: string | null;
   avatar: string | null;
   city: string | null;
-  role: 'user' | 'dealer' | 'agency' | 'admin';
+  role: 'user' | 'dealer' | 'agency' | 'store' | 'admin';
   status: string;
   email_verified_at: string | null;
   phone_verified_at: string | null;
@@ -128,7 +128,7 @@ export interface BackendConversation {
   seller_avatar: string | null;
   last_message: string | null;
   last_message_at: string | null;
-  unread_count: string;
+  unread_count: number;
   created_at: string;
   messages?: BackendMessage[];
 }

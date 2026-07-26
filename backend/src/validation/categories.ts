@@ -15,7 +15,7 @@ export const createAttributeSchema = z.object({
   name: z.string().min(1).max(100),
   label: z.string().min(1).max(100),
   type: z.enum(['text', 'number', 'select', 'multi_select', 'boolean', 'range', 'color']),
-  options: z.any().optional(),
+  options: z.union([z.array(z.string()), z.record(z.unknown())]).optional(),
   unit: z.string().max(50).optional(),
   is_required: z.boolean().optional(),
   is_filterable: z.boolean().optional(),

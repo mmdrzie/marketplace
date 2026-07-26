@@ -19,8 +19,7 @@ export function transformUser(b: BackendUser): User {
   };
 }
 
-function transformDealerProfile(b: BackendDealerProfile): DealerProfile {
-  return {
+function transformDealerProfile(b: BackendDealerProfile): DealerProfile {  return {
     business_name: b.business_name,
     logo: b.logo,
     address: b.address,
@@ -33,13 +32,68 @@ function transformDealerProfile(b: BackendDealerProfile): DealerProfile {
   };
 }
 
+function toUser(id: string, name: string | null, avatar: string | null): User {
+  return {
+    id,
+    name,
+    email: null,
+    phone: null,
+    avatar,
+    city: null,
+    role: 'user',
+    status: null,
+    phoneVerified: false,
+    emailVerified: false,
+    profile: null,
+    dealer_profile: null,
+    created_at: '',
+  };
+}
+
+function toListingPreview(title: string | null, slug: string | null, primaryImage: string | null): Listing | null {
+  if (!title || !slug) return null;
+  return {
+    id: '',
+    title,
+    slug,
+    price: 0,
+    price_type: 'fixed',
+    status: 'published',
+    is_featured: false,
+    views: 0,
+    primary_image: primaryImage,
+    category_name: null,
+    category_slug: null,
+    category_id: null,
+    province_name: null,
+    province_id: null,
+    city_id: null,
+    city_name: null,
+    seller_id: null,
+    seller_name: null,
+  };
+}
+
+function toMessage(id: string, conversationId: string, senderId: string, body: string): Message {
+  return {
+    id: Number(id),
+    conversation_id: conversationId,
+    sender: toUser(senderId, null, null),
+    sender_id: senderId,
+    body,
+    is_read: false,
+    read_at: null,
+    created_at: '',
+  };
+}
+
 export function transformListing(b: BackendListing): Listing {
   return {
     id: String(b.id),
     title: b.title,
     slug: b.slug,
     price: b.price,
-    price_type: b.price_type as Listing['price_type'],
+    price_type: b.price_type,
     status: b.status,
     is_featured: b.is_featured,
     views: b.views,
@@ -63,7 +117,7 @@ export function transformListingDetail(b: BackendListingDetail): ListingDetail {
     ...transformListing(b),
     description: b.description || '',
     images: b.images.map((img) => ({
-      id: img.id as unknown as number,
+      id: Number(img.id),
       url: img.url,
       thumbnail_url: img.thumbnail_url,
       medium_url: img.medium_url,
@@ -120,13 +174,13 @@ function transformCity(b: BackendCity): City {
 
 export function transformConversation(b: BackendConversation): Conversation {
   return {
-    id: b.id as unknown as number,
-    listing: b.listing_title ? { title: b.listing_title, slug: b.listing_slug, primary_image: b.listing_image } as unknown as Listing : null,
-    buyer: { id: b.buyer_id, name: b.buyer_name, avatar: b.buyer_avatar } as unknown as User,
-    seller: { id: b.seller_id, name: b.seller_name, avatar: b.seller_avatar } as unknown as User,
-    buyer_id: b.buyer_id as unknown as number,
-    seller_id: b.seller_id as unknown as number,
-    last_message: b.last_message ? { body: b.last_message } as unknown as Message : null,
+    id: Number(b.id),
+    listing: toListingPreview(b.listing_title, b.listing_slug, b.listing_image),
+    buyer: toUser(b.buyer_id, b.buyer_name, b.buyer_avatar),
+    seller: toUser(b.seller_id, b.seller_name, b.seller_avatar),
+    buyer_id: b.buyer_id,
+    seller_id: b.seller_id,
+    last_message: b.last_message ? toMessage('0', b.id, '', b.last_message) : null,
     last_message_at: b.last_message_at,
     created_at: b.created_at,
     messages: b.messages?.map(transformMessage),
@@ -135,10 +189,10 @@ export function transformConversation(b: BackendConversation): Conversation {
 
 function transformMessage(b: BackendMessage): Message {
   return {
-    id: b.id as unknown as number,
-    conversation_id: b.conversation_id as unknown as number,
-    sender: { id: b.sender_id, name: null } as unknown as User,
-    sender_id: b.sender_id as unknown as number,
+    id: Number(b.id),
+    conversation_id: b.conversation_id,
+    sender: toUser(b.sender_id, null, null),
+    sender_id: b.sender_id,
     body: b.body,
     is_read: b.is_read,
     read_at: b.read_at,
@@ -146,15 +200,23 @@ function transformMessage(b: BackendMessage): Message {
   };
 }
 
+const ARTICLE_CATEGORIES = ['market', 'guide', 'regulation', 'announcement'] as const;
+
+function toArticleCategory(value: string): Article['category'] {
+  return (ARTICLE_CATEGORIES as readonly string[]).includes(value)
+    ? (value as Article['category'])
+    : 'announcement';
+}
+
 export function transformArticle(b: BackendArticle): Article {
   return {
-    id: b.id as unknown as number,
+    id: Number(b.id),
     title: b.title,
     slug: b.slug,
     excerpt: b.excerpt,
     body: b.body,
     cover_image: b.cover_image,
-    category: b.category as Article['category'],
+    category: toArticleCategory(b.category),
     category_label: b.category_label,
     author: b.author,
     tags: b.tags,

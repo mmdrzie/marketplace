@@ -1,194 +1,195 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AuthService } from '../src/domain/services/auth';
-import { AppError } from '../src/errors';
-import { ErrorCode } from '../src/shared';
+import { User } from '../src/domain/entities/user/User.entity.js';
 
-vi.mock('../src/repositories/user', () => ({
-  userRepo: {
-    findByEmail: vi.fn(),
-    findById: vi.fn(),
-    create: vi.fn(),
-    updatePassword: vi.fn(),
-    update: vi.fn(),
+vi.mock('../src/services/email/index.js', () => ({
+  EmailService: class {
+    sendVerificationEmail = vi.fn();
+    sendPasswordResetEmail = vi.fn();
   },
 }));
 
-vi.mock('../src/repositories/refreshToken', () => ({
-  refreshTokenRepo: {
-    create: vi.fn(),
-    findByTokenHash: vi.fn(),
-    revoke: vi.fn(),
-  },
+vi.mock('../src/domain/events/index.js', () => ({
+  eventBus: { publish: vi.fn() },
+  UserRegistered: 'UserRegistered',
+  EmailVerified: 'EmailVerified',
 }));
 
-vi.mock('../src/services/jwt', () => ({
-  signAccessToken: vi.fn(() => Promise.resolve('mock-access-token')),
-  signRefreshToken: vi.fn(() => Promise.resolve('mock-refresh-token')),
-}));
+import { AuthService } from '../src/domain/services/auth.js';
+import { AppError } from '../src/errors.js';
 
-vi.mock('../src/services/email', () => ({
-  EmailService: vi.fn(() => ({
-    sendPasswordResetEmail: vi.fn(),
-    sendVerificationEmail: vi.fn(),
-  })),
-}));
+function makeUser(overrides: Partial<Record<string, unknown>> = {}) {
+  return User.fromSnapshot({
+    id: 'u1',
+    email: 'a@b.com',
+    name: 'Test',
+    phone: null,
+    role: 'user',
+    status: 'active',
+    avatar: null,
+    publicId: null,
+    passwordHash: (overrides.passwordHash as string) ?? 'hash',
+    city: null,
+    emailVerified: false,
+    phoneVerified: false,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+    deletedAt: null,
+    ...(overrides as Record<string, unknown>),
+  });
+}
 
-import { userRepo } from '../src/repositories/user';
-import { refreshTokenRepo } from '../src/repositories/refreshToken';
+function repoMocks() {
+  return {
+    user: {
+      findById: vi.fn(),
+      findByEmail: vi.fn(),
+      save: vi.fn(),
+      updatePassword: vi.fn(),
+    },
+    refreshToken: {
+      create: vi.fn(),
+      findByTokenHash: vi.fn(),
+      revoke: vi.fn(),
+      revokeAllForUser: vi.fn(),
+    },
+    dealer: {
+      findById: vi.fn(),
+      findByUserId: vi.fn(),
+      save: vi.fn(),
+      getStats: vi.fn(),
+      getSubscription: vi.fn(),
+      addReview: vi.fn(),
+    },
+  };
+}
 
-describe('AuthService', () => {
-  let authService: AuthService;
+describe('AuthService.register', () => {
+  beforeEach(() => vi.clearAllMocks());
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    authService = new AuthService();
+  it('registers a new user and returns a sanitized profile', async () => {
+    const m = repoMocks();
+    const mockUser = makeUser();
+    m.user.findByEmail.mockResolvedValue(undefined);
+    m.user.findById.mockResolvedValue(mockUser);
+
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const res = await svc.register({ email: 'a@b.com', password: 'password123', name: 'Test' });
+
+    expect(res.token).toBeTypeOf('string');
+    expect(res.refreshToken).toBeTypeOf('string');
+    expect(res.user.email).toBe('a@b.com');
+    expect(res.user.role).toBeUndefined();
+    expect(res.user.status).toBeUndefined();
+    expect(m.user.save).toHaveBeenCalledTimes(1);
   });
 
-  describe('register', () => {
-    it('creates user and returns tokens', async () => {
-      vi.mocked(userRepo.findByEmail).mockResolvedValue(undefined);
-      vi.mocked(userRepo.create).mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        password_hash: 'hashed',
-        name: 'Test User',
-        phone: null,
-        role: 'user',
-        status: 'active',
-        avatar: null,
-        city: null,
-        email_verified_at: null,
-        phone_verified_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        deleted_at: null,
-      });
+  it('throws emailAlreadyExists when email is taken', async () => {
+    const m = repoMocks();
+    m.user.findByEmail.mockResolvedValue(makeUser());
 
-      const result = await authService.register({
-        email: 'test@test.com',
-        password: 'password123',
-        name: 'Test User',
-      });
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    await expect(
+      svc.register({ email: 'a@b.com', password: 'password123', name: 'Test' }),
+    ).rejects.toMatchObject({ code: 'EMAIL_ALREADY_EXISTS', httpStatus: 409 });
+    expect(m.user.save).not.toHaveBeenCalled();
+  });
+});
 
-      expect(result.token).toBe('mock-access-token');
-      expect(result.user.email).toBe('test@test.com');
-      expect(userRepo.create).toHaveBeenCalledOnce();
-    });
+describe('AuthService.login', () => {
+  beforeEach(() => vi.clearAllMocks());
 
-    it('throws EMAIL_ALREADY_EXISTS when email exists', async () => {
-      vi.mocked(userRepo.findByEmail).mockResolvedValue({
-        id: 'existing',
-        email: 'test@test.com',
-      } as any);
+  it('logs in with correct credentials', async () => {
+    const bcrypt = await import('bcryptjs');
+    const hash = await bcrypt.hash('password123', 12);
+    const m = repoMocks();
+    m.user.findByEmail.mockResolvedValue(makeUser({ passwordHash: hash }));
+    m.refreshToken.create.mockResolvedValue({ id: 'rt1' });
 
-      await expect(
-        authService.register({ email: 'test@test.com', password: 'password123', name: 'T' }),
-      ).rejects.toThrow(AppError);
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const res = await svc.login({ email: 'a@b.com', password: 'password123' });
 
-      await expect(
-        authService.register({ email: 'test@test.com', password: 'password123', name: 'T' }),
-      ).rejects.toMatchObject({ code: ErrorCode.EMAIL_ALREADY_EXISTS });
-    });
+    expect(res.token).toBeTypeOf('string');
+    expect(res.user.email).toBe('a@b.com');
   });
 
-  describe('login', () => {
-    it('returns tokens for valid credentials', async () => {
-      const bcrypt = await import('bcryptjs');
-      const hash = await bcrypt.hash('password123', 4);
+  it('throws invalidCredentials for wrong password', async () => {
+    const bcrypt = await import('bcryptjs');
+    const hash = await bcrypt.hash('password123', 12);
+    const m = repoMocks();
+    m.user.findByEmail.mockResolvedValue(makeUser({ passwordHash: hash }));
 
-      vi.mocked(userRepo.findByEmail).mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        password_hash: hash,
-        name: 'Test',
-        phone: null,
-        role: 'user',
-        status: 'active',
-        avatar: null,
-        city: null,
-        email_verified_at: null,
-        phone_verified_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        deleted_at: null,
-      });
-
-      const result = await authService.login({
-        email: 'test@test.com',
-        password: 'password123',
-      });
-
-      expect(result.token).toBe('mock-access-token');
-    });
-
-    it('throws INVALID_CREDENTIALS for wrong password', async () => {
-      const bcrypt = await import('bcryptjs');
-      const hash = await bcrypt.hash('correct-password', 4);
-
-      vi.mocked(userRepo.findByEmail).mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        password_hash: hash,
-        status: 'active',
-      } as any);
-
-      await expect(
-        authService.login({ email: 'test@test.com', password: 'wrong-password' }),
-      ).rejects.toMatchObject({ code: ErrorCode.INVALID_CREDENTIALS });
-    });
-
-    it('throws INVALID_CREDENTIALS for non-existent email', async () => {
-      vi.mocked(userRepo.findByEmail).mockResolvedValue(undefined);
-
-      await expect(
-        authService.login({ email: 'none@test.com', password: 'password123' }),
-      ).rejects.toMatchObject({ code: ErrorCode.INVALID_CREDENTIALS });
-    });
-
-    it('throws FORBIDDEN for deactivated user', async () => {
-      const bcrypt = await import('bcryptjs');
-      const hash = await bcrypt.hash('password123', 4);
-
-      vi.mocked(userRepo.findByEmail).mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        password_hash: hash,
-        status: 'banned',
-      } as any);
-
-      await expect(
-        authService.login({ email: 'test@test.com', password: 'password123' }),
-      ).rejects.toMatchObject({ code: ErrorCode.FORBIDDEN });
-    });
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    await expect(
+      svc.login({ email: 'a@b.com', password: 'wrongpass' }),
+    ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS', httpStatus: 401 });
   });
 
-  describe('getMe', () => {
-    it('returns user when found', async () => {
-      vi.mocked(userRepo.findById).mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        name: 'Test',
-        phone: null,
-        role: 'user',
-        status: 'active',
-        avatar: null,
-        city: null,
-        email_verified_at: null,
-        phone_verified_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as any);
+  it('throws invalidCredentials for unknown email', async () => {
+    const m = repoMocks();
+    m.user.findByEmail.mockResolvedValue(undefined);
 
-      const result = await authService.getMe('user-1');
-      expect(result.email).toBe('test@test.com');
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    await expect(
+      svc.login({ email: 'missing@b.com', password: 'password123' }),
+    ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' });
+  });
+});
+
+describe('AuthService.refresh', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns a new access token for a valid stored refresh token', async () => {
+    const { RefreshToken } = await import('../src/domain/entities/refreshToken/RefreshToken.entity.js');
+    const m = repoMocks();
+    m.refreshToken.findByTokenHash.mockResolvedValue(
+      RefreshToken.create({
+        id: 'rt1', userId: 'u1', tokenHash: 'h',
+        expiresAt: new Date(Date.now() + 60000),
+      }),
+    );
+    m.user.findById.mockResolvedValue(makeUser());
+
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const refreshTokenStr = await (await import('../src/services/jwt.js')).signRefreshToken('u1');
+    const res = await svc.refresh(refreshTokenStr);
+
+    expect(res.token).toBeTypeOf('string');
+    expect(m.refreshToken.revoke).toHaveBeenCalledWith('rt1');
+  });
+
+  it('throws invalidToken for an unknown refresh token', async () => {
+    const m = repoMocks();
+    m.refreshToken.findByTokenHash.mockResolvedValue(undefined);
+
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const refreshTokenStr = await (await import('../src/services/jwt.js')).signRefreshToken('u1');
+    await expect(svc.refresh(refreshTokenStr)).rejects.toMatchObject({ code: 'INVALID_TOKEN' });
+  });
+});
+
+describe('sanitizeUser output', () => {
+  it('omits role and status from the output (related to 1.11)', async () => {
+    const m = repoMocks();
+    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const userWithRole = User.fromSnapshot({
+      id: 'u1', email: 'a@b.com', name: 'Test', phone: null,
+      role: 'admin', status: 'banned', avatar: null, publicId: null,
+      passwordHash: 'hash', city: null,
+      emailVerified: false, phoneVerified: false,
+      createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z', deletedAt: null,
     });
+    m.user.findById.mockResolvedValue(userWithRole);
+    const out = await svc.getMe('u1');
+    expect(out).not.toHaveProperty('role');
+    expect(out).not.toHaveProperty('status');
+    expect(out.id).toBe('u1');
+    expect(out.email).toBe('a@b.com');
+  });
+});
 
-    it('throws NOT_FOUND when user does not exist', async () => {
-      vi.mocked(userRepo.findById).mockResolvedValue(undefined);
-
-      await expect(authService.getMe('nonexistent')).rejects.toMatchObject({
-        code: ErrorCode.NOT_FOUND,
-      });
-    });
+describe('AppError', () => {
+  it('maps error codes to http statuses', () => {
+    expect(new AppError('NOT_FOUND').httpStatus).toBe(404);
+    expect(AppError.forbidden().httpStatus).toBe(403);
   });
 });

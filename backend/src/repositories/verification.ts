@@ -1,4 +1,5 @@
 import { getDb } from '../config/database.js';
+import { VerificationRepositoryImpl } from '../domain/infrastructure/verification/VerificationRepository.impl.js';
 
 export interface EmailVerificationRow {
   id: string;
@@ -20,83 +21,76 @@ export interface PhoneVerificationRow {
 }
 
 export class VerificationRepository {
-  // Email
+  private _domainImpl: VerificationRepositoryImpl;
+
+  constructor(domainImpl?: VerificationRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new VerificationRepositoryImpl();
+  }
 
   async findLatestEmailVerification(userId: string): Promise<EmailVerificationRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'SELECT * FROM email_verifications WHERE user_id = $1 AND verified_at IS NULL ORDER BY created_at DESC LIMIT 1',
-      [userId],
-    );
-    return rows[0] as EmailVerificationRow | undefined;
+    const result = await this._domainImpl.findLatestEmailVerification(userId);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return {
+      id: s.id, user_id: s.userId, token_hash: s.tokenHash,
+      expires_at: s.expiresAt, verified_at: s.verifiedAt, created_at: s.createdAt,
+    };
   }
 
   async createEmailVerification(data: { user_id: string; token_hash: string; expires_at: Date }): Promise<EmailVerificationRow> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO email_verifications (user_id, token_hash, expires_at) VALUES ($1, $2, $3) RETURNING *`,
-      [data.user_id, data.token_hash, data.expires_at],
-    );
-    return rows[0] as EmailVerificationRow;
+    const result = await this._domainImpl.createEmailVerification(data);
+    const s = result.snapshot();
+    return {
+      id: s.id, user_id: s.userId, token_hash: s.tokenHash,
+      expires_at: s.expiresAt, verified_at: s.verifiedAt, created_at: s.createdAt,
+    };
   }
 
   async findEmailVerificationByHash(hash: string): Promise<EmailVerificationRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'SELECT * FROM email_verifications WHERE token_hash = $1 AND verified_at IS NULL ORDER BY created_at DESC LIMIT 1',
-      [hash],
-    );
-    return rows[0] as EmailVerificationRow | undefined;
+    const result = await this._domainImpl.findEmailVerificationByHash(hash);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return {
+      id: s.id, user_id: s.userId, token_hash: s.tokenHash,
+      expires_at: s.expiresAt, verified_at: s.verifiedAt, created_at: s.createdAt,
+    };
   }
 
   async markEmailVerified(id: string): Promise<void> {
-    const db = await getDb();
-    await db.query('UPDATE email_verifications SET verified_at = NOW() WHERE id = $1', [id]);
+    await this._domainImpl.markEmailVerified(id);
   }
 
-  // Phone
-
   async createPhoneVerification(data: { user_id: string; phone: string; otp_hash: string; expires_at: Date }): Promise<PhoneVerificationRow> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO phone_verifications (user_id, phone, otp_hash, expires_at) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [data.user_id, data.phone, data.otp_hash, data.expires_at],
-    );
-    return rows[0] as PhoneVerificationRow;
+    const result = await this._domainImpl.createPhoneVerification(data);
+    const s = result.snapshot();
+    return {
+      id: s.id, user_id: s.userId, phone: s.phone,
+      otp_hash: s.otpHash, expires_at: s.expiresAt,
+      verified_at: s.verifiedAt, created_at: s.createdAt,
+    };
   }
 
   async findLatestPhoneVerification(userId: string, phone: string): Promise<PhoneVerificationRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'SELECT * FROM phone_verifications WHERE user_id = $1 AND phone = $2 AND verified_at IS NULL ORDER BY created_at DESC LIMIT 1',
-      [userId, phone],
-    );
-    return rows[0] as PhoneVerificationRow | undefined;
+    const result = await this._domainImpl.findLatestPhoneVerification(userId, phone);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return {
+      id: s.id, user_id: s.userId, phone: s.phone,
+      otp_hash: s.otpHash, expires_at: s.expiresAt,
+      verified_at: s.verifiedAt, created_at: s.createdAt,
+    };
   }
 
   async markPhoneVerified(id: string): Promise<void> {
-    const db = await getDb();
-    await db.query('UPDATE phone_verifications SET verified_at = NOW() WHERE id = $1', [id]);
+    await this._domainImpl.markPhoneVerified(id);
   }
 
   async countRecentByPhone(phone: string, withinSeconds: number): Promise<number> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `SELECT COUNT(*) as count FROM phone_verifications WHERE phone = $1 AND created_at > NOW() - INTERVAL '1 second' * $2`,
-      [phone, withinSeconds],
-    );
-    const row = rows[0] as { count: string };
-    return parseInt(row.count, 10);
+    return this._domainImpl.countRecentByPhone(phone, withinSeconds);
   }
 
   async countRecentByUser(userId: string, withinSeconds: number): Promise<number> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `SELECT COUNT(*) as count FROM phone_verifications WHERE user_id = $1 AND created_at > NOW() - INTERVAL '1 second' * $2`,
-      [userId, withinSeconds],
-    );
-    const row = rows[0] as { count: string };
-    return parseInt(row.count, 10);
+    return this._domainImpl.countRecentByUser(userId, withinSeconds);
   }
 }
 

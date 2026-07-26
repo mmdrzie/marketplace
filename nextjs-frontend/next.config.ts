@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-const path = require("node:path");
 
 let bundleAnalyzer: (config: NextConfig) => NextConfig = (c) => c;
 
@@ -10,24 +9,24 @@ if (process.env.ANALYZE === 'true') {
 }
 
 const nextConfig: NextConfig = bundleAnalyzer({
-  turbopack: {
-    root: path.resolve(__dirname, ".."),
-  },
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
+      { protocol: 'https', hostname: 'localhost' },
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'https', hostname: '127.0.0.1' },
+      { protocol: 'http', hostname: '127.0.0.1' },
+      { protocol: 'https', hostname: '*.supabase.co' },
+      { protocol: 'https', hostname: '*.supabase.in' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 768, 1024, 1280, 1536],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+
   experimental: {
     optimizePackageImports: ['@tanstack/react-query', 'react-icons', 'framer-motion'],
   },
-  allowedDevOrigins: ['192.168.0.191', process.env.NEXT_PUBLIC_DEV_ORIGIN].filter(Boolean) as string[],
+  allowedDevOrigins: (process.env.NEXT_PUBLIC_DEV_ORIGINS || 'localhost').split(',').map(s => s.trim()),
 });
 
 export default nextConfig;

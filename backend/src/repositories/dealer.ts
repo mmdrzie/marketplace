@@ -1,4 +1,5 @@
-import { getDb } from '../config/database.js';
+import { Dealer } from '../domain/entities/dealer/Dealer.entity.js';
+import { DealerRepositoryImpl } from '../domain/infrastructure/dealer/DealerRepository.impl.js';
 
 export interface DealerProfileRow {
   user_id: string;
@@ -16,10 +17,16 @@ export interface DealerProfileRow {
 }
 
 export class DealerRepository {
+  private _domainImpl: DealerRepositoryImpl;
+
+  constructor(domainImpl?: DealerRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new DealerRepositoryImpl();
+  }
+
   async findByUserId(userId: string) {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM dealer_profiles WHERE user_id = $1', [userId]);
-    return rows[0] as DealerProfileRow | undefined;
+    const dealer = await this._domainImpl.findByUserId(userId);
+    if (!dealer) return undefined;
+    return this.snapshotToRow(dealer.snapshot());
   }
 
   async create(data: {
@@ -30,132 +37,81 @@ export class DealerRepository {
     description?: string;
     dealer_code?: string;
   }) {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO dealer_profiles (user_id, business_name, logo, address, description, dealer_code)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [data.user_id, data.business_name, data.logo ?? null, data.address ?? null, data.description ?? null, data.dealer_code ?? `DLR-${Date.now().toString(36).toUpperCase()}`],
-    );
-    return rows[0] as DealerProfileRow;
+    const dealer = Dealer.fromSnapshot({
+      id: 0,
+      userId: data.user_id,
+      name: '',
+      slug: '',
+      businessName: data.business_name,
+      logo: data.logo ?? null,
+      description: data.description ?? null,
+      phone: null,
+      address: data.address ?? null,
+      latitude: null,
+      longitude: null,
+      dealerCode: data.dealer_code ?? `DLR-${Date.now().toString(36).toUpperCase()}`,
+      subscriptionPlan: null,
+      subscriptionExpiresAt: null,
+      listingsLimit: null,
+      isVerified: false,
+      isActive: true,
+      rating: 0,
+      reviewCount: 0,
+      publicId: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    await this._domainImpl.save(dealer);
+    const created = await this._domainImpl.findByUserId(data.user_id);
+    return created ? this.snapshotToRow(created.snapshot()) : this.snapshotToRow(dealer.snapshot());
   }
 
   async update(userId: string, data: Partial<DealerProfileRow>) {
-    const fields: string[] = ['updated_at = NOW()'];
-    const values: unknown[] = [];
-    let idx = 1;
+    const existing = await this._domainImpl.findByUserId(userId);
+    if (!existing) return undefined;
 
-    for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
-        fields.push(`${key} = $${idx++}`);
-        values.push(value);
-      }
-    }
+    if (data.business_name !== undefined) existing.businessName = data.business_name;
+    if (data.logo !== undefined) existing.logo = data.logo;
+    if (data.address !== undefined) existing.address = data.address;
+    if (data.description !== undefined) existing.description = data.description;
+    if (data.dealer_code !== undefined) existing.dealerCode = data.dealer_code;
+    if (data.subscription_plan !== undefined) existing.subscriptionPlan = data.subscription_plan;
+    if (data.subscription_expires_at !== undefined) existing.subscriptionExpiresAt = data.subscription_expires_at ? new Date(data.subscription_expires_at) : null;
+    if (data.listings_limit !== undefined) existing.listingsLimit = data.listings_limit;
+    if (data.is_verified !== undefined) existing.isVerified = data.is_verified;
 
-    values.push(userId);
-    const db = await getDb();
-    const { rows } = await db.query(
-      `UPDATE dealer_profiles SET ${fields.join(', ')} WHERE user_id = $${idx} RETURNING *`,
-      values,
-    );
-    return rows[0] as DealerProfileRow | undefined;
+    await this._domainImpl.save(existing);
+    const updated = await this._domainImpl.findByUserId(userId);
+    return updated ? this.snapshotToRow(updated.snapshot()) : undefined;
   }
 
   async getStats(userId: string) {
-    const db = await getDb();
-    const [listingsRes, reviewsRes, todayViewsRes, contactsRes, unreadRes, activitiesRes] = await Promise.all([
-      db.query(
-        `SELECT
-           COUNT(*) as total_listings,
-           COUNT(*) FILTER (WHERE status = 'published') as active_listings,
-           COUNT(*) FILTER (WHERE status = 'sold') as sold_listings,
-           COALESCE(SUM(views), 0) as total_views
-         FROM listings WHERE user_id = $1 AND deleted_at IS NULL`,
-        [userId],
-      ),
-      db.query(
-        `SELECT COALESCE(AVG(rating), 0) as avg_rating, COUNT(*) as total_reviews
-         FROM dealer_reviews WHERE dealer_id = $1`,
-        [userId],
-      ),
-      db.query(
-        `SELECT COALESCE(SUM(v.views), 0) as today_views
-         FROM listing_views_daily v
-         JOIN listings l ON l.id = v.listing_id
-         WHERE l.user_id = $1 AND v.date = CURRENT_DATE`,
-        [userId],
-      ),
-      db.query(
-        `SELECT COUNT(*) as today_contacts
-         FROM messages m
-         JOIN conversations c ON c.id = m.conversation_id
-         WHERE (c.buyer_id = $1 OR c.seller_id = $1)
-           AND m.sender_id != $1
-           AND m.created_at >= CURRENT_DATE`,
-        [userId],
-      ),
-      db.query(
-        `SELECT COUNT(*) as unread_messages
-         FROM messages m
-         JOIN conversations c ON c.id = m.conversation_id
-         WHERE (c.buyer_id = $1 OR c.seller_id = $1)
-           AND m.sender_id != $1
-           AND m.is_read = false`,
-        [userId],
-      ),
-      db.query(
-        `SELECT id, title, status, created_at
-         FROM listings
-         WHERE user_id = $1 AND deleted_at IS NULL
-         ORDER BY created_at DESC
-         LIMIT 5`,
-        [userId],
-      ),
-    ]);
-
-    const l = listingsRes.rows[0] as { total_listings: string; active_listings: string; sold_listings: string; total_views: string };
-    const r = reviewsRes.rows[0] as { avg_rating: string; total_reviews: string };
-    const tv = todayViewsRes.rows[0] as { today_views: string };
-    const tc = contactsRes.rows[0] as { today_contacts: string };
-    const um = unreadRes.rows[0] as { unread_messages: string };
-
-    return {
-      total_listings: parseInt(l.total_listings, 10),
-      active_listings: parseInt(l.active_listings, 10),
-      sold_listings: parseInt(l.sold_listings, 10),
-      total_views: parseInt(l.total_views, 10),
-      avg_rating: parseFloat(r.avg_rating),
-      total_reviews: parseInt(r.total_reviews, 10),
-      today_views: parseInt(tv.today_views, 10),
-      today_contacts: parseInt(tc.today_contacts, 10),
-      unread_messages: parseInt(um.unread_messages, 10),
-      recent_activities: (activitiesRes.rows as Array<{ id: number; title: string; status: string; created_at: string }>).map((a) => ({
-        id: a.id,
-        description: `ثبت آگهی «${a.title}»`,
-        status: a.status,
-        created_at: a.created_at,
-      })),
-    };
+    return this._domainImpl.getStats(userId);
   }
 
   async getSubscription(userId: string) {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `SELECT dp.*, u.role FROM dealer_profiles dp
-       JOIN users u ON u.id = dp.user_id
-       WHERE dp.user_id = $1`,
-      [userId],
-    );
-    return rows[0] as (DealerProfileRow & { role: string }) | undefined;
+    return this._domainImpl.getSubscription(userId);
   }
 
   async addReview(data: { dealer_id: string; user_id: string; rating: number; comment?: string }) {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO dealer_reviews (dealer_id, user_id, rating, comment)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [data.dealer_id, data.user_id, data.rating, data.comment ?? ''],
-    );
-    return rows[0];
+    return this._domainImpl.addReview(data);
+  }
+
+  private snapshotToRow(s: import('../domain/entities/dealer/Dealer.entity.js').DealerSnapshot): DealerProfileRow {
+    return {
+      user_id: s.userId,
+      business_name: s.businessName ?? '',
+      logo: s.logo,
+      address: s.address,
+      description: s.description,
+      dealer_code: s.dealerCode,
+      subscription_plan: s.subscriptionPlan ?? 'free',
+      subscription_expires_at: s.subscriptionExpiresAt,
+      listings_limit: s.listingsLimit ?? 0,
+      is_verified: s.isVerified,
+      created_at: s.createdAt,
+      updated_at: s.updatedAt,
+    };
   }
 }
 

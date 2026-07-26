@@ -3,11 +3,12 @@
   "private": true,
   "workspaces": [
     "backend",
+    "nextjs-frontend",
     "packages/*"
   ],
   "scripts": {
     "dev:backend": "npm run dev -w backend",
-    "dev:frontend": "cd nextjs-frontend && next dev",
+    "dev:frontend": "npm run dev -w nextjs-frontend",
     "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build:backend": "npm run build -w backend",
     "build:frontend": "npm run build -w nextjs-frontend",

@@ -3,9 +3,10 @@ import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useConversations } from '@/hooks/useChat';
 import { useAuthStore } from '@/store/authStore';
-import { useEcho } from '@/providers/EchoProvider';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { formatRelativeTime } from '@/lib/utils';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { Conversation } from '@/types';
 
 interface ConversationListProps {
@@ -14,41 +15,37 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ onSelectChat, activeChatId }: ConversationListProps) {
-  const { data, isLoading } = useConversations();
+  const { data, isLoading, isError, error, refetch } = useConversations();
   const user = useAuthStore((s) => s.user);
-  const { echo } = useEcho();
   const queryClient = useQueryClient();
-  const subscribed = useRef<Set<number>>(new Set());
-  const idsSnapshot = useRef<string>('[]');
+  const channelsRef = useRef<Map<number, RealtimeChannel>>(new Map());
 
   useEffect(() => {
-    if (!echo || !user) return;
-    const active = subscribed.current;
-    const newIds = new Set((data as Conversation[] | undefined)?.map((c) => c.id) || []);
-    const prevIds: number[] = JSON.parse(idsSnapshot.current);
+    if (!user) return;
+    const conversations = (data as Conversation[] | undefined) || [];
+    const currentIds = new Set(conversations.map((c) => c.id));
+    const activeChannels = channelsRef.current;
 
-    const same = prevIds.length === newIds.size && prevIds.every((id) => newIds.has(id));
-    if (same) return;
-
-    for (const id of prevIds) {
-      if (!newIds.has(id)) {
-        active.delete(id);
-        try { echo.leave(`App.Models.Conversation.${id}`); } catch {}
+    for (const [id, ch] of activeChannels) {
+      if (!currentIds.has(id)) {
+        ch.unsubscribe();
+        activeChannels.delete(id);
       }
     }
-    for (const id of newIds) {
-      if (active.has(id)) continue;
-      active.add(id);
-      const channelName = `App.Models.Conversation.${id}`;
-      try {
-        const channel = echo.private(channelName);
-        channel.listen('MessageSent', () => {
+
+    for (const conv of conversations) {
+      if (activeChannels.has(conv.id)) continue;
+
+      const channel = supabase.channel(`conversation:${conv.id}`);
+      channel
+        .on('broadcast', { event: 'message.sent' }, () => {
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        });
-      } catch {}
+        })
+        .subscribe();
+
+      activeChannels.set(conv.id, channel);
     }
-    idsSnapshot.current = JSON.stringify(Array.from(newIds));
-  }, [echo, user, data, queryClient]);
+  }, [user, data, queryClient]);
 
   if (isLoading) {
     return (
@@ -62,6 +59,30 @@ export function ConversationList({ onSelectChat, activeChatId }: ConversationLis
             </div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-16 px-4">
+        <div className="w-20 h-20 rounded-3xl bg-surface-2 border border-border flex items-center justify-center text-destructive mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <p className="font-bold text-foreground text-lg mb-2">خطا در بارگذاری</p>
+        <p className="text-sm text-muted-foreground max-w-[250px] leading-relaxed mb-4">
+          {(error as Error)?.message || 'مکالمه‌ها بارگذاری نشدند. لطفاً دوباره تلاش کنید.'}
+        </p>
+        <button
+          onClick={() => refetch()}
+          className="btn btn-primary btn-sm rounded-xl"
+        >
+          تلاش مجدد
+        </button>
       </div>
     );
   }

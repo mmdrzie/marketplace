@@ -23,7 +23,15 @@ export function PWAProvider({ children }: { children?: ReactNode }) {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('[PWA] SW registration failed:', err));
+      // در حالت توسعه: حذف SW قبلی + عدم ثبت مجدد تا لوپ refresh قطع شود
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isDev) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          for (const reg of regs) reg.unregister();
+        });
+      } else {
+        navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('[PWA] SW registration failed:', err));
+      }
     }
 
     const handler = (e: Event) => {

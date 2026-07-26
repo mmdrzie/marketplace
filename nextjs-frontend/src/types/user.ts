@@ -5,7 +5,7 @@ export interface User {
   phone?: string | null;
   avatar: string | null;
   city: string | null;
-  role: 'user' | 'dealer' | 'agency' | 'admin';
+  role: 'user' | 'dealer' | 'agency' | 'store' | 'admin';
   status?: string | null;
   phoneVerified?: boolean;
   emailVerified?: boolean;

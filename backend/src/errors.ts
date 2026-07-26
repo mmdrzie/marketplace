@@ -2,12 +2,14 @@ import { ErrorCode, type ErrorCodeType } from './shared/index.js';
 
 const httpStatusMap: Record<ErrorCodeType, number> = {
   [ErrorCode.VALIDATION_ERROR]: 422,
+  [ErrorCode.BAD_REQUEST]: 400,
   [ErrorCode.UNAUTHORIZED]: 401,
   [ErrorCode.FORBIDDEN]: 403,
   [ErrorCode.NOT_FOUND]: 404,
   [ErrorCode.RATE_LIMITED]: 429,
   [ErrorCode.PHONE_VERIFICATION_REQUIRED]: 403,
   [ErrorCode.EMAIL_ALREADY_EXISTS]: 409,
+  [ErrorCode.PHONE_ALREADY_EXISTS]: 409,
   [ErrorCode.INVALID_CREDENTIALS]: 401,
   [ErrorCode.INVALID_TOKEN]: 401,
   [ErrorCode.TOKEN_EXPIRED]: 401,
@@ -34,6 +36,10 @@ export class AppError extends Error {
     return new AppError(ErrorCode.VALIDATION_ERROR, message);
   }
 
+  static badRequest(message: string) {
+    return new AppError(ErrorCode.BAD_REQUEST, message);
+  }
+
   static unauthorized(message?: string) {
     return new AppError(ErrorCode.UNAUTHORIZED, message || 'Unauthorized');
   }
@@ -56,6 +62,10 @@ export class AppError extends Error {
 
   static emailAlreadyExists(message?: string) {
     return new AppError(ErrorCode.EMAIL_ALREADY_EXISTS, message || 'Email already exists');
+  }
+
+  static phoneAlreadyExists(message?: string) {
+    return new AppError(ErrorCode.PHONE_ALREADY_EXISTS, message || 'Phone already exists');
   }
 
   static invalidCredentials(message?: string) {

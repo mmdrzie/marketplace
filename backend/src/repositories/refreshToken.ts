@@ -1,4 +1,5 @@
 import { getDb } from '../config/database.js';
+import { RefreshTokenRepositoryImpl } from '../domain/infrastructure/refreshToken/RefreshTokenRepository.impl.js';
 
 export interface RefreshTokenRow {
   id: string;
@@ -10,40 +11,45 @@ export interface RefreshTokenRow {
 }
 
 export class RefreshTokenRepository {
+  private _domainImpl: RefreshTokenRepositoryImpl;
+
+  constructor(domainImpl?: RefreshTokenRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new RefreshTokenRepositoryImpl();
+  }
+
   async create(data: { user_id: string; token_hash: string; expires_at: Date }): Promise<RefreshTokenRow> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [data.user_id, data.token_hash, data.expires_at],
-    );
-    return rows[0] as RefreshTokenRow;
+    const result = await this._domainImpl.create(data);
+    const s = result.snapshot();
+    return {
+      id: s.id,
+      user_id: s.userId,
+      token_hash: s.tokenHash,
+      expires_at: s.expiresAt,
+      revoked_at: s.revokedAt,
+      created_at: s.createdAt,
+    };
   }
 
   async findByTokenHash(hash: string): Promise<RefreshTokenRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'SELECT * FROM refresh_tokens WHERE token_hash = $1 AND revoked_at IS NULL',
-      [hash],
-    );
-    return rows[0] as RefreshTokenRow | undefined;
+    const result = await this._domainImpl.findByTokenHash(hash);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return {
+      id: s.id,
+      user_id: s.userId,
+      token_hash: s.tokenHash,
+      expires_at: s.expiresAt,
+      revoked_at: s.revokedAt,
+      created_at: s.createdAt,
+    };
   }
 
   async revoke(id: string): Promise<void> {
-    const db = await getDb();
-    await db.query(
-      'UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = $1',
-      [id],
-    );
+    await this._domainImpl.revoke(id);
   }
 
   async revokeAllForUser(userId: string): Promise<void> {
-    const db = await getDb();
-    await db.query(
-      'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL',
-      [userId],
-    );
+    await this._domainImpl.revokeAllForUser(userId);
   }
 }
 

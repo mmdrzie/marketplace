@@ -3,11 +3,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useConversation, useSendMessage, useMarkRead } from '@/hooks/useChat';
 import { useAuthStore } from '@/store/authStore';
-import { useEcho } from '@/providers/EchoProvider';
+import { useConversationRealtime } from '@/hooks/useConversationRealtime';
 import { MessageBubble } from './MessageBubble';
 import { TypingIndicator } from './TypingIndicator';
 import { MessageSearch } from './MessageSearch';
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/common/Toast';
 import type { Message } from '@/types';
 
@@ -45,53 +44,22 @@ export function ChatRoom({ conversationId, onBack }: ChatRoomProps) {
   const sendMessage = useSendMessage();
   const markRead = useMarkRead();
   const user = useAuthStore((s) => s.user);
-  const { echo } = useEcho();
-  const queryClient = useQueryClient();
+  useConversationRealtime(conversationId);
   
   const [body, setBody] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<number, HTMLDivElement | null>>({});
-  const initialized = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [filePreviews, setFilePreviews] = useState<FilePreview[]>([]);
   const objectUrlsRef = useRef<string[]>([]);
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [typingUsers] = useState<string[]>([]);
   const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages]);
-
-  const otherUserName = conversation
-    ? (conversation.buyer_id === user?.id ? conversation.seller : conversation.buyer)?.name || 'کاربر'
-    : 'کاربر';
-  const otherUserNameRef = useRef(otherUserName);
-  otherUserNameRef.current = otherUserName;
-
-  useEffect(() => {
-    if (!conversationId || !echo || initialized.current) return;
-    initialized.current = true;
-
-    const channel = echo.private(`App.Models.Conversation.${conversationId}`);
-
-    channel.listen('MessageSent', () => {
-      queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
-    });
-
-    channel.listen('Typing', () => {
-      setTypingUsers((prev) => prev.includes(otherUserNameRef.current) ? prev : [...prev, otherUserNameRef.current]);
-      setTimeout(() => {
-        setTypingUsers((prev) => prev.filter((u) => u !== otherUserNameRef.current));
-      }, 3000);
-    });
-
-    return () => {
-      try { echo.leave(`App.Models.Conversation.${conversationId}`); } catch {}
-      initialized.current = false;
-    };
-  }, [conversationId, echo, queryClient]);
 
   useEffect(() => {
     if (conversationId) markRead.mutate(conversationId);

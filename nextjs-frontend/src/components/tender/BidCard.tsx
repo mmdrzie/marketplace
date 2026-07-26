@@ -1,6 +1,6 @@
 'use client';
 
-import type { Bid } from '@/store/tenderStore';
+import type { Bid } from '@/store/tender';
 
 interface BidCardProps {
   bid: Bid;

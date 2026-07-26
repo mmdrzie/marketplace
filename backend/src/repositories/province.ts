@@ -1,4 +1,5 @@
 import { getDb } from '../config/database.js';
+import { ProvinceRepositoryImpl } from '../domain/infrastructure/province/ProvinceRepository.impl.js';
 
 export interface ProvinceRow {
   id: number;
@@ -24,82 +25,70 @@ export type CreateProvinceData = {
 export type UpdateProvinceData = Partial<CreateProvinceData>;
 
 export class ProvinceRepository {
+  private _domainImpl: ProvinceRepositoryImpl;
+
+  constructor(domainImpl?: ProvinceRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new ProvinceRepositoryImpl();
+  }
+
   async findAll(): Promise<ProvinceRow[]> {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM provinces ORDER BY sort_order, name');
-    return rows as ProvinceRow[];
+    const results = await this._domainImpl.findAll();
+    return results.map(r => { const s = r.snapshot(); return { id: s.id, name: s.name, slug: s.slug, sort_order: s.sortOrder, created_at: s.createdAt }; });
   }
 
   async findById(id: number): Promise<ProvinceRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM provinces WHERE id = $1', [id]);
-    return rows[0] as ProvinceRow | undefined;
+    const result = await this._domainImpl.findById(id);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, slug: s.slug, sort_order: s.sortOrder, created_at: s.createdAt };
   }
 
   async findBySlug(slug: string): Promise<ProvinceRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM provinces WHERE slug = $1', [slug]);
-    return rows[0] as ProvinceRow | undefined;
+    const result = await this._domainImpl.findBySlug(slug);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, slug: s.slug, sort_order: s.sortOrder, created_at: s.createdAt };
   }
 
   async findCities(provinceId: number): Promise<CityRow[]> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'SELECT * FROM cities WHERE province_id = $1 ORDER BY name',
-      [provinceId],
-    );
-    return rows as CityRow[];
+    const results = await this._domainImpl.findCities(provinceId);
+    return results.map(c => { const s = c.snapshot(); return { id: s.id, province_id: s.provinceId, name: s.name, created_at: s.createdAt }; });
+  }
+
+  async findAllCities(): Promise<Record<number, CityRow[]>> {
+    const results = await this._domainImpl.findAllCities();
+    const grouped: Record<number, CityRow[]> = {};
+    for (const [pid, cities] of Object.entries(results)) {
+      grouped[Number(pid)] = cities.map(c => { const s = c.snapshot(); return { id: s.id, province_id: s.provinceId, name: s.name, created_at: s.createdAt }; });
+    }
+    return grouped;
   }
 
   async create(data: CreateProvinceData): Promise<ProvinceRow> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO provinces (name, slug, sort_order) VALUES ($1, $2, $3) RETURNING *`,
-      [data.name, data.slug, data.sort_order ?? 0],
-    );
-    return rows[0] as ProvinceRow;
+    const result = await this._domainImpl.create(data);
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, slug: s.slug, sort_order: s.sortOrder, created_at: s.createdAt };
   }
 
   async update(id: number, data: UpdateProvinceData): Promise<ProvinceRow | undefined> {
-    const fields: string[] = [];
-    const values: unknown[] = [];
-    let idx = 1;
-
-    for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
-        fields.push(`${key} = $${idx++}`);
-        values.push(value);
-      }
-    }
-
-    if (fields.length === 0) return this.findById(id);
-
-    values.push(id);
-    const db = await getDb();
-    const { rows } = await db.query(
-      `UPDATE provinces SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
-      values,
-    );
-    return rows[0] as ProvinceRow | undefined;
+    const result = await this._domainImpl.update(id, data as Record<string, unknown>);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, slug: s.slug, sort_order: s.sortOrder, created_at: s.createdAt };
   }
 
   async delete(id: number): Promise<void> {
-    const db = await getDb();
-    await db.query('DELETE FROM provinces WHERE id = $1', [id]);
+    await this._domainImpl.delete(id);
   }
 
   async createCity(provinceId: number, name: string): Promise<CityRow> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'INSERT INTO cities (province_id, name) VALUES ($1, $2) RETURNING *',
-      [provinceId, name],
-    );
-    return rows[0] as CityRow;
+    const result = await this._domainImpl.createCity(provinceId, name);
+    const s = result.snapshot();
+    return { id: s.id, province_id: s.provinceId, name: s.name, created_at: s.createdAt };
   }
 
   async deleteCity(id: number): Promise<void> {
-    const db = await getDb();
-    await db.query('DELETE FROM cities WHERE id = $1', [id]);
+    await this._domainImpl.deleteCity(id);
   }
 }
 

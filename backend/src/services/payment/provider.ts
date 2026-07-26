@@ -13,12 +13,12 @@ export interface PaymentInterface {
 
 import { NoopPaymentProvider } from './providers/noop.js';
 
-export function createPaymentProvider(): PaymentInterface {
+export async function createPaymentProvider(): Promise<PaymentInterface> {
   const providerName = process.env.PAYMENT_PROVIDER || 'noop';
 
   if (providerName === 'zarinpal') {
-    // Lazy-load Zarinpal when configured
-    throw new Error('Zarinpal provider not yet implemented');
+    const { ZarinpalProvider } = await import('./providers/zarinpal.js');
+    return new ZarinpalProvider();
   }
 
   // Default: NoopPaymentProvider

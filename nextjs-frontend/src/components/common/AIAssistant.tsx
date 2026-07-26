@@ -63,7 +63,7 @@ export function AIAssistant() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-36 md:bottom-24 left-6 z-[70] w-[340px] sm:w-[380px] glass rounded-3xl border border-border-subtle shadow-2xl overflow-hidden"
+            className="fixed bottom-36 md:bottom-24 left-6 z-[70] w-[340px] sm:w-[380px] max-w-[calc(100vw-48px)] glass rounded-3xl border border-border-subtle shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import api from '@/lib/api';
@@ -15,6 +15,32 @@ export default function AdminUsersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [addForm, setAddForm] = useState({ name: '', phone: '', password: '', role: 'user' as User['role'] });
+  const addModalRef = useRef<HTMLDivElement>(null);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const hasOpenModal = showAddModal || !!deleteTarget;
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [showAddModal, deleteTarget]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) setShowAddModal(false);
+        else if (deleteTarget) setDeleteTarget(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showAddModal, deleteTarget]);
+
+  useEffect(() => {
+    if (showAddModal) addModalRef.current?.focus();
+    if (deleteTarget) deleteModalRef.current?.focus();
+  }, [showAddModal, deleteTarget]);
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.admin.users(search, roleFilter),
@@ -88,7 +114,8 @@ export default function AdminUsersPage() {
             { value: '', label: 'همه نقش‌ها' },
             { value: 'user', label: 'کاربر عادی' },
             { value: 'dealer', label: 'نمایندگی' },
-            { value: 'agency', label: 'بنگاه' },
+            { value: 'agency', label: 'نمایشگاه' },
+            { value: 'store', label: 'فروشگاه' },
             { value: 'admin', label: 'مدیر' },
           ]}
           placeholder="همه نقش‌ها"
@@ -121,7 +148,8 @@ export default function AdminUsersPage() {
                       <select value={user.role} onChange={(e) => updateRoleMutation.mutate({ id: user.id, role: e.target.value })} className="text-xs glass-input rounded-lg px-2 py-1 text-foreground">
                         <option value="user">کاربر عادی</option>
                         <option value="dealer">نمایندگی</option>
-                        <option value="agency">بنگاه</option>
+                        <option value="agency">نمایشگاه</option>
+                        <option value="store">فروشگاه</option>
                         <option value="admin">مدیر</option>
                       </select>
                     </td>
@@ -158,8 +186,9 @@ export default function AdminUsersPage() {
       {/* Add User Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-md border border-border-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-5">افزودن کاربر جدید</h3>
+          <div ref={addModalRef} role="dialog" aria-modal="true" aria-labelledby="add-user-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-md border border-border-subtle shadow-2xl outline-none" onClick={(e) => e.stopPropagation()}>
+            <h3 id="add-user-title" className="text-lg font-bold text-foreground mb-5">افزودن کاربر جدید</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">نام و نام خانوادگی</label>
@@ -181,7 +210,8 @@ export default function AdminUsersPage() {
                   options={[
                     { value: 'user', label: 'کاربر عادی' },
                     { value: 'dealer', label: 'نمایندگی' },
-                    { value: 'agency', label: 'بنگاه' },
+                    { value: 'agency', label: 'نمایشگاه' },
+                    { value: 'store', label: 'فروشگاه' },
                     { value: 'admin', label: 'مدیر' },
                   ]}
                   placeholder="انتخاب نقش"
@@ -204,11 +234,12 @@ export default function AdminUsersPage() {
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center" onClick={(e) => e.stopPropagation()}>
+          <div ref={deleteModalRef} role="dialog" aria-modal="true" aria-labelledby="delete-user-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center outline-none" onClick={(e) => e.stopPropagation()}>
             <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
             </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">حذف کاربر</h3>
+            <h3 id="delete-user-title" className="text-lg font-bold text-foreground mb-2">حذف کاربر</h3>
             <p className="text-sm text-muted-foreground mb-1">آیا از حذف کاربر <span className="font-medium text-foreground">{deleteTarget.name || 'بدون نام'}</span> اطمینان دارید؟</p>
             <p className="text-xs text-destructive mb-5">این عمل قابل بازگشت نیست</p>
             <div className="flex gap-3">

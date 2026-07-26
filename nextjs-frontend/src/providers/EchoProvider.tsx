@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useRef, ReactNode } from 'react';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 
 interface EchoInstance {
@@ -73,10 +73,13 @@ export function EchoProvider({ children }: { children: ReactNode }) {
     };
   }, [isAuthenticated, token]);
 
-  const value: EchoContextType = {
-    echo,
-    private: (channel: string) => echo?.private(channel),
-  };
+  const value = useMemo<EchoContextType>(
+    () => ({
+      echo,
+      private: (channel: string) => echo?.private(channel),
+    }),
+    [echo],
+  );
 
   return (
     <EchoContext.Provider value={value}>

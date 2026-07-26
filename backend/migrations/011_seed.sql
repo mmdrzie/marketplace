@@ -5,12 +5,12 @@ BEGIN;
 
 -- Demo admin (password: admin123456)
 INSERT INTO users (id, email, password_hash, name, role, status, email_verified_at)
-VALUES ('00000000-0000-0000-0000-000000000001', 'admin@marketplace.com', '$2a$12$pBdqN.GXiUoP/yOnR/6CpubiDzPxAEyl8cApr93wwtl6qiZ0UjL56', 'مدیر سایت', 'admin', 'active', NOW())
+VALUES (gen_random_uuid(), 'admin@marketplace.com', '$2a$12$pBdqN.GXiUoP/yOnR/6CpubiDzPxAEyl8cApr93wwtl6qiZ0UjL56', 'مدیر سایت', 'admin', 'active', NOW())
 ON CONFLICT (email) DO NOTHING;
 
 -- Demo user (password: demo123456) — برای حالت نمایشی لاگین
 INSERT INTO users (id, email, password_hash, name, phone, role, status, email_verified_at, phone_verified_at)
-VALUES ('00000000-0000-0000-0000-000000000002', 'demo@marketplace.com', '$2a$12$85k7gxy1TMaWQs4VH8TMHuubjWXTPNujwN6JCWgOaYgudfFfrzvnO', 'کاربر آزمایشی', '09120000000', 'user', 'active', NOW(), NOW())
+VALUES (gen_random_uuid(), 'demo@marketplace.com', '$2a$12$85k7gxy1TMaWQs4VH8TMHuubjWXTPNujwN6JCWgOaYgudfFfrzvnO', 'کاربر آزمایشی', '09120000000', 'user', 'active', NOW(), NOW())
 ON CONFLICT (email) DO NOTHING;
 
 -- Provinces

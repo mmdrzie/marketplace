@@ -5,7 +5,7 @@ import { SERVICE_TYPE_LABELS, SERVICE_TYPE_COLORS, persianDateToNum } from '@/st
 
 interface ServiceLogTimelineProps {
   records: ServiceRecord[];
-  onDelete?: (id: number) => void;
+  onDelete?: (id: string) => void;
   isEditable?: boolean;
 }
 
@@ -78,7 +78,7 @@ export function ServiceLogTimeline({ records, onDelete, isEditable }: ServiceLog
             )}
             {record.documents.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {record.documents.map((doc, i) => (
+                {record.documents.map((doc) => (
                   <span key={doc.name} className="text-[9px] bg-surface-2 border border-border-subtle px-2 py-0.5 rounded-md text-muted-foreground flex items-center gap-1">
                     <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                     {doc.name}

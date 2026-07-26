@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
 import { User } from '@/types';
+import api from '@/lib/api';
 
 interface AuthState {
   token: string | null;
@@ -59,9 +60,8 @@ export const useAuthStore = create<AuthState>()(
       }),
       {
         name: 'auth-storage',
-        version: 5,
+        version: 6,
         partialize: (state) => ({
-          token: state.token,
           user: state.user,
           isAuthenticated: state.isAuthenticated,
           phoneVerified: state.phoneVerified,
@@ -69,37 +69,11 @@ export const useAuthStore = create<AuthState>()(
           pendingAction: state.pendingAction,
         }),
         migrate: (persisted: unknown, version) => {
-          if (version === 0) {
-            const old = persisted as { token?: string; user?: User; isAuthenticated?: boolean };
+          if (version < 6) {
+            const v = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
             return {
-              refreshToken: null,
               token: null,
-              user: old.user ?? null,
-              isAuthenticated: old.isAuthenticated ?? false,
-              phoneVerified: false,
-              emailVerified: false,
-              pendingAction: null,
-              _hasHydrated: true,
-            } as AuthState;
-          }
-          if (version === 1) {
-            const v1 = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; pendingAction?: string | null };
-            return {
               refreshToken: null,
-              token: null,
-              user: v1.user ?? null,
-              isAuthenticated: v1.isAuthenticated ?? false,
-              phoneVerified: v1.phoneVerified ?? false,
-              emailVerified: false,
-              pendingAction: v1.pendingAction ?? null,
-              _hasHydrated: true,
-            } as AuthState;
-          }
-          if (version >= 2 && version < 5) {
-            const v = persisted as { token?: string | null; user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
-            return {
-              refreshToken: null,
-              token: v.token ?? null,
               user: v.user ?? null,
               isAuthenticated: v.isAuthenticated ?? false,
               phoneVerified: v.phoneVerified ?? false,
@@ -108,10 +82,10 @@ export const useAuthStore = create<AuthState>()(
               _hasHydrated: true,
             } as AuthState;
           }
-          const v = persisted as { token?: string | null; user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
+          const v = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
           return {
+            token: null,
             refreshToken: null,
-            token: v.token ?? null,
             user: v.user ?? null,
             isAuthenticated: v.isAuthenticated ?? false,
             phoneVerified: v.phoneVerified ?? false,
@@ -123,18 +97,18 @@ export const useAuthStore = create<AuthState>()(
         onRehydrateStorage: () => (state) => {
           state?.setHasHydrated(true);
           if (state?.user && !state.token) {
-            import('@/lib/api').then(({ default: api }) => {
-              api.post('/auth/refresh', {}, { withCredentials: true }).then((res) => {
+            api.post('/auth/refresh', {}, { withCredentials: true })
+              .then((res) => {
                 const newToken = res.data.data?.token || res.data.token;
                 const newRefresh = res.data.data?.refreshToken;
                 const currentUser = useAuthStore.getState().user;
                 if (newToken && currentUser) {
                   useAuthStore.getState().setAuth(newToken, currentUser, newRefresh);
                 }
-              }).catch(() => {
+              })
+              .catch(() => {
                 useAuthStore.getState().logout();
               });
-            });
           }
         },
       },

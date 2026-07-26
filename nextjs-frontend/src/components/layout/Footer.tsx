@@ -11,7 +11,7 @@ export function Footer() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-16">
         
         {/* بخش اصلی فوتر */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-12 mb-12">
           
           {/* ستون برندینگ */}
           <div className="md:col-span-2 space-y-4">
@@ -31,18 +31,19 @@ export function Footer() {
             {/* شبکه‌های اجتماعی */}
             <div className="flex gap-3 pt-4">
               {[
-                { name: 'ایتا', url: 'https://eitaa.com/teamdecision' },
-                { name: 'بله', url: 'https://ble.ir/teamdecision' },
-                { name: 'آپارات', url: 'https://aparat.com/teamdecision' },
+                { name: 'ایتا', url: 'https://eitaa.com/teamdecision', icon: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></> },
+                { name: 'بله', url: 'https://ble.ir/teamdecision', icon: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></> },
+                { name: 'آپارات', url: 'https://aparat.com/teamdecision', icon: <><polygon points="5 3 19 12 5 21 5 3" /></> },
               ].map((social) => (
                 <a
                   key={social.name}
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl bg-surface-2/50 border border-border-subtle flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:text-primary hover:border-primary/30 transition-all"
+                  aria-label={social.name}
+                  className="w-10 h-10 rounded-xl bg-surface-2/50 border border-border-subtle flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 transition-all"
                 >
-                  {social.name}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{social.icon}</svg>
                 </a>
               ))}
             </div>
@@ -67,6 +68,7 @@ export function Footer() {
                 { href: '/search', label: 'جستجوی پیشرفته' },
                 { href: '/cursor-test', label: 'تست کرسور' },
                 { href: '/dashboard/listings/new', label: 'ثبت آگهی رایگان' },
+                { href: '/pricing', label: 'تعرفه‌ها و خرید اشتراک' },
               ].map((link) => (
                 <Link key={link.href} href={link.href} className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
                   <span className="w-1.5 h-1.5 rounded-full bg-border-subtle group-hover:bg-primary transition-colors"></span>

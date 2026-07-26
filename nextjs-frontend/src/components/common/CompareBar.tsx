@@ -16,7 +16,7 @@ export function CompareBar() {
   const count = items.length;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[60] border-t border-border bg-background/80 backdrop-blur-xl animate-slide-up">
+    <div className="fixed bottom-0 inset-x-0 z-[60] border-t border-border bg-background/80 backdrop-blur-xl animate-slide-up pb-[env(safe-area-inset-bottom)]">
       {/* سرصفحه — همیشه نمایش داده می‌شود */}
       <div className="max-w-7xl mx-auto px-3 md:px-4 py-2 md:py-3 flex items-center gap-3">
         {/* دکمه باز/بستن در موبایل */}
@@ -45,11 +45,12 @@ export function CompareBar() {
               className="flex items-center gap-2 shrink-0 bg-surface-2 rounded-xl px-3 py-1.5 border border-border-subtle"
             >
               {item.primary_image && (
-                <Image src={item.primary_image} alt="" width={32} height={24} className="rounded object-cover" />
+                <Image src={item.primary_image} alt={item.title} width={32} height={24} className="rounded object-cover" />
               )}
               <span className="text-[11px] text-foreground font-medium truncate max-w-[100px]">{item.title}</span>
               <button
                 onClick={() => { useCompareStore.getState().removeItem(item.id); toast({ type: 'info', title: 'از مقایسه حذف شد', message: item.title }); }}
+                aria-label={`حذف ${item.title} از مقایسه`}
                 className="mr-1 text-muted-foreground hover:text-destructive transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -93,12 +94,13 @@ export function CompareBar() {
                 >
                   {item.primary_image && (
                     <div className="relative w-full h-20">
-                      <Image src={item.primary_image} alt="" fill className="rounded-lg object-cover" sizes="140px" />
+                      <Image src={item.primary_image} alt={item.title} fill className="rounded-lg object-cover" sizes="140px" />
                     </div>
                   )}
                   <span className="text-xs text-foreground font-medium text-center line-clamp-2 leading-tight">{item.title}</span>
                   <button
                     onClick={() => { useCompareStore.getState().removeItem(item.id); toast({ type: 'info', title: 'از مقایسه حذف شد', message: item.title }); }}
+                    aria-label={`حذف ${item.title} از مقایسه`}
                     className="text-muted-foreground hover:text-destructive transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

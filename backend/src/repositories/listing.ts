@@ -1,4 +1,6 @@
 import { getDb } from '../config/database.js';
+import { ListingRepositoryImpl } from '../domain/infrastructure/listing/ListingRepository.impl.js';
+import type { ListingSnapshot } from '../domain/entities/listing/Listing.entity.js';
 
 export type ListingStatus = 'draft' | 'pending' | 'published' | 'rejected' | 'sold' | 'archived';
 export type PriceType = 'fixed' | 'negotiable' | 'auction';
@@ -38,7 +40,26 @@ export type CreateListingData = {
   status?: ListingStatus;
 };
 
-export type UpdateListingData = Record<string, unknown>;
+export interface UpdateListingData {
+  title?: string;
+  description?: string;
+  price?: number;
+  price_type?: PriceType;
+  category_id?: number;
+  province_id?: number | null;
+  city_id?: number | null;
+  status?: ListingStatus;
+  is_featured?: boolean;
+  views?: number;
+  primary_image?: string | null;
+  published_at?: string | null;
+  expires_at?: string | null;
+  slug?: string;
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
+  telegram?: string;
+}
 
 export interface ListingFilters {
   scope?: 'me';
@@ -53,12 +74,48 @@ export interface ListingFilters {
   model?: string;
   year_from?: string;
   year_to?: string;
-  sort?: string;
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'views' | 'title';
   page?: number;
   perPage?: number;
 }
 
+function listingSnapshotToRow(s: ListingSnapshot): ListingRow {
+  return {
+    id: s.id,
+    user_id: s.userId,
+    category_id: s.categoryId,
+    province_id: s.provinceId,
+    city_id: s.cityId,
+    title: s.title,
+    slug: s.slug,
+    description: s.description,
+    price: s.price,
+    price_type: s.priceType as PriceType,
+    status: s.status as ListingStatus,
+    is_featured: s.isFeatured,
+    views: s.views,
+    primary_image: s.primaryImage,
+    published_at: s.publishedAt,
+    expires_at: s.expiresAt,
+    created_at: s.createdAt,
+    updated_at: s.updatedAt,
+    deleted_at: s.deletedAt,
+  };
+}
+
+const ALLOWED_LISTING_FIELDS = new Set([
+  'title', 'description', 'price', 'price_type', 'category_id', 'province_id',
+  'city_id', 'status', 'is_featured', 'views', 'primary_image', 'published_at',
+  'expires_at', 'user_id', 'slug', 'email', 'phone', 'whatsapp', 'telegram',
+]);
+
 export class ListingRepository {
+  private _domainImpl: ListingRepositoryImpl;
+
+  constructor(domainImpl?: ListingRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new ListingRepositoryImpl();
+  }
+
   async findAll(filters: ListingFilters): Promise<{ data: ListingRow[]; total: number; page: number; lastPage: number }> {
     const wheres: string[] = ['l.deleted_at IS NULL'];
     const params: unknown[] = [];
@@ -77,7 +134,7 @@ export class ListingRepository {
       params.push(filters.category);
     }
     if (filters.province) {
-      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = ${p++} OR id::text = ${p++})`);
+      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = $${p++} OR id::text = $${p++})`);
       params.push(filters.province);
       params.push(filters.province);
     }
@@ -98,7 +155,7 @@ export class ListingRepository {
       params.push(parseInt(filters.city_id, 10));
     }
     if (filters.brand) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND la_b.value ILIKE $${p++})`);
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND a_b.value ILIKE $${p++})`);
       params.push(`%${filters.brand}%`);
     }
     if (filters.model) {
@@ -110,7 +167,7 @@ export class ListingRepository {
       params.push(parseInt(filters.year_from, 10));
     }
     if (filters.year_to) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND a_yt.value::int <= $${p++})`);
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND la_yt.value::int <= $${p++})`);
       params.push(parseInt(filters.year_to, 10));
     }
 
@@ -166,9 +223,9 @@ export class ListingRepository {
   }
 
   async findById(id: number) {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM listings WHERE id = $1 AND deleted_at IS NULL', [id]);
-    return rows[0] as ListingRow | undefined;
+    const listing = await this._domainImpl.findById(id);
+    if (!listing) return undefined;
+    return listingSnapshotToRow(listing.snapshot());
   }
 
   async findAttributes(listingId: number) {
@@ -210,10 +267,10 @@ export class ListingRepository {
     let idx = 1;
 
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
-        fields.push(`${key} = $${idx++}`);
-        values.push(value);
-      }
+      if (value === undefined) continue;
+      if (!ALLOWED_LISTING_FIELDS.has(key)) continue;
+      fields.push(`${key} = $${idx++}`);
+      values.push(value);
     }
     if (fields.length === 0) return this.findById(id);
 
@@ -250,8 +307,7 @@ export class ListingRepository {
   }
 
   async softDelete(id: number) {
-    const db = await getDb();
-    await db.query('UPDATE listings SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1', [id]);
+    await this._domainImpl.delete(id);
   }
 
   async incrementViews(id: number) {
@@ -262,12 +318,43 @@ export class ListingRepository {
   async setAttributes(listingId: number, attributes: { attribute_id: number; value: string }[]) {
     const db = await getDb();
     await db.query('DELETE FROM listing_attributes WHERE listing_id = $1', [listingId]);
+    if (attributes.length === 0) return;
+
+    const values: string[] = [];
+    const params: unknown[] = [listingId];
+    let p = 2;
     for (const attr of attributes) {
-      await db.query(
-        'INSERT INTO listing_attributes (listing_id, attribute_id, value) VALUES ($1, $2, $3)',
-        [listingId, attr.attribute_id, attr.value],
+      values.push(`($${p++}, $${p++}, $${p++})`);
+      params.push(listingId, attr.attribute_id, attr.value);
+    }
+    await db.query(
+      `INSERT INTO listing_attributes (listing_id, attribute_id, value) VALUES ${values.join(', ')}`,
+      params,
+    );
+  }
+
+  async addImages(listingId: number, images: { url: string; thumbnail_url?: string; medium_url?: string; is_primary?: boolean; sort_order?: number }[]) {
+    const db = await getDb();
+    const values: string[] = [];
+    const params: unknown[] = [];
+    let p = 1;
+    for (const img of images) {
+      values.push(`($${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++})`);
+      params.push(
+        listingId,
+        img.url,
+        img.thumbnail_url ?? null,
+        img.medium_url ?? null,
+        img.is_primary ?? false,
+        img.sort_order ?? 0,
       );
     }
+    const { rows } = await db.query(
+      `INSERT INTO listing_images (listing_id, url, thumbnail_url, medium_url, is_primary, sort_order)
+       VALUES ${values.join(', ')} RETURNING *`,
+      params,
+    );
+    return rows[0];
   }
 
   async addImage(listingId: number, data: { url: string; thumbnail_url?: string; medium_url?: string; is_primary?: boolean; sort_order?: number }) {
@@ -286,7 +373,8 @@ export class ListingRepository {
   }
 
   async search(q: string, filters: Omit<ListingFilters, 'scope'>): Promise<{ data: ListingRow[]; total: number; page: number; lastPage: number }> {
-    const term = `%${q}%`;
+    const safeQ = (q || '').slice(0, 200);
+    const term = `%${safeQ}%`;
     const wheres: string[] = ['l.deleted_at IS NULL', 'l.status = $1', '(l.title ILIKE $2 OR l.description ILIKE $3)'];
     const params: unknown[] = ['published', term, term];
     let p = 4;
@@ -296,7 +384,7 @@ export class ListingRepository {
       params.push(filters.category);
     }
     if (filters.province) {
-      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = ${p++} OR id::text = ${p++})`);
+      wheres.push(`l.province_id = (SELECT id FROM provinces WHERE slug = $${p++} OR id::text = $${p++})`);
       params.push(filters.province);
       params.push(filters.province);
     }
@@ -313,7 +401,7 @@ export class ListingRepository {
       params.push(parseInt(filters.city_id, 10));
     }
     if (filters.brand) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND la_b.value ILIKE $${p++})`);
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND a_b.value ILIKE $${p++})`);
       params.push(`%${filters.brand}%`);
     }
     if (filters.model) {
@@ -325,7 +413,7 @@ export class ListingRepository {
       params.push(parseInt(filters.year_from, 10));
     }
     if (filters.year_to) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND a_yt.value::int <= $${p++})`);
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND la_yt.value::int <= $${p++})`);
       params.push(parseInt(filters.year_to, 10));
     }
 

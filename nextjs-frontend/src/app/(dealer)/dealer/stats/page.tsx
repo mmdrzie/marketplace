@@ -17,6 +17,7 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 export default function DealerStatsPage() {
   const user = useAuthStore((s) => s.user);
   const isAgency = user?.role === 'agency';
+  const isStore = user?.role === 'store';
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.dealers.stats,
@@ -36,7 +37,7 @@ export default function DealerStatsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">آمار و عملکرد</h1>
-        <p className="text-sm text-muted-foreground mt-1">خلاصه فعالیت {isAgency ? 'بنگاه' : 'نمایندگی'}</p>
+        <p className="text-sm text-muted-foreground mt-1">خلاصه فعالیت {isAgency ? 'نمایشگاه' : isStore ? 'فروشگاه' : 'نمایندگی'}</p>
       </div>
 
       <ErrorBoundary>

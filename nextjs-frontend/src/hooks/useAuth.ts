@@ -16,8 +16,49 @@ export function useAuth() {
     setError(null);
     try {
       const res = await api.post('/auth/register', { email, password, name });
-      const { token, refreshToken, user } = res.data.data;
-      setAuth(token, user, refreshToken);
+      const { token, user } = res.data.data;
+      setAuth(token, user);
+      setAuthCookie();
+      return { token, user };
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      const msg = data?.error?.message || 'خطا در ثبت‌نام';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendRegisterOtp = async (identifier: string, type: 'email' | 'phone') => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.post('/auth/send-register-otp', { type, identifier });
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      const msg = data?.error?.message || 'خطا در ارسال کد تایید';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const registerWithOtp = async (
+    identifier: string,
+    type: 'email' | 'phone',
+    code: string,
+    password: string,
+    name: string,
+    role: 'user' | 'dealer' | 'agency' | 'store' = 'user',
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post('/auth/register-with-otp', { type, identifier, code, password, name, role });
+      const { token, user } = res.data.data;
+      setAuth(token, user);
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
@@ -35,8 +76,8 @@ export function useAuth() {
     setError(null);
     try {
       const res = await api.post('/auth/login', { email, password });
-      const { token, refreshToken, user } = res.data.data;
-      setAuth(token, user, refreshToken);
+      const { token, user } = res.data.data;
+      setAuth(token, user);
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
@@ -90,5 +131,8 @@ export function useAuth() {
     }
   };
 
-  return { registerWithEmail, loginWithEmail, forgotPassword, resetPassword, logout, loading, error };
+  return {
+    registerWithEmail, sendRegisterOtp, registerWithOtp,
+    loginWithEmail, forgotPassword, resetPassword, logout, loading, error,
+  };
 }

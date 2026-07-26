@@ -5,10 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(price: number | null): string {
+export interface PriceFormatOptions {
+  divisor?: number;
+  unit?: string;
+}
+
+export function formatPrice(price: number | null, options: PriceFormatOptions = {}): string {
   if (price === null) return 'توافقی';
-  const toman = Math.floor(price / 10);
-  return toman.toLocaleString('fa-IR') + ' تومان';
+  const { divisor = 10, unit = 'تومان' } = options;
+  const converted = Math.floor(price / divisor);
+  return converted.toLocaleString('fa-IR') + ' ' + unit;
 }
 
 export function formatPriceWithUnit(price: number | null, priceType: string): string {
@@ -32,6 +38,7 @@ export function formatRelativeTime(date: string | null | undefined): string {
   const now = new Date();
   const d = new Date(date);
   const diff = now.getTime() - d.getTime();
+  if (diff < 0) return 'همین حالا';
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);

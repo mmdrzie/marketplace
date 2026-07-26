@@ -7,12 +7,11 @@ const router = new Hono();
 // Public: get all provinces with cities
 router.get('/', async (c) => {
   const provinces = await provinceRepo.findAll();
-  const result = await Promise.all(
-    provinces.map(async (p) => {
-      const cities = await provinceRepo.findCities(p.id);
-      return { ...p, cities };
-    }),
-  );
+  const citiesByProvince = await provinceRepo.findAllCities();
+  const result = provinces.map((p) => ({
+    ...p,
+    cities: citiesByProvince[p.id] ?? [],
+  }));
   return c.json({ success: true, data: result });
 });
 

@@ -1,36 +1,18 @@
-import { getDb } from '../config/database.js';
+import { FavoriteRepositoryImpl } from '../domain/infrastructure/favorite/FavoriteRepository.impl.js';
 
 export class FavoriteRepository {
+  private _domainImpl: FavoriteRepositoryImpl;
+
+  constructor(domainImpl?: FavoriteRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new FavoriteRepositoryImpl();
+  }
+
   async findByUser(userId: string) {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `SELECT l.*, f.created_at as favorited_at
-       FROM favorites f
-       JOIN listings l ON l.id = f.listing_id
-       WHERE f.user_id = $1 AND l.deleted_at IS NULL
-       ORDER BY f.created_at DESC`,
-      [userId],
-    );
-    return rows;
+    return this._domainImpl.findByUserWithListing(userId);
   }
 
   async toggle(userId: string, listingId: number): Promise<{ favorited: boolean }> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'SELECT id FROM favorites WHERE user_id = $1 AND listing_id = $2',
-      [userId, listingId],
-    );
-
-    if ((rows[0] as { id: number } | undefined)) {
-      await db.query('DELETE FROM favorites WHERE user_id = $1 AND listing_id = $2', [userId, listingId]);
-      return { favorited: false };
-    }
-
-    await db.query(
-      'INSERT INTO favorites (user_id, listing_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-      [userId, listingId],
-    );
-    return { favorited: true };
+    return this._domainImpl.toggle(userId, listingId);
   }
 }
 

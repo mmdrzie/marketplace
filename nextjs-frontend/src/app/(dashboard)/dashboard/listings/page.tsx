@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useMyListings } from '@/hooks/useListings';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { EmptyState } from '@/components/common/EmptyState';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import Link from 'next/link';
 
 const STATUS_TABS = [

@@ -21,7 +21,7 @@ export function CustomCursor() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const style = document.createElement('style');
-    style.textContent = '* { cursor: none !important; } *:focus-visible { cursor: auto !important; }';
+    style.textContent = 'html { cursor: none !important; }';
     document.head.appendChild(style);
 
     const show = () => {
@@ -99,7 +99,7 @@ export function CustomCursor() {
   return createPortal(
     <div
       ref={containerRef}
-      className="fixed top-0 left-0 pointer-events-none z-[99999] opacity-0 transition-opacity duration-200"
+      className="custom-cursor-root fixed top-0 left-0 pointer-events-none z-[99999] opacity-0 transition-opacity duration-200"
       style={{ isolation: 'isolate' }}
     >
       <div

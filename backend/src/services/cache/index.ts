@@ -6,9 +6,11 @@ interface CacheEntry<T> {
 export class MemoryCache {
   private store = new Map<string, CacheEntry<unknown>>();
   private defaultTtl: number;
+  private maxSize: number;
 
-  constructor(defaultTtlMs = 30000) {
+  constructor(defaultTtlMs = 30000, maxSize = 1000) {
     this.defaultTtl = defaultTtlMs;
+    this.maxSize = maxSize;
   }
 
   get<T>(key: string): T | undefined {
@@ -18,10 +20,20 @@ export class MemoryCache {
       this.store.delete(key);
       return undefined;
     }
+    // Refresh recency for LRU
+    this.store.delete(key);
+    this.store.set(key, entry);
     return entry.value as T;
   }
 
   set<T>(key: string, value: T, ttlMs?: number): void {
+    // Evict least-recently-used entries if over capacity
+    while (this.store.size >= this.maxSize) {
+      const oldest = this.store.keys().next().value;
+      if (oldest === undefined) break;
+      this.store.delete(oldest);
+    }
+
     this.store.set(key, {
       value,
       expiresAt: Date.now() + (ttlMs ?? this.defaultTtl),

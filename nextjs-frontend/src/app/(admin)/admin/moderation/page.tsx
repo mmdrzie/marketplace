@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { PriceDisplay } from '@/components/common/PriceDisplay';
@@ -13,6 +13,32 @@ export default function ModerationPage() {
   const [rejectTarget, setRejectTarget] = useState<{ id: string | number; title: string } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [detailTarget, setDetailTarget] = useState<ListingDetail | null>(null);
+  const detailModalRef = useRef<HTMLDivElement>(null);
+  const rejectModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const hasOpenModal = !!detailTarget || !!rejectTarget;
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [detailTarget, rejectTarget]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (detailTarget) setDetailTarget(null);
+        else if (rejectTarget) setRejectTarget(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [detailTarget, rejectTarget]);
+
+  useEffect(() => {
+    if (detailTarget) detailModalRef.current?.focus();
+    if (rejectTarget) rejectModalRef.current?.focus();
+  }, [detailTarget, rejectTarget]);
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.admin.pending,
@@ -120,9 +146,10 @@ export default function ModerationPage() {
       {/* Detail modal */}
       {detailTarget && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDetailTarget(null)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-lg border border-border-subtle shadow-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div ref={detailModalRef} role="dialog" aria-modal="true" aria-labelledby="mod-detail-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-lg border border-border-subtle shadow-2xl max-h-[80vh] overflow-y-auto outline-none" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">{detailTarget.title}</h3>
+              <h3 id="mod-detail-title" className="text-lg font-bold text-foreground">{detailTarget.title}</h3>
               <button onClick={() => setDetailTarget(null)} className="btn btn-ghost btn-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6l-12 12" /></svg>
               </button>
@@ -153,11 +180,12 @@ export default function ModerationPage() {
       {/* Rejection Reason Modal */}
       {rejectTarget && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setRejectTarget(null)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-md border border-border-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div ref={rejectModalRef} role="dialog" aria-modal="true" aria-labelledby="reject-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-md border border-border-subtle shadow-2xl outline-none" onClick={(e) => e.stopPropagation()}>
             <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
             </div>
-            <h3 className="text-lg font-bold text-foreground text-center mb-1">رد آگهی</h3>
+            <h3 id="reject-title" className="text-lg font-bold text-foreground text-center mb-1">رد آگهی</h3>
             <p className="text-sm text-muted-foreground text-center mb-4">آگهی: {rejectTarget.title}</p>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">دلیل رد</label>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
@@ -10,6 +10,26 @@ export default function WalletPage() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const depositModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showDepositModal) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [showDepositModal]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showDepositModal) setShowDepositModal(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showDepositModal]);
+
+  useEffect(() => {
+    if (showDepositModal) depositModalRef.current?.focus();
+  }, [showDepositModal]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: queryKeys.dashboard.wallet,
@@ -94,8 +114,9 @@ export default function WalletPage() {
       {/* Deposit Modal */}
       {showDepositModal && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowDepositModal(false)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground mb-4">شارژ کیف پول</h3>
+          <div ref={depositModalRef} role="dialog" aria-modal="true" aria-labelledby="deposit-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl outline-none" onClick={(e) => e.stopPropagation()}>
+            <h3 id="deposit-title" className="text-lg font-bold text-foreground mb-4">شارژ کیف پول</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">مبلغ (تومان)</label>

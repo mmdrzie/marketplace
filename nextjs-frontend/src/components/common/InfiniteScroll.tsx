@@ -18,7 +18,10 @@ export function InfiniteScroll({
 }: InfiniteScrollProps) {
   const observerRef = useRef<HTMLDivElement>(null);
   const onLoadMoreRef = useRef(onLoadMore);
-  onLoadMoreRef.current = onLoadMore;
+
+  useEffect(() => {
+    onLoadMoreRef.current = onLoadMore;
+  }, [onLoadMore]);
 
   useEffect(() => {
     if (!observerRef.current || !hasMore) return;

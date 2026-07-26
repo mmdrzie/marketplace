@@ -46,7 +46,7 @@ describe('useAuth', () => {
     });
 
     expect(mockApiPost).toHaveBeenCalledWith('/auth/register', { email: 'test@test.com', password: 'password123', name: 'Test' });
-    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser, undefined);
+    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser);
   });
 
   it('handles register error', async () => {
@@ -71,7 +71,7 @@ describe('useAuth', () => {
     });
 
     expect(mockApiPost).toHaveBeenCalledWith('/auth/login', { email: 'test@test.com', password: 'password123' });
-    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser, undefined);
+    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser);
   });
 
   it('handles login error', async () => {

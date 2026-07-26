@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTenders } from '@/hooks/useTenders';
 import { TenderCard } from '@/components/tender/TenderCard';
-import type { Tender } from '@/store/tenderStore';
+import type { Tender } from '@/store/tender';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';

@@ -69,6 +69,10 @@ const NAV_ITEMS: Record<string, NavItem> = {
     href: '/dealer/subscription', label: 'اشتراک',
     renderIcon: (cn) => <Svg className={cn}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Svg>,
   },
+  storePanel: {
+    href: '/store/inventory', label: 'پنل فروشگاه',
+    renderIcon: (cn) => <Svg className={cn}><circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></Svg>,
+  },
   admin: {
     href: '/admin', label: 'پنل مدیریت',
     renderIcon: (cn) => <Svg className={cn}><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></Svg>,
@@ -101,23 +105,22 @@ export function Sidebar() {
   const openLogoutModal = useLogoutModal((s) => s.open);
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { canInstall, installApp } = usePWAInstall();
 
   if (!isAuthenticated) return null;
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   const topLinks = ['home', 'listings', 'news'];
-  const dealerLinks = ['dealer', 'subscription'];
-
   const allTopLinks = [...topLinks];
-  if (user?.role === 'dealer' || user?.role === 'agency') {
-    allTopLinks.push(...dealerLinks);
+  if (user?.role === 'store') {
+    allTopLinks.push('storePanel');
+  } else if (user?.role === 'dealer' || user?.role === 'agency') {
+    allTopLinks.push('dealer', 'subscription');
   }
   if (user?.role === 'admin') {
     allTopLinks.push('admin');
   }
-
-  const { canInstall, installApp } = usePWAInstall();
 
   const isDashboardActive = DASHBOARD_SUB_ITEMS.some((sub) => pathname === sub.href || pathname.startsWith(sub.href + '/'));
 
@@ -140,7 +143,7 @@ export function Sidebar() {
       </div>
 
       {/* Sidebar Panel */}
-      <aside className={`fixed right-0 top-0 bottom-0 z-40 w-72 transform transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+      <aside className={`fixed right-0 top-0 bottom-0 z-40 w-72 max-w-[85vw] transform transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="h-full glass border-l border-border flex flex-col">
           {/* Profile Header */}
           <div className="p-5 border-b border-border">
@@ -151,7 +154,7 @@ export function Sidebar() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-foreground truncate">{user?.name || 'کاربر'}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {user?.role === 'admin' ? 'مدیر سیستم' : user?.role === 'dealer' ? 'نماینده' : user?.role === 'agency' ? 'بنگاه' : 'کاربر'}
+                  {user?.role === 'admin' ? 'مدیر سیستم' : user?.role === 'dealer' ? 'نمایندگی' : user?.role === 'agency' ? 'نمایشگاه' : user?.role === 'store' ? 'فروشگاه' : 'کاربر'}
                 </p>
               </div>
             </div>

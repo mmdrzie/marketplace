@@ -16,4 +16,6 @@ export const rateLimits: Record<string, RateLimitEntry> = {
   'listing:publish': config.rateLimits.publishListing,
   'conversation:create': config.rateLimits.createConversation,
   'message:send': config.rateLimits.sendMessage,
+  'article:view': config.rateLimits.articleView,
+  admin: config.rateLimits.admin,
 };

@@ -1,57 +1,48 @@
-import type { Context, MiddlewareHandler } from 'hono';
+import type { Context, Next } from 'hono';
 import { jwtVerify } from 'jose';
 import { authConfig } from '../config/auth.js';
-import { AppError } from '../errors.js';
 
 export interface AuthUser {
   id: string;
   email: string;
-  role: 'user' | 'dealer' | 'agency' | 'admin';
+  role: 'user' | 'dealer' | 'agency' | 'store' | 'admin';
   phoneVerified: boolean;
   emailVerified: boolean;
 }
 
-declare module 'hono' {
-  interface ContextVariableMap {
-    user: AuthUser;
-  }
-}
+const ROLES = ['user', 'dealer', 'agency', 'store', 'admin'] as const;
 
-export function auth(): MiddlewareHandler {
-  return async (c, next) => {
-    const header = c.req.header('Authorization');
-    if (!header?.startsWith('Bearer ')) {
-      return c.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing or invalid Authorization header' } },
-        401,
-      );
+export function auth(...allowedRoles: string[]) {
+  return async (c: Context, next: Next) => {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return c.json({ error: 'Unauthorized' }, 401);
     }
-
-    const token = header.slice(7);
+    const token = authHeader.slice(7);
     try {
       const { payload } = await jwtVerify(token, authConfig.secret);
-      c.set('user', payload as unknown as AuthUser);
+      const user = payload as unknown as AuthUser;
+      if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+        return c.json({ error: 'Forbidden' }, 403);
+      }
+      c.set('user', user);
       await next();
-    } catch (err) {
-      const isExpired = err instanceof Error && err.name === 'JWTExpired';
-      return c.json(
-        { success: false, error: { code: isExpired ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN', message: isExpired ? 'Token expired' : 'Invalid token' } },
-        401,
-      );
+    } catch {
+      return c.json({ error: 'Invalid token' }, 401);
     }
   };
 }
 
-export function optionalAuth(): MiddlewareHandler {
-  return async (c, next) => {
-    const header = c.req.header('Authorization');
-    if (header?.startsWith('Bearer ')) {
-      const token = header.slice(7);
+export function optionalAuth() {
+  return async (c: Context, next: Next) => {
+    const authHeader = c.req.header('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
       try {
         const { payload } = await jwtVerify(token, authConfig.secret);
         c.set('user', payload as unknown as AuthUser);
       } catch {
-        // Ignore invalid tokens for optional auth
+        // ignore invalid token
       }
     }
     await next();

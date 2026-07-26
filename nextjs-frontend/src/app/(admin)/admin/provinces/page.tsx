@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { FadeIn } from '@/components/common/MotionDiv';
@@ -26,6 +26,35 @@ export default function AdminProvincesPage() {
   const [showCityForm, setShowCityForm] = useState(false);
   const [cityName, setCityName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'province' | 'city'; id: number; name: string } | null>(null);
+  const provinceModalRef = useRef<HTMLDivElement>(null);
+  const cityModalRef = useRef<HTMLDivElement>(null);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const hasOpenModal = showProvinceForm || showCityForm || !!deleteTarget;
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [showProvinceForm, showCityForm, deleteTarget]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showProvinceForm) setShowProvinceForm(false);
+        else if (showCityForm) setShowCityForm(false);
+        else if (deleteTarget) setDeleteTarget(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showProvinceForm, showCityForm, deleteTarget]);
+
+  useEffect(() => {
+    if (showProvinceForm) provinceModalRef.current?.focus();
+    if (showCityForm) cityModalRef.current?.focus();
+    if (deleteTarget) deleteModalRef.current?.focus();
+  }, [showProvinceForm, showCityForm, deleteTarget]);
 
   const { data: provinces, isLoading: loadingProv } = useQuery({
     queryKey: queryKeys.admin.provinces,
@@ -160,8 +189,9 @@ export default function AdminProvincesPage() {
         {/* Province form modal */}
         {showProvinceForm && (
           <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowProvinceForm(false)}>
-            <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-foreground mb-4">استان جدید</h3>
+            <div ref={provinceModalRef} role="dialog" aria-modal="true" aria-labelledby="province-form-title" tabIndex={-1}
+              className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl outline-none" onClick={(e) => e.stopPropagation()}>
+              <h3 id="province-form-title" className="text-lg font-bold text-foreground mb-4">استان جدید</h3>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-1">نام استان</label>
@@ -200,8 +230,9 @@ export default function AdminProvincesPage() {
         {/* City form modal */}
         {showCityForm && (
           <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowCityForm(false)}>
-            <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-foreground mb-4">شهر جدید</h3>
+            <div ref={cityModalRef} role="dialog" aria-modal="true" aria-labelledby="city-form-title" tabIndex={-1}
+              className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl outline-none" onClick={(e) => e.stopPropagation()}>
+              <h3 id="city-form-title" className="text-lg font-bold text-foreground mb-4">شهر جدید</h3>
               <input
                 value={cityName}
                 onChange={(e) => setCityName(e.target.value)}
@@ -225,11 +256,12 @@ export default function AdminProvincesPage() {
         {/* Delete confirmation */}
         {deleteTarget && (
           <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
-            <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center" onClick={(e) => e.stopPropagation()}>
+            <div ref={deleteModalRef} role="dialog" aria-modal="true" aria-labelledby="delete-province-title" tabIndex={-1}
+              className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center outline-none" onClick={(e) => e.stopPropagation()}>
               <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
                 <SvgIcon className="h-7 w-7 text-destructive"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></SvgIcon>
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">حذف {deleteTarget.type === 'province' ? 'استان' : 'شهر'}</h3>
+              <h3 id="delete-province-title" className="text-lg font-bold text-foreground mb-2">حذف {deleteTarget.type === 'province' ? 'استان' : 'شهر'}</h3>
               <p className="text-sm text-muted-foreground mb-1">آیا از حذف <span className="font-medium text-foreground">{deleteTarget.name}</span> اطمینان دارید؟</p>
               <p className="text-xs text-destructive mb-5">این عمل قابل بازگشت نیست</p>
               <div className="flex gap-3">

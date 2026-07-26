@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { AttributeFilters } from './AttributeFilters';
 import { HEAVY_BRANDS } from '@/lib/brands';
 import { GlassSelect } from '@/components/common/GlassSelect';
@@ -62,13 +62,16 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({ filters, onFilterChange, categories, provinces }: FilterPanelProps) {
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+
   const emit = useCallback((next: Partial<Filters>) => {
-    onFilterChange({ ...filters, ...next });
-  }, [filters, onFilterChange]);
+    onFilterChange({ ...filtersRef.current, ...next });
+  }, [onFilterChange]);
 
   const handleAttrChange = useCallback((name: string, value: string) => {
-    emit({ attributeFilters: { ...filters.attributeFilters, [name]: value } });
-  }, [filters, emit]);
+    emit({ attributeFilters: { ...filtersRef.current.attributeFilters, [name]: value } });
+  }, [emit]);
 
   const resetFilters = useCallback(() => {
     onFilterChange({

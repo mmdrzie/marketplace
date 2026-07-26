@@ -49,6 +49,8 @@ axiosRetry(api, {
 });
 
 let refreshPromise: RefreshPromise = null;
+let refreshAttempts = 0;
+const MAX_REFRESH_ATTEMPTS = 3;
 
 async function refreshToken(): Promise<string | null> {
   try {
@@ -68,8 +70,16 @@ async function refreshToken(): Promise<string | null> {
     return newToken;
   } catch {
     useAuthStore.getState().logout();
-    window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    }
     return null;
+  } finally {
+    refreshAttempts++;
+    if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+      refreshAttempts = 0;
+      refreshPromise = null;
+    }
   }
 }
 

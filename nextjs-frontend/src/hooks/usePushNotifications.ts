@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import api from '@/lib/api';
 
 const VAPID_PUBLIC_KEY = 'BC8wAB0gV1H3bK3xJ5qL9mN7pR2tV6yZ4cE8fA0dG2iK4oM6qS8uW0yX2zC4F6hJ8kL0nP2rT5vX7zB';
@@ -13,14 +13,10 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export function usePushNotifications() {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [permission, setPermission] = useState<NotificationPermission>(() =>
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
   const [subscribed, setSubscribed] = useState(false);
-
-  useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
-  }, []);
 
   const subscribe = async () => {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {

@@ -14,7 +14,12 @@ export function StarRating({ value, onChange, size = 'sm', count = 5, className 
   const sizes = { sm: 'h-3.5 w-3.5', md: 'h-5 w-5', lg: 'h-7 w-7' };
 
   return (
-    <div className={cn('flex items-center gap-0.5', className)} dir="ltr">
+    <div
+      className={cn('flex items-center gap-0.5', className)}
+      dir="ltr"
+      role={onChange ? 'radiogroup' : 'img'}
+      aria-label={onChange ? `امتیاز را انتخاب کنید (${value} از ${count})` : `امتیاز ${value} از ${count}`}
+    >
       {Array.from({ length: count }).map((_, i) => {
         const filled = i < value;
         const half = !filled && i < value + 0.5;
@@ -22,6 +27,9 @@ export function StarRating({ value, onChange, size = 'sm', count = 5, className 
           <button
             key={i}
             type="button"
+            role={onChange ? 'radio' : undefined}
+            aria-checked={onChange ? i + 1 === value : undefined}
+            aria-label={onChange ? `${i + 1} از ${count}` : undefined}
             disabled={!onChange}
             onClick={() => onChange?.(i + 1)}
             className={cn(

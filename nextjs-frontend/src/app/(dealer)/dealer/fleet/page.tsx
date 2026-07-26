@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useFleet } from '@/hooks/useFleet';
-import { VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_DOT } from '@/store/fleetStore';
-import type { VehicleStatus } from '@/store/fleetStore';
+import { VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_DOT } from '@/store/fleet';
+import type { VehicleStatus } from '@/store/fleet';
 import { FleetSummaryCard } from '@/components/fleet/FleetSummaryCard';
 import { FleetMap } from '@/components/fleet/FleetMap';
 import { FuelChart } from '@/components/fleet/FuelChart';

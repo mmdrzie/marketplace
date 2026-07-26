@@ -1,0 +1,223 @@
+export const components = {
+  securitySchemes: {
+    bearerAuth: {
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    },
+  },
+  schemas: {
+    Error: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' },
+        message: { type: 'string' },
+        code: { type: 'string' },
+        details: { type: 'object' },
+      },
+    },
+    Pagination: {
+      type: 'object',
+      properties: {
+        page: { type: 'integer' },
+        perPage: { type: 'integer' },
+        total: { type: 'integer' },
+        totalPages: { type: 'integer' },
+      },
+    },
+    User: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        phone: { type: 'string' },
+        role: { type: 'string', enum: ['user', 'dealer', 'admin'] },
+        emailVerifiedAt: { type: 'string', format: 'date-time', nullable: true },
+        phoneVerifiedAt: { type: 'string', format: 'date-time', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    RegisterInput: {
+      type: 'object',
+      required: ['name', 'email', 'phone', 'password'],
+      properties: {
+        name: { type: 'string', minLength: 2, maxLength: 100 },
+        email: { type: 'string', format: 'email' },
+        phone: { type: 'string', pattern: '^\\+?[1-9]\\d{6,14}$' },
+        password: { type: 'string', minLength: 8, maxLength: 128 },
+      },
+    },
+    LoginInput: {
+      type: 'object',
+      required: ['email', 'password'],
+      properties: {
+        email: { type: 'string', format: 'email' },
+        password: { type: 'string' },
+      },
+    },
+    AuthResponse: {
+      type: 'object',
+      properties: {
+        token: { type: 'string' },
+        refreshToken: { type: 'string' },
+        user: { $ref: '#/components/schemas/User' },
+      },
+    },
+    Listing: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        title: { type: 'string' },
+        slug: { type: 'string' },
+        description: { type: 'string' },
+        status: { type: 'string', enum: ['draft', 'active', 'pending', 'rejected', 'sold', 'archived'] },
+        price: { type: 'number' },
+        priceType: { type: 'string', enum: ['fixed', 'negotiable', 'auction', 'starting_bid'] },
+        categoryId: { type: 'string', format: 'uuid' },
+        categorySlug: { type: 'string' },
+        provinceId: { type: 'string' },
+        cityId: { type: 'string' },
+        brand: { type: 'string' },
+        model: { type: 'string' },
+        year: { type: 'integer' },
+        images: { type: 'array', items: { type: 'string' } },
+        userId: { type: 'string', format: 'uuid' },
+        version: { type: 'integer' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    ListingCreate: {
+      type: 'object',
+      required: ['title', 'description', 'price', 'categoryId'],
+      properties: {
+        title: { type: 'string', minLength: 3, maxLength: 200 },
+        description: { type: 'string', minLength: 10, maxLength: 10000 },
+        price: { type: 'number', exclusiveMinimum: 0 },
+        priceType: { type: 'string', enum: ['fixed', 'negotiable', 'auction', 'starting_bid'], default: 'fixed' },
+        categoryId: { type: 'string', format: 'uuid' },
+        provinceId: { type: 'string' },
+        cityId: { type: 'string' },
+        year: { type: 'integer', minimum: 1900, maximum: 2030 },
+        images: { type: 'array', items: { type: 'string' }, maxItems: 20 },
+      },
+    },
+    VehicleBrand: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        slug: { type: 'string' },
+        logoUrl: { type: 'string', nullable: true },
+        isActive: { type: 'boolean' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    VehicleModel: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        brandId: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        slug: { type: 'string' },
+        yearStart: { type: 'integer' },
+        yearEnd: { type: 'integer', nullable: true },
+        isActive: { type: 'boolean' },
+      },
+    },
+    Payment: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        listingId: { type: 'string', format: 'uuid' },
+        userId: { type: 'string', format: 'uuid' },
+        amount: { type: 'number' },
+        currency: { type: 'string', default: 'IRR' },
+        status: { type: 'string', enum: ['pending', 'completed', 'failed', 'refunded'] },
+        method: { type: 'string' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    Tender: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        listingId: { type: 'string', format: 'uuid' },
+        bidderId: { type: 'string', format: 'uuid' },
+        amount: { type: 'number' },
+        status: { type: 'string', enum: ['submitted', 'accepted', 'rejected', 'withdrawn'] },
+        message: { type: 'string' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    Notification: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        userId: { type: 'string', format: 'uuid' },
+        title: { type: 'string' },
+        body: { type: 'string' },
+        type: { type: 'string' },
+        readAt: { type: 'string', format: 'date-time', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    Conversation: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        participants: { type: 'array', items: { type: 'string' } },
+        lastMessage: { type: 'string' },
+        unreadCount: { type: 'integer' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    Message: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        conversationId: { type: 'string', format: 'uuid' },
+        senderId: { type: 'string', format: 'uuid' },
+        content: { type: 'string' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+    Category: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        name: { type: 'string' },
+        slug: { type: 'string' },
+        icon: { type: 'string', nullable: true },
+        parentId: { type: 'string', format: 'uuid', nullable: true },
+        children: { type: 'array', items: { $ref: '#/components/schemas/Category' } },
+      },
+    },
+    Province: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        slug: { type: 'string' },
+      },
+    },
+    City: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        provinceId: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    UploadUrl: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', format: 'uri' },
+        key: { type: 'string' },
+        expiresIn: { type: 'integer' },
+      },
+    },
+  },
+};

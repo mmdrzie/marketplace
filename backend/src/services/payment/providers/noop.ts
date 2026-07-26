@@ -5,7 +5,6 @@ export class NoopPaymentProvider implements PaymentInterface {
     return {
       success: true,
       providerPaymentId: `noop_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      redirectUrl: null as unknown as undefined,
     };
   }
 

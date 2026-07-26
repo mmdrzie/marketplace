@@ -23,6 +23,7 @@
   --color-success: #15803d;
   --color-warning: #b45309;
   --color-surface: #f0dbb8;
+  --color-surface-1: #f0dbb8;
   --color-surface-2: #e8ccaa;
   --color-surface-3: #dcb890;
   --color-border-subtle: rgba(61, 48, 36, 0.10);
@@ -39,6 +40,9 @@
   --color-accent-sky: #0ea5e9;
   --color-accent-sky-bg: rgba(14, 165, 233, 0.10);
   --color-accent-sky-border: rgba(14, 165, 233, 0.20);
+  --color-accent-purple: #8b5cf6;
+  --color-accent-purple-bg: rgba(139, 92, 246, 0.10);
+  --color-accent-purple-border: rgba(139, 92, 246, 0.20);
 
   /* Glow shadow tokens (replace repeating shadow-[...] values) */
   --shadow-glow-accent: 0 0 20px -8px var(--color-accent-blue);
@@ -92,8 +96,9 @@
   --color-warning: #f59e0b;
 
     /* Glassmorphism Surfaces */
-    --color-surface: rgba(20, 20, 23, 0.85);       
-    --color-surface-2: rgba(30, 30, 35, 0.75);     
+    --color-surface: rgba(20, 20, 23, 0.85);
+    --color-surface-1: rgba(20, 20, 23, 0.85);
+    --color-surface-2: rgba(30, 30, 35, 0.75);
     --color-surface-3: rgba(40, 40, 45, 0.65);     
     --color-border-subtle: rgba(255, 255, 255, 0.04);
     --color-overlay: rgba(0, 0, 0, 0.75);
@@ -121,6 +126,9 @@
     --color-accent-sky: #38bdf8;
     --color-accent-sky-bg: rgba(56, 189, 248, 0.10);
     --color-accent-sky-border: rgba(56, 189, 248, 0.20);
+    --color-accent-purple: #a78bfa;
+    --color-accent-purple-bg: rgba(167, 139, 250, 0.10);
+    --color-accent-purple-border: rgba(167, 139, 250, 0.20);
 
     --shadow-glow-accent: 0 0 25px -5px var(--color-accent-blue);
     --shadow-glow-destructive: 0 0 25px -5px var(--color-destructive);
@@ -194,6 +202,14 @@ body {
   background: var(--color-glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+@utility glass-strong {
+  background: color-mix(in srgb, var(--color-glass-bg) 80%, transparent);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border: 1px solid var(--color-glass-border);
   box-shadow: var(--shadow-glass);
 }
@@ -429,7 +445,7 @@ body {
 }
 /* kbd — استایل یکدست برای کلیدهای میانبر (Ctrl K و ESC) */
 kbd {
-  font-family: var(--font-vazirmatn);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   direction: ltr;
 }
 /* Slow pulse — برای CTA glow در homepage */
@@ -501,4 +517,26 @@ kbd {
 .page-hidden .animate-marquee-rtl,
 .page-hidden .animate-aurora {
   animation-play-state: paused !important;
+}
+
+/* LiquidMetalButton shader canvas */
+.shader-container-exploded canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  border-radius: 100px !important;
+}
+
+@keyframes ripple-animation {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
+  }
 }

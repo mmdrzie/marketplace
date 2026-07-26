@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { listingService } from '../domain/services/listing.js';
+import { listingRepo } from '../repositories/listing.js';
+import { cache } from '../services/cache/index.js';
 import { AppError } from '../errors.js';
 
 const router = new Hono();
@@ -13,7 +14,7 @@ router.get('/', async (c) => {
   const minPrice = c.req.query('min_price') ?? c.req.query('price_min');
   const maxPrice = c.req.query('max_price') ?? c.req.query('price_max');
 
-  const result = await listingService.search(q, {
+  const filters = {
     category: c.req.query('category'),
     province: c.req.query('province'),
     city_id: c.req.query('city_id'),
@@ -26,7 +27,20 @@ router.get('/', async (c) => {
     sort: c.req.query('sort'),
     page: c.req.query('page') ? parseInt(c.req.query('page')!, 10) : undefined,
     perPage: c.req.query('per_page') ? parseInt(c.req.query('per_page')!, 10) : undefined,
-  });
+  };
+
+  const cacheKey = `search:${q.slice(0, 200)}:${JSON.stringify(filters)}`;
+  const cached = cache.get<{ data: unknown[]; total: number; page: number; lastPage: number }>(cacheKey);
+  if (cached) {
+    return c.json({
+      success: true,
+      data: cached.data,
+      meta: { total: cached.total, current_page: cached.page, last_page: cached.lastPage, per_page: 24 },
+    });
+  }
+
+  const result = await listingRepo.search(q, filters);
+  cache.set(cacheKey, result, 30000);
 
   return c.json({
     success: true,

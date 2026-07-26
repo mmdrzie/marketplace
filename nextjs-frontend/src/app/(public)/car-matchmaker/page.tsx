@@ -57,7 +57,7 @@ function getRecommendations(budget: number, type: string, fuel: string, priority
     if (priority === 'خانواده' && car.bestFor.includes('خانواده')) score += 20;
     if (priority === 'قدرت' && (car.reason.includes('قدرت') || car.reason.includes('پیشرانه'))) score += 20;
 
-    return { ...car, match: Math.min(Math.round(score + Math.random() * 10), 98) };
+    return { ...car, match: Math.min(Math.round(score), 98) };
   }).sort((a, b) => b.match - a.match).slice(0, 4);
 }
 

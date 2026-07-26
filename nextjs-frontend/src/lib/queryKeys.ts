@@ -71,4 +71,5 @@ export const queryKeys = {
   users: {
     profile: (id: number | string) => ['user-profile', id] as const,
   },
+  stats: ['stats', 'public'] as const,
 } as const;

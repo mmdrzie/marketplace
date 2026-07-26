@@ -1,10 +1,10 @@
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { verificationRepo } from '../../repositories/verification.js';
-import { userRepo } from '../../repositories/user.js';
+import type { UserRepository } from '../entities/user/User.repository.js';
+import type { VerificationRepository } from '../entities/verification/Verification.repository.js';
+import { UserRepositoryImpl } from '../infrastructure/user/UserRepository.impl.js';
+import { VerificationRepositoryImpl } from '../infrastructure/verification/VerificationRepository.impl.js';
 import { AppError } from '../../errors.js';
 import { SmsService } from '../../services/sms/index.js';
-import { eventBus, PhoneVerified } from '../events/index.js';
 
 const OTP_LENGTH = 6;
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -13,9 +13,17 @@ const OTP_MAX_PER_WINDOW = 3;
 
 export class PhoneVerificationService {
   private smsService: SmsService;
+  private verificationRepo: VerificationRepository;
+  private userRepo: UserRepository;
 
-  constructor(smsService?: SmsService) {
+  constructor(
+    smsService?: SmsService,
+    verificationRepo?: VerificationRepository,
+    userRepo?: UserRepository,
+  ) {
     this.smsService = smsService ?? new SmsService();
+    this.verificationRepo = verificationRepo ?? new VerificationRepositoryImpl();
+    this.userRepo = userRepo ?? new UserRepositoryImpl();
   }
 
   private generateOtp(): string {
@@ -23,48 +31,52 @@ export class PhoneVerificationService {
   }
 
   async sendOtp(userId: string, phone: string): Promise<void> {
-    const recentCount = await verificationRepo.countRecentByPhone(phone, OTP_RATE_WINDOW_SEC);
+    const recentCount = await this.verificationRepo.countRecentByPhone(phone, OTP_RATE_WINDOW_SEC);
     if (recentCount >= OTP_MAX_PER_WINDOW) {
       throw AppError.rateLimited('OTP rate limited. Try again later.');
     }
 
     const code = this.generateOtp();
-    const otpHash = await bcrypt.hash(code, 10);
+    const otpHash = crypto.createHash('sha256').update(code).digest('hex');
     const expiresAt = new Date(Date.now() + OTP_TTL_MS);
-    await verificationRepo.createPhoneVerification({ user_id: userId, phone, otp_hash: otpHash, expires_at: expiresAt });
+    await this.verificationRepo.createPhoneVerification({ user_id: userId, phone, otp_hash: otpHash, expires_at: expiresAt });
 
     await this.smsService.sendOtp(phone, code);
   }
 
   async verifyOtp(userId: string, phone: string, code: string): Promise<void> {
-    const stored = await verificationRepo.findLatestPhoneVerification(userId, phone);
+    const stored = await this.verificationRepo.findLatestPhoneVerification(userId, phone);
     if (!stored) {
       throw AppError.otpInvalid();
     }
 
-    if (new Date(stored.expires_at) < new Date()) {
+    if (stored.expiresAt < new Date()) {
       throw AppError.otpExpired();
     }
 
-    const valid = await bcrypt.compare(code, stored.otp_hash);
+    const valid = crypto.createHash('sha256').update(code).digest('hex') === stored.otpHash;
     if (!valid) {
       throw AppError.otpInvalid();
     }
 
-    await verificationRepo.markPhoneVerified(stored.id);
-    await userRepo.update(userId, { phone, phone_verified_at: new Date().toISOString() });
+    await this.verificationRepo.markPhoneVerified(stored.id);
 
-    eventBus.publish(PhoneVerified, { userId, phone });
+    const user = await this.userRepo.findById(userId);
+    if (user) {
+      user.phone = phone;
+      user.verifyPhone();
+      await this.userRepo.save(user);
+    }
   }
 
   async getStatus(userId: string): Promise<{ phone: string | null; verified: boolean }> {
-    const user = await userRepo.findById(userId);
+    const user = await this.userRepo.findById(userId);
     if (!user) {
       throw AppError.notFound('User not found');
     }
     return {
       phone: user.phone,
-      verified: !!user.phone_verified_at,
+      verified: user.phoneVerified,
     };
   }
 }

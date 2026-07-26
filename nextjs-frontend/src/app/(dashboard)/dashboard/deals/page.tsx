@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useEscrowDeals } from '@/hooks/useEscrow';
-import type { DealStatus } from '@/store/escrowStore';
+import type { DealStatus } from '@/store/escrow';
 import { TransactionCard } from '@/components/escrow/TransactionCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';

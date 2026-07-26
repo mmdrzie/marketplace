@@ -9,7 +9,7 @@ import { formatRelativeTime } from '@/lib/utils';
 export function NotificationDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { data } = useQuery({
+  const { data, isError, error } = useQuery({
     queryKey: queryKeys.notifications.all,
     queryFn: async () => {
       const res = await api.get('/notifications');
@@ -43,6 +43,7 @@ export function NotificationDropdown() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-label="اعلان‌ها"
         className="btn btn-ghost btn-sm relative"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -57,13 +58,17 @@ export function NotificationDropdown() {
       </button>
 
       {open && (
-        <div className="absolute start-0 top-full mt-2 w-80 glass rounded-2xl z-50 overflow-hidden">
+        <div className="absolute start-0 top-full mt-2 w-80 sm:w-80 max-w-[calc(100vw-16px)] glass rounded-2xl z-50 overflow-hidden">
           <div className="p-3 border-b border-border-subtle flex items-center justify-between">
             <h4 className="font-medium text-sm text-foreground">اعلان‌ها</h4>
           </div>
 
           <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {isError ? (
+              <div className="p-6 text-center text-sm text-destructive">
+                خطا در بارگذاری اعلان‌ها: {(error as Error)?.message || 'لطفاً دوباره تلاش کنید'}
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 اعلانی ندارید
               </div>

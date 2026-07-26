@@ -13,7 +13,7 @@ test.describe('Home Page', () => {
 
   test('shows categories section', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(500);
     const categoryLinks = page.locator('a[href*="/categories/"]');
     const count = await categoryLinks.count();
     expect(count).toBeGreaterThan(0);

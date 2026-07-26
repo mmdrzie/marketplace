@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateTender } from '@/hooks/useTenders';
-import { TENDER_TYPE_LABELS } from '@/store/tenderStore';
-import type { TenderType } from '@/store/tenderStore';
+import { TENDER_TYPE_LABELS } from '@/store/tender';
+import type { TenderType } from '@/store/tender';
 import { GlassSelect } from '@/components/common/GlassSelect';
 import { toast } from '@/components/common/Toast';
 
@@ -61,7 +61,7 @@ export function TenderForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <label className="block text-xs font-bold text-muted-foreground mb-1.5">نوع درخواست</label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {(Object.entries(TENDER_TYPE_LABELS) as [TenderType, string][]).map(([key, label]) => (
             <button
               key={key}
@@ -99,7 +99,7 @@ export function TenderForm() {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-bold text-muted-foreground mb-1.5">نوع ماشین‌آلات</label>
           <GlassSelect
@@ -134,7 +134,7 @@ export function TenderForm() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-bold text-muted-foreground mb-1.5">بودجه حداقل</label>
           <input
@@ -157,7 +157,7 @@ export function TenderForm() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-bold text-muted-foreground mb-1.5">استان</label>
           <GlassSelect

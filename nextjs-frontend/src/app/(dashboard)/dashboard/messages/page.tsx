@@ -62,7 +62,7 @@ export default function MessagesPage() {
             {activeChatId ? (
               <ChatRoom conversationId={activeChatId} onBack={() => setActiveChatId(null)} />
             ) : (
-              <div className="hidden md:flex flex-col items-center justify-center h-full text-center p-8">
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6">
                   <Icon d={ICON_PATHS.empty_chat} className="w-10 h-10" />
                 </div>

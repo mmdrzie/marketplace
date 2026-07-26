@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import type { Deal } from '@/store/escrowStore';
-import { DEAL_STATUS_LABELS, DEAL_STATUS_COLORS, DEAL_STATUS_BG } from '@/store/escrowStore';
+import type { Deal } from '@/store/escrow';
+import { DEAL_STATUS_LABELS, DEAL_STATUS_COLORS, DEAL_STATUS_BG } from '@/store/escrow';
 
 interface TransactionCardProps {
   deal: Deal;

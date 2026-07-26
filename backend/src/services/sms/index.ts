@@ -1,11 +1,14 @@
 import type { SmsProvider, SmsPayload } from './provider.js';
 import { ConsoleSmsProvider } from './providers/console.js';
+import { KavenegarSmsProvider } from './providers/kavenegar.js';
 import { config } from '../../config/index.js';
 
 export * from './provider.js';
 
 export function createSmsProvider(): SmsProvider {
   switch (config.sms.provider) {
+    case 'kavenegar':
+      return new KavenegarSmsProvider();
     case 'console':
     default:
       return new ConsoleSmsProvider();

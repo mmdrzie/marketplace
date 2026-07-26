@@ -17,6 +17,7 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 export default function DealerDashboardPage() {
   const user = useAuthStore((s) => s.user);
   const isAgency = user?.role === 'agency';
+  const isStore = user?.role === 'store';
   const accentBg = isAgency ? 'bg-warning/10' : 'bg-success/10';
   const accentText = isAgency ? 'text-warning' : 'text-success';
 
@@ -44,7 +45,7 @@ export default function DealerDashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">خوش آمدید، {user?.name || 'کاربر'}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{isAgency ? 'پنل مدیریت بنگاه' : 'پنل نمایندگی'}</p>
+        <p className="text-sm text-muted-foreground mt-1">{isAgency ? 'پنل مدیریت نمایشگاه' : isStore ? 'پنل فروشگاه' : 'پنل نمایندگی'}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

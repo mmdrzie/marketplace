@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -8,9 +6,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: marketplace
-      POSTGRES_USER: marketplace
-      POSTGRES_PASSWORD: marketplace_pass
+      POSTGRES_DB: ${POSTGRES_DB:-marketplace}
+      POSTGRES_USER: ${POSTGRES_USER:-marketplace}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-marketplace_pass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -30,16 +28,30 @@ services:
     ports:
       - "7700:7700"
     environment:
-      MEILI_MASTER_KEY: marketplace_meili_master_key
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-marketplace_meili_master_key}
     volumes:
       - meili_data:/meili_data
 
   app:
-    image: node:22-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: marketplace_app
     restart: unless-stopped
     working_dir: /app
+    command: npm run dev:backend
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: ${DATABASE_URL}
+      DIRECT_URL: ${DIRECT_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: http://localhost:3000
+    ports:
+      - "4000:4000"
     volumes:
+      - ./backend:/app/backend
+      - ./packages:/app/packages
       - uploads_data:/app/uploads
     depends_on:
       - postgres

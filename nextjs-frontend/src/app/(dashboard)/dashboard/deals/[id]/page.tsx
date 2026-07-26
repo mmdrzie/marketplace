@@ -3,8 +3,8 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useEscrowDeal, useUpdateEscrowDeal } from '@/hooks/useEscrow';
-import type { DealStatus } from '@/store/escrowStore';
-import { DEAL_STATUS_LABELS, DEAL_STATUS_COLORS, DEAL_STATUS_BG } from '@/store/escrowStore';
+import type { DealStatus } from '@/store/escrow';
+import { DEAL_STATUS_LABELS, DEAL_STATUS_COLORS, DEAL_STATUS_BG } from '@/store/escrow';
 import { Skeleton } from '@/components/common/Skeleton';
 import { EscrowTimeline } from '@/components/escrow/EscrowTimeline';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';

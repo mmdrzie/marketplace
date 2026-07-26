@@ -6,30 +6,36 @@ import { notFound } from 'next/navigation';
 import { FEATURES } from '@/lib/features';
 import { StatChartCard, PriceHistoryChart, MiniDonut } from '@/components/common/Charts';
 import { FuelChart } from '@/components/fleet/FuelChart';
-import {
-  generateImportPriceTrend,
-  generateCountryShare,
-  generateCustomsVolumeByMonth,
-  generateSegmentDistribution,
-  generateTopModels,
-  generateImportForecast,
-} from '@/lib/importChartData';
 import { cn } from '@/lib/utils';
 
 const BRANDS = ['BMW', 'Toyota', 'Mercedes', 'Hyundai', 'Porsche'];
+
+type PricePoint = { date: string; price: number };
+type CountryShare = { country: string; share: number; volume: number; color: string };
+type CustomsVolume = { month: string; volume: number; revenue: number };
+type Segment = { segment: string; percentage: number; color: string };
+type TopModel = { model: string; count: number; avgPrice: number };
+type Forecast = { year: string; volume: number; lower: number; upper: number };
+
+const PRICE_TREND: PricePoint[] = [];
+const COUNTRY_SHARE: CountryShare[] = [];
+const CUSTOMS_VOLUMES: CustomsVolume[] = [];
+const SEGMENTS: Segment[] = [];
+const TOP_MODELS: TopModel[] = [];
+const FORECAST: Forecast[] = [];
 
 export default function ImportedChartsPage() {
   if (!FEATURES.importedVehicles) notFound();
   const [brand, setBrand] = useState('BMW');
 
-  const priceTrend = useMemo(() => generateImportPriceTrend(brand), [brand]);
-  const countryShare = useMemo(() => generateCountryShare(), []);
-  const customsVolumes = useMemo(() => generateCustomsVolumeByMonth(), []);
-  const segments = useMemo(() => generateSegmentDistribution(), []);
-  const topModels = useMemo(() => generateTopModels(10), []);
-  const forecast = useMemo(() => generateImportForecast(), []);
+  const priceTrend = PRICE_TREND;
+  const countryShare = COUNTRY_SHARE;
+  const customsVolumes = CUSTOMS_VOLUMES;
+  const segments = SEGMENTS;
+  const topModels = TOP_MODELS;
+  const forecast = FORECAST;
   const totalVolume = useMemo(() => customsVolumes.reduce((s, m) => s + m.volume, 0), [customsVolumes]);
-  const avgPrice = useMemo(() => Math.round(topModels.reduce((s, m) => s + m.avgPrice, 0) / topModels.length), [topModels]);
+  const avgPrice = useMemo(() => (topModels.length ? Math.round(topModels.reduce((s, m) => s + m.avgPrice, 0) / topModels.length) : 0), [topModels]);
 
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">

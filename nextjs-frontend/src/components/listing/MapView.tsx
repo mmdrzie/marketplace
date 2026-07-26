@@ -25,27 +25,22 @@ export function MapView({ address, title, lat, lng, className }: MapViewProps) {
 
   useEffect(() => {
     if (!L || !mapRef.current || instanceRef.current) return;
+    if (lat == null || lng == null) return;
 
-    const defaultLat = lat ?? 35.6892;
-    const defaultLng = lng ?? 51.3890;
-    const zoom = lat && lng ? 14 : 5;
-
-    const map = L.map(mapRef.current, { zoomControl: false }).setView([defaultLat, defaultLng], zoom);
+    const map = L.map(mapRef.current, { zoomControl: false }).setView([lat, lng], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
       maxZoom: 19,
     }).addTo(map);
 
-    if (lat && lng) {
-      const icon = L.divIcon({
-        html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 24 36" fill="none"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="var(--color-primary, #e05e2a)" stroke="white" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="white"/></svg>`,
-        className: '',
-        iconSize: [28, 36],
-        iconAnchor: [14, 36],
-      });
-      L.marker([lat, lng], { icon }).addTo(map);
-    }
+    const icon = L.divIcon({
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 24 36" fill="none"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="var(--color-primary, #e05e2a)" stroke="white" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="white"/></svg>`,
+      className: '',
+      iconSize: [28, 36],
+      iconAnchor: [14, 36],
+    });
+    L.marker([lat, lng], { icon }).addTo(map);
 
     mapRef.current?.querySelector('.leaflet-control-zoom')?.remove();
     instanceRef.current = map;
@@ -55,6 +50,8 @@ export function MapView({ address, title, lat, lng, className }: MapViewProps) {
       instanceRef.current = null;
     };
   }, [L, lat, lng]);
+
+  if (lat == null || lng == null) return null;
 
   return (
     <div className={`relative glass rounded-2xl overflow-hidden border border-border ${className || 'h-48 w-full'}`}>

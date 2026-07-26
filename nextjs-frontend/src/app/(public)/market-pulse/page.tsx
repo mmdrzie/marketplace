@@ -5,7 +5,6 @@ import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { StatChartCard, MiniSparkline, ModernLineChart, ModernBarChart } from '@/components/common/Charts';
 import { cn } from '@/lib/utils';
-import { generatePriceSeries, generateVolumeSeries } from '@/lib/chartData';
 
 const CATEGORY_ICONS: Record<string, { icon: string; viewBox?: string }> = {
   car: { icon: "M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 002 12v4c0 .6.4 1 1 1h2m10 0v-5m-10 5v-5m-4 0h18M7 17a2 2 0 11-4 0 2 2 0 014 0zm14 0a2 2 0 11-4 0 2 2 0 014 0z" },
@@ -39,6 +38,17 @@ function formatPrice(v: number) {
   return (v * 1000000).toLocaleString('fa-IR');
 }
 
+const PRICE_SHAPE = [0.94, 0.95, 0.97, 0.96, 0.98, 1.0, 1.01, 1.0, 1.02, 1.04, 1.05, 1.07];
+const VOLUME_SHAPE = [0.85, 0.9, 1.05, 1.0, 1.1, 1.2, 1.15, 1.05, 0.95, 0.9, 0.8, 1.0];
+
+function buildPriceSeries(base: number): number[] {
+  return PRICE_SHAPE.map((f) => Math.round(base * f));
+}
+
+function buildVolumeSeries(base: number): number[] {
+  return VOLUME_SHAPE.map((f) => Math.round(base * f));
+}
+
 export default function MarketPulsePage() {
   const [active, setActive] = useState('car');
   const [marketData, setMarketData] = useState<Record<string, { prices: number[]; volumes: number[]; avg: number; total: number; change: number }>>({});
@@ -50,8 +60,8 @@ export default function MarketPulsePage() {
     for (const slug of CATEGORIES.map((c) => c.slug)) {
       const baseP = BASE_PRICES[slug] || 500;
       const baseV = BASE_VOLUMES[slug] || 50;
-      const prices = generatePriceSeries(baseP, 12, { volatility: 0.07, trend: 0.03 });
-      const volumes = generateVolumeSeries(baseV, 12, { volatility: 0.18, seasonality: true });
+      const prices = buildPriceSeries(baseP);
+      const volumes = buildVolumeSeries(baseV);
       const avg = prices[prices.length - 1];
       const total = volumes.reduce((a, b) => a + b, 0);
       const change = Math.round(((prices[11] - prices[0]) / prices[0]) * 100 * 10) / 10;

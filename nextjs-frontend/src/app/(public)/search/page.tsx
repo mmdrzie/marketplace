@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/search/SearchBar';
 import { FilterPanel } from '@/components/search/FilterPanel';
 import { SortSelect } from '@/components/search/SortSelect';
 import { ListingGrid } from '@/components/listing/ListingGrid';
+import { ListingCard } from '@/components/listing/ListingCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SmartAlert } from '@/components/common/SmartAlert';
 import { useSearch } from '@/hooks/useSearch';
@@ -16,7 +17,9 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ICON_PATHS } from '@/lib/icons';
 import { GlassSelect } from '@/components/common/GlassSelect';
+import { FilterButton } from '@/components/common/FilterButton';
 import { SkeletonListings } from '@/components/common/Skeleton';
+import type { Listing } from '@/types';
 
 const Icon = ({ d, className = "w-5 h-5" }: { d: string; className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -84,7 +87,7 @@ export default function SearchPage() {
   const router = useRouter();
 
   const [query, setQuery] = useState(sp.get('q') || '');
-  const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isSearchSaved, setIsSearchSaved] = useState(false);
   const [filters, setFilters] = useState<Filters>(() => parseFiltersFromParams(sp));
@@ -212,53 +215,7 @@ export default function SearchPage() {
 
         <div className="mb-6"><SmartAlert /></div>
 
-        <div className="flex flex-col md:flex-row gap-6">
-
-          {/* Desktop Sidebar Filters */}
-          <aside className="w-full md:w-80 shrink-0 hidden md:block">
-            <div className="sticky top-24 glass rounded-3xl p-6 border border-border-subtle">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Icon d={ICON_PATHS.filter} className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground">فیلترهای پیشرفته</h3>
-                  <p className="text-[11px] text-muted-foreground">نتایج را دقیق‌تر کنید</p>
-                </div>
-              </div>
-              <FilterPanel
-                filters={filters}
-                onFilterChange={updateFilters}
-                categories={categories}
-                provinces={provinces}
-              />
-              <div className="mt-6 space-y-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-                  </svg>
-                  <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">وارداتی</span>
-                </div>
-                <GlassSelect
-                  value={filters.attributeFilters.origin || ''}
-                  onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, origin: v } })}
-                  options={[
-                    { value: 'وارداتی (طرح نوین)', label: 'وارداتی (طرح نوین)' },
-                    { value: 'وارداتی (شمال)', label: 'وارداتی (شمال)' },
-                    { value: 'وارداتی (منطقه آزاد)', label: 'وارداتی (منطقه آزاد)' },
-                    { value: 'وارداتی (تهران)', label: 'وارداتی (تهران)' },
-                  ]}
-                  placeholder="همه خودروها"
-                />
-                <GlassSelect
-                  value={filters.attributeFilters.import_country || ''}
-                  onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, import_country: v } })}
-                  options={['آلمان','ژاپن','کره جنوبی','چین','آمریکا','فرانسه','ایتالیا','انگلستان','سوئد','ترکیه','هند'].map((c) => ({ value: c, label: c }))}
-                  placeholder="کشور مبدأ"
-                />
-              </div>
-            </div>
-          </aside>
+          <div className="flex flex-col md:flex-row gap-6">
 
           {/* Main Results Area */}
           <div className="flex-1 min-w-0">
@@ -266,13 +223,11 @@ export default function SearchPage() {
             {/* Results Toolbar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 glass rounded-2xl p-4 border border-border-subtle gap-3">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowMobileFilter(true)}
-                  className="md:hidden btn btn-glass btn-sm rounded-full"
-                >
-                  <Icon d={ICON_PATHS.filter} className="w-4 h-4 text-primary" />
-                  فیلترها
-                </button>
+                <FilterButton
+                  onClick={() => setShowFilter(true)}
+                  count={activeFilters.length}
+                  className="px-4 py-2 rounded-full"
+                />
                 <div>
                   <span className="text-xl md:text-2xl font-bold text-foreground tracking-tighter">{total.toLocaleString('fa-IR')}</span>
                   <span className="text-sm text-muted-foreground mr-1">آگهی یافت شد</span>
@@ -338,9 +293,15 @@ export default function SearchPage() {
               </div>
             ) : data?.data?.length > 0 ? (
               <Fragment>
-                <div className={viewMode === 'list' ? 'flex flex-col gap-4' : ''}>
+                {viewMode === 'list' ? (
+                  <div className="flex flex-col gap-4">
+                    {data.data.map((listing: Listing) => (
+                      <ListingCard key={listing.id} listing={listing} />
+                    ))}
+                  </div>
+                ) : (
                   <ListingGrid listings={data.data} />
-                </div>
+                )}
                 {lastPage > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-12" dir="ltr">
                     <button
@@ -387,70 +348,81 @@ export default function SearchPage() {
           </div>
         </div>
 
-        {/* Mobile Filter Drawer */}
+        {/* Filter Popup (mobile & desktop) */}
         <AnimatePresence>
-          {showMobileFilter && (
+          {showFilter && (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 md:hidden"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4"
             >
-              <div className="absolute inset-0 bg-overlay backdrop-blur-md" onClick={() => setShowMobileFilter(false)} />
+              <div className="absolute inset-0 bg-overlay backdrop-blur-md" onClick={() => setShowFilter(false)} />
               <motion.div
-                initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute right-0 top-0 bottom-0 w-80 max-w-[85%] glass border-l border-border p-6 overflow-y-auto overscroll-contain"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                className="relative w-full max-w-lg md:max-w-2xl max-h-[85dvh] rounded-2xl md:rounded-3xl glass border-border overflow-y-auto overscroll-contain shadow-2xl"
               >
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+                {/* sticky header */}
+                <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-border bg-background/80 backdrop-blur-xl">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                       <Icon d={ICON_PATHS.filter} className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-foreground">فیلترها</span>
+                    <span className="font-bold text-foreground">فیلترهای پیشرفته</span>
                   </div>
                   <button
-                    onClick={() => setShowMobileFilter(false)}
-                    className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowFilter(false)}
+                    className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="بستن"
                   >
                     <Icon d={ICON_PATHS.close} className="w-4 h-4" />
                   </button>
                 </div>
-                <FilterPanel
-                  filters={filters}
-                  onFilterChange={(newFilters) => { updateFilters(newFilters); }}
-                  categories={categories}
-                  provinces={provinces}
-                />
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <svg className="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-                    </svg>
-                    <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">وارداتی</span>
+
+                <div className="p-5">
+                  <FilterPanel
+                    filters={filters}
+                    onFilterChange={(newFilters) => { updateFilters(newFilters); }}
+                    categories={categories}
+                    provinces={provinces}
+                  />
+                  <div className="mt-6 space-y-3 pt-6 border-t border-border-subtle">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                      </svg>
+                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">وارداتی</span>
+                    </div>
+                    <GlassSelect
+                      value={filters.attributeFilters.origin || ''}
+                      onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, origin: v } })}
+                      options={[
+                        { value: 'وارداتی (طرح نوین)', label: 'وارداتی (طرح نوین)' },
+                        { value: 'وارداتی (شمال)', label: 'وارداتی (شمال)' },
+                        { value: 'وارداتی (منطقه آزاد)', label: 'وارداتی (منطقه آزاد)' },
+                        { value: 'وارداتی (تهران)', label: 'وارداتی (تهران)' },
+                      ]}
+                      placeholder="همه خودروها"
+                    />
+                    <GlassSelect
+                      value={filters.attributeFilters.import_country || ''}
+                      onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, import_country: v } })}
+                      options={['آلمان','ژاپن','کره جنوبی','چین','آمریکا','فرانسه','ایتالیا','انگلستان','سوئد','ترکیه','هند'].map((c) => ({ value: c, label: c }))}
+                      placeholder="کشور مبدأ"
+                    />
                   </div>
-                  <GlassSelect
-                    value={filters.attributeFilters.origin || ''}
-                    onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, origin: v } })}
-                    options={[
-                      { value: 'وارداتی (طرح نوین)', label: 'وارداتی (طرح نوین)' },
-                      { value: 'وارداتی (شمال)', label: 'وارداتی (شمال)' },
-                      { value: 'وارداتی (منطقه آزاد)', label: 'وارداتی (منطقه آزاد)' },
-                      { value: 'وارداتی (تهران)', label: 'وارداتی (تهران)' },
-                    ]}
-                    placeholder="همه خودروها"
-                  />
-                  <GlassSelect
-                    value={filters.attributeFilters.import_country || ''}
-                    onChange={(v) => updateFilters({ ...filters, attributeFilters: { ...filters.attributeFilters, import_country: v } })}
-                    options={['آلمان','ژاپن','کره جنوبی','چین','آمریکا','فرانسه','ایتالیا','انگلستان','سوئد','ترکیه','هند'].map((c) => ({ value: c, label: c }))}
-                    placeholder="کشور مبدأ"
-                  />
                 </div>
-                <button
-                  onClick={() => setShowMobileFilter(false)}
-                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors"
-                >
-                  اعمال فیلترها
-                </button>
+
+                {/* sticky footer */}
+                <div className="sticky bottom-0 z-10 px-5 py-4 border-t border-border bg-background/80 backdrop-blur-xl flex items-center gap-3">
+                  {activeFilters.length > 0 && (
+                    <button onClick={() => updateFilters(DEFAULT_FILTERS)} className="flex-1 py-3 rounded-xl border border-border text-muted-foreground font-medium text-sm hover:bg-surface-2 transition-colors">
+                      پاک کردن فیلترها
+                    </button>
+                  )}
+                  <button onClick={() => setShowFilter(false)} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors">
+                    {total > 0 ? `نمایش ${total.toLocaleString('fa-IR')} آگهی` : 'اعمال فیلترها'}
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}

@@ -1,4 +1,7 @@
 import { getDb } from '../config/database.js';
+import { config } from '../config/index.js';
+import { Payment } from '../domain/entities/payment/Payment.entity.js';
+import { PaymentRepositoryImpl } from '../domain/infrastructure/payment/PaymentRepository.impl.js';
 
 export interface PaymentRow {
   id: number;
@@ -27,6 +30,12 @@ export interface WalletTransactionRow {
 }
 
 export class PaymentRepository {
+  private _domainImpl: PaymentRepositoryImpl;
+
+  constructor(domainImpl?: PaymentRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new PaymentRepositoryImpl();
+  }
+
   async create(data: {
     user_id: string;
     amount: number;
@@ -34,31 +43,38 @@ export class PaymentRepository {
     provider?: string;
     metadata?: Record<string, unknown>;
   }) {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO payments (user_id, amount, currency, provider, metadata)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [data.user_id, data.amount, data.currency ?? 'IRR', data.provider ?? 'noop', JSON.stringify(data.metadata ?? {})],
-    );
-    return rows[0] as PaymentRow;
+    const payment = Payment.fromSnapshot({
+      id: 0,
+      userId: data.user_id,
+      amount: data.amount,
+      currency: data.currency ?? 'IRR',
+      gateway: 'zarinpal',
+      provider: data.provider ?? config.payment.provider,
+      status: 'pending',
+      referenceId: null,
+      providerId: null,
+      description: null,
+      metadata: data.metadata ?? null,
+      paidAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    await this._domainImpl.save(payment);
+    const created = await this._domainImpl.findById(payment.id);
+    return this.snapshotToRow((created ?? payment).snapshot());
   }
 
   async update(id: number, data: { status?: string; provider_id?: string; metadata?: Record<string, unknown> }) {
-    const fields: string[] = ['updated_at = NOW()'];
-    const values: unknown[] = [];
-    let idx = 1;
+    const existing = await this._domainImpl.findById(id);
+    if (!existing) return undefined;
 
-    if (data.status) { fields.push(`status = $${idx++}`); values.push(data.status); }
-    if (data.provider_id !== undefined) { fields.push(`provider_id = $${idx++}`); values.push(data.provider_id); }
-    if (data.metadata) { fields.push(`metadata = $${idx++}`); values.push(JSON.stringify(data.metadata)); }
+    if (data.status) existing.status = data.status as any;
+    if (data.provider_id !== undefined) existing.providerId = data.provider_id;
+    if (data.metadata) existing.metadata = data.metadata;
 
-    values.push(id);
-    const db = await getDb();
-    const { rows } = await db.query(
-      `UPDATE payments SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
-      values,
-    );
-    return rows[0] as PaymentRow | undefined;
+    await this._domainImpl.save(existing);
+    const updated = await this._domainImpl.findById(id);
+    return updated ? this.snapshotToRow(updated.snapshot()) : undefined;
   }
 
   async addWalletTransaction(data: {
@@ -95,6 +111,21 @@ export class PaymentRepository {
       [userId],
     );
     return parseInt((rows[0] as { balance: string }).balance, 10);
+  }
+
+  private snapshotToRow(s: import('../domain/entities/payment/Payment.entity.js').PaymentSnapshot): PaymentRow {
+    return {
+      id: s.id,
+      user_id: s.userId,
+      amount: s.amount,
+      currency: s.currency,
+      status: s.status,
+      provider: s.provider ?? '',
+      provider_id: s.providerId,
+      metadata: s.metadata ?? {},
+      created_at: s.createdAt,
+      updated_at: s.updatedAt,
+    };
   }
 }
 

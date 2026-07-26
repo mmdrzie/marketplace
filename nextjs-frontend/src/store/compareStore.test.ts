@@ -8,7 +8,7 @@ function makeItem(id: number): CompareItem {
     slug: `listing-${id}`,
     price: 1000000,
     price_type: 'fixed',
-    status: 'active',
+    status: 'published',
     is_featured: false,
     views: 0,
     primary_image: null,

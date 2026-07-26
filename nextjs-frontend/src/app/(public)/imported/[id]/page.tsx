@@ -5,7 +5,6 @@ import { ImportedBadge } from '@/components/imported/ImportedBadge';
 import { CustomsStatusCard } from '@/components/imported/CustomsStatusCard';
 import { BrandOriginTag } from '@/components/imported/BrandOriginTag';
 import { PriceHistoryChart } from '@/components/common/Charts';
-import { generateImportPriceTrend } from '@/lib/importChartData';
 
 async function fetchListing(id: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/listings/${id}`, {
@@ -53,7 +52,7 @@ export default async function ImportedDetailPage({ params }: { params: Promise<{
   const engineCc = getAttr(210);
   const color = getAttr(211);
   const warranty = getAttr(212);
-  const chartData = generateImportPriceTrend(typeof listingRecord?.title === 'string' ? listingRecord.title.split(' ')[0] : '');
+  const chartData: { date: string; price: number }[] = [];
 
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">

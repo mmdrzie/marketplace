@@ -1,6 +1,6 @@
 'use client';
 
-import type { DealStatus } from '@/store/escrowStore';
+import type { DealStatus } from '@/store/escrow';
 
 interface EscrowTimelineProps {
   status: DealStatus;
@@ -69,7 +69,7 @@ export function EscrowTimeline({ status, className = '' }: EscrowTimelineProps) 
                 </span>
               </div>
               <span
-                className={`text-[10px] mt-1.5 whitespace-nowrap font-medium transition-colors ${
+                className={`text-[10px] mt-1.5 whitespace-normal text-center font-medium transition-colors ${
                   isCancelled && isCurrent ? 'text-destructive' : isActive ? 'text-foreground' : 'text-muted-foreground'
                 }`}
               >

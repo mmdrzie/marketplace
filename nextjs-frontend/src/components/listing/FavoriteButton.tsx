@@ -1,11 +1,13 @@
 'use client';
 
 import { memo, useState } from 'react';
-import { useToggleFavorite } from '@/hooks/useFavorites';
+import { useToggleFavorite, useFavorites } from '@/hooks/useFavorites';
 import { toast } from '@/components/common/Toast';
 
 export const FavoriteButton = memo(function FavoriteButton({ listingId, className, size = 'md' }: { listingId: string | number; className?: string; size?: 'sm' | 'md' | 'lg' }) {
-  const [isFav, setIsFav] = useState(false);
+  const { data: favorites } = useFavorites();
+  const isFavInitially = (favorites as Array<{ id: string | number }> | undefined)?.some((f) => f.id === listingId) ?? false;
+  const [isFav, setIsFav] = useState(isFavInitially);
   const toggleFav = useToggleFavorite();
 
   const toggle = (e: React.MouseEvent) => {
@@ -30,6 +32,7 @@ export const FavoriteButton = memo(function FavoriteButton({ listingId, classNam
     <button
       onClick={toggle}
       disabled={toggleFav.isPending}
+      aria-label={isFav ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها'}
       className={`rounded-xl flex items-center justify-center transition-all duration-200 bg-background/60 border border-border-subtle ${size === 'sm' ? 'w-9 h-9' : size === 'lg' ? 'w-11 h-11' : 'w-10 h-10'} ${isFav ? 'text-destructive border-destructive/40 bg-destructive/10' : 'text-muted-foreground hover:text-destructive hover:border-destructive/30'} ${className || ''}`}
       title={isFav ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها'}
     >

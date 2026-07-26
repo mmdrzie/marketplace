@@ -46,6 +46,11 @@ export const config = {
     },
   },
 
+  supabase: {
+    url: process.env.SUPABASE_URL || '',
+    anonKey: process.env.SUPABASE_ANON_KEY || '',
+  },
+
   payment: {
     provider: process.env.PAYMENT_PROVIDER || 'noop',
     zarinpal: {
@@ -66,5 +71,6 @@ export const config = {
     publishListing: { limit: parseInt(process.env.PUBLISH_LISTING_RATE_LIMIT || '10', 10), window: parseInt(process.env.PUBLISH_LISTING_RATE_WINDOW || '86400', 10) },
     createConversation: { limit: parseInt(process.env.CONVERSATION_RATE_LIMIT || '30', 10), window: parseInt(process.env.CONVERSATION_RATE_WINDOW || '3600', 10) },
     sendMessage: { limit: parseInt(process.env.MESSAGE_RATE_LIMIT || '60', 10), window: parseInt(process.env.MESSAGE_RATE_WINDOW || '60', 10) },
+    articleView: { limit: parseInt(process.env.ARTICLE_VIEW_RATE_LIMIT || '30', 10), window: parseInt(process.env.ARTICLE_VIEW_RATE_WINDOW || '60', 10) },
   },
 } as const;

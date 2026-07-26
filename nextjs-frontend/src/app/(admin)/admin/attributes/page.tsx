@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { GlassSelect } from '@/components/common/GlassSelect';
@@ -35,6 +35,32 @@ export default function AdminAttributesPage() {
   const [editingAttr, setEditingAttr] = useState<Attribute | null>(null);
   const [form, setForm] = useState<AttributeForm>(EMPTY_FORM);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const formModalRef = useRef<HTMLDivElement>(null);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const hasOpenModal = showForm || !!deleteTarget;
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [showForm, deleteTarget]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showForm) { setShowForm(false); setEditingAttr(null); }
+        else if (deleteTarget) setDeleteTarget(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showForm, deleteTarget]);
+
+  useEffect(() => {
+    if (showForm) formModalRef.current?.focus();
+    if (deleteTarget) deleteModalRef.current?.focus();
+  }, [showForm, deleteTarget]);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: queryKeys.admin.categoriesTree,
@@ -192,8 +218,9 @@ export default function AdminAttributesPage() {
         {/* Create/Edit form modal */}
         {showForm && (
           <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowForm(false); setEditingAttr(null); }}>
-            <div className="glass rounded-2xl p-6 w-full max-w-md border border-border-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-foreground mb-4">{editingAttr ? 'ویرایش ویژگی' : 'ویژگی جدید'}</h3>
+            <div ref={formModalRef} role="dialog" aria-modal="true" aria-labelledby="attr-form-title" tabIndex={-1}
+              className="glass rounded-2xl p-6 w-full max-w-md border border-border-subtle shadow-2xl outline-none" onClick={(e) => e.stopPropagation()}>
+              <h3 id="attr-form-title" className="text-lg font-bold text-foreground mb-4">{editingAttr ? 'ویرایش ویژگی' : 'ویژگی جدید'}</h3>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -249,11 +276,12 @@ export default function AdminAttributesPage() {
         {/* Delete confirmation */}
         {deleteTarget && (
           <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
-            <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center" onClick={(e) => e.stopPropagation()}>
+            <div ref={deleteModalRef} role="dialog" aria-modal="true" aria-labelledby="delete-attr-title" tabIndex={-1}
+              className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center outline-none" onClick={(e) => e.stopPropagation()}>
               <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
                 <SvgIcon className="h-7 w-7 text-destructive"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></SvgIcon>
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">حذف ویژگی</h3>
+              <h3 id="delete-attr-title" className="text-lg font-bold text-foreground mb-2">حذف ویژگی</h3>
               <p className="text-sm text-muted-foreground mb-1">آیا از حذف <span className="font-medium text-foreground">{deleteTarget.name}</span> اطمینان دارید؟</p>
               <p className="text-xs text-destructive mb-5">این عمل قابل بازگشت نیست</p>
               <div className="flex gap-3">

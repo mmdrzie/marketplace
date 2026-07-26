@@ -40,7 +40,7 @@ export function TrustBadge({ tier = 'bronze', score, deals, verified, className 
       </div>
 
       {score !== undefined && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 glass rounded-xl border border-border-subtle p-3 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 max-w-[calc(100vw-16px)] glass rounded-xl border border-border-subtle p-3 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
           <div className="space-y-2 text-[11px]">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">امتیاز اعتماد</span>

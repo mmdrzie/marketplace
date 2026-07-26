@@ -1,6 +1,7 @@
 # ADR-001: Domain Layer
 
-**Status:** Accepted
+**Status:** Superseded by ADR-010  
+**Superseded Date:** 2026-07-22
 
 ## Context
 Business logic scattered across controllers, middleware, and helpers creates duplication and makes testing difficult.

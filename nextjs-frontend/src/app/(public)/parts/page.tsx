@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParts } from '@/hooks/useParts';
-import { CATEGORY_PARTS_LABELS, CATEGORY_PARTS_MAP } from '@/store/partStore';
+import { CATEGORY_PARTS_LABELS, CATEGORY_PARTS_MAP } from '@/store/parts';
 
 const CATEGORY_LIST = Object.keys(CATEGORY_PARTS_LABELS).filter((k) => k !== 'sedan');
 const CATEGORY_NAMES: Record<string, string> = {

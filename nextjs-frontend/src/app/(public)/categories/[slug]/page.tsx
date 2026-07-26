@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -80,6 +80,26 @@ export default function CategoryPage() {
   const [yearTo, setYearTo] = useState('');
   const [attrFilters, setAttrFilters] = useState<Record<string, string>>({});
   const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const mobileFilterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showMobileFilter) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [showMobileFilter]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showMobileFilter) setShowMobileFilter(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showMobileFilter]);
+
+  useEffect(() => {
+    if (showMobileFilter) mobileFilterRef.current?.focus();
+  }, [showMobileFilter]);
 
   const { data: apiCategories } = useQuery({
     queryKey: queryKeys.categories.all,
@@ -283,7 +303,8 @@ export default function CategoryPage() {
         {showMobileFilter && (
           <div className="fixed inset-0 z-50 md:hidden">
             <div className="absolute inset-0 bg-overlay" onClick={() => setShowMobileFilter(false)} />
-            <div className="absolute left-0 top-0 bottom-0 w-80 bg-surface shadow-xl p-4 overflow-y-auto">
+            <div ref={mobileFilterRef} role="dialog" aria-modal="true" aria-label="فیلترها" tabIndex={-1}
+              className="absolute left-0 top-0 bottom-0 w-80 bg-surface shadow-xl p-4 overflow-y-auto outline-none">
               <div className="flex items-center justify-between mb-4">
                 <span className="font-medium text-foreground">فیلترها</span>
                 <button onClick={() => setShowMobileFilter(false)} className="btn btn-ghost btn-sm">

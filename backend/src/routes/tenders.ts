@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getDb } from '../config/database.js';
 import { auth } from '../middleware/auth.js';
 import { AppError } from '../errors.js';
+import { generateSlug as baseGenerateSlug } from '../utils/slug.js';
 
 const router = new Hono();
 
@@ -23,7 +24,7 @@ const bidSchema = z.object({
 });
 
 function generateSlug(title: string): string {
-  return title.toLowerCase().replace(/[^a-z0-9\u0600-\u06FF\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').substring(0, 100) || 'tender';
+  return baseGenerateSlug(title) || 'tender';
 }
 
 // GET /tenders — open tenders
@@ -83,6 +84,15 @@ router.post('/:id/bid', auth(), zValidator('json', bidSchema), async (c) => {
   if (tender.user_id === c.get('user').id) throw AppError.validation('You cannot bid on your own tender');
 
   const body = c.req.valid('json');
+
+  const { rows: existingBids } = await db.query(
+    `SELECT id FROM tender_bids WHERE tender_id = $1 AND user_id = $2 AND status != 'cancelled'`,
+    [tenderId, c.get('user').id],
+  );
+  if (existingBids[0]) {
+    throw AppError.badRequest('You have already placed a bid');
+  }
+
   const { rows } = await db.query(
     `INSERT INTO tender_bids (tender_id, user_id, amount, description) VALUES ($1, $2, $3, $4) RETURNING *`,
     [tenderId, c.get('user').id, body.amount, body.description ?? ''],

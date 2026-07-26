@@ -122,7 +122,7 @@ export function ImageUploader({ onImagesChange, maxImages = 15 }: ImageUploaderP
     } catch {
       setImages((prev) => prev.filter((img) => img.id !== id));
     }
-  }, []);
+  }, [compressImage]);
 
   const handleFiles = useCallback((files: FileList) => {
     const toUpload = Array.from(files).slice(0, maxImages);
@@ -197,7 +197,7 @@ export function ImageUploader({ onImagesChange, maxImages = 15 }: ImageUploaderP
       </div>
 
       {images.length > 0 && (
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {images.map((img, index) => (
             <div 
               key={img.id} 

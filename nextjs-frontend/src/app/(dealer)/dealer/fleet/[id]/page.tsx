@@ -3,8 +3,8 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useFleet, useFleetVehicle } from '@/hooks/useFleet';
-import type { VehicleStatus } from '@/store/fleetStore';
-import { VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_BG, VEHICLE_STATUS_DOT } from '@/store/fleetStore';
+import type { VehicleStatus } from '@/store/fleet';
+import { VEHICLE_STATUS_LABELS, VEHICLE_STATUS_COLORS, VEHICLE_STATUS_BG, VEHICLE_STATUS_DOT } from '@/store/fleet';
 import { Skeleton } from '@/components/common/Skeleton';
 import { FleetMap } from '@/components/fleet/FleetMap';
 import { FuelChart } from '@/components/fleet/FuelChart';

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { phoneVerificationService } from '../domain/services/phoneVerification.js';
+import { phoneVerificationController } from '../container.js';
 import { auth } from '../middleware/auth.js';
 import { rateLimiter } from '../middleware/rateLimiter.js';
 
@@ -17,27 +17,15 @@ const verifyOtpSchema = z.object({
 });
 
 router.post('/send-otp', auth(), rateLimiter('otp:send'), zValidator('json', sendOtpSchema), async (c) => {
-  const user = c.get('user');
-  const { phone } = c.req.valid('json');
-
-  await phoneVerificationService.sendOtp(user.id, phone);
-
-  return c.json({ success: true, data: null });
+  return phoneVerificationController.sendOtp(c);
 });
 
 router.post('/verify-otp', auth(), rateLimiter('otp:verify'), zValidator('json', verifyOtpSchema), async (c) => {
-  const user = c.get('user');
-  const { phone, code } = c.req.valid('json');
-
-  await phoneVerificationService.verifyOtp(user.id, phone, code);
-
-  return c.json({ success: true, data: null });
+  return phoneVerificationController.verifyOtp(c);
 });
 
 router.get('/status', auth(), async (c) => {
-  const user = c.get('user');
-  const status = await phoneVerificationService.getStatus(user.id);
-  return c.json({ success: true, data: status });
+  return phoneVerificationController.status(c);
 });
 
 export { router as phoneRouter };

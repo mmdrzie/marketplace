@@ -6,7 +6,7 @@ import { persist, createJSONStorage, devtools } from 'zustand/middleware';
 export type ServiceType = 'repair' | 'maintenance' | 'oil_change' | 'part_replacement' | 'accident' | 'inspection';
 
 export interface ServiceRecord {
-  id: number;
+  id: string;
   listingId: number;
   type: ServiceType;
   title: string;
@@ -22,8 +22,8 @@ export interface ServiceRecord {
 interface ServiceLogState {
   records: ServiceRecord[];
   addRecord: (record: Omit<ServiceRecord, 'id' | 'createdAt'>) => void;
-  updateRecord: (id: number, data: Partial<ServiceRecord>) => void;
-  deleteRecord: (id: number) => void;
+  updateRecord: (id: string, data: Partial<ServiceRecord>) => void;
+  deleteRecord: (id: string) => void;
   getRecordsByListing: (listingId: number) => ServiceRecord[];
 }
 
@@ -33,9 +33,13 @@ export const useServiceLogStore = create<ServiceLogState>()(
     (set, get) => ({
       records: [],
       addRecord: (record) => {
+        const genId = () =>
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         const newRecord: ServiceRecord = {
           ...record,
-          id: Date.now(),
+          id: genId(),
           createdAt: new Date().toISOString(),
         };
         set((s) => ({ records: [...s.records, newRecord] }));

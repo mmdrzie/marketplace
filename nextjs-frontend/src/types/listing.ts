@@ -4,7 +4,7 @@ export interface Listing {
   slug: string;
   price: number;
   price_type: 'fixed' | 'negotiable' | 'auction';
-  status: string;
+  status: 'draft' | 'pending' | 'published' | 'rejected' | 'sold' | 'archived';
   is_featured: boolean;
   views: number;
   primary_image: string | null;

@@ -22,7 +22,7 @@ interface ListingCardProps {
 export const ListingCard = memo(function ListingCard({ listing, showStatus = false, priority = false }: ListingCardProps) {
   const addItem = useCompareStore((s) => s.addItem);
   const removeItem = useCompareStore((s) => s.removeItem);
-  const isInCompare = useCompareStore((s) => s.items.some((i) => i.id === listing.id));
+  const isInCompare = useCompareStore((s) => s.hasItem(listing.id));
 
   const toggleCompare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -129,6 +129,7 @@ export const ListingCard = memo(function ListingCard({ listing, showStatus = fal
           
           <button
             onClick={toggleCompare}
+            aria-label={isInCompare ? 'حذف از مقایسه' : 'افزودن به مقایسه'}
             className={cn(
               'w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 border',
               isInCompare

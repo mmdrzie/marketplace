@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint architecture (dependency-cruiser)
+        run: npm run lint:arch
+        working-directory: backend
+
+      - name: Lint backend (ESLint)
+        run: npm run lint
+        working-directory: backend
+
+      - name: Lint frontend
+        run: npm run lint
+        working-directory: nextjs-frontend
+
+      - name: Type check backend
+        run: npm run typecheck
+        working-directory: backend
+
+      - name: Type check frontend
+        run: npm run typecheck
+        working-directory: nextjs-frontend
+
+      - name: Run backend tests
+        run: npm run test
+        working-directory: backend
+
+      - name: Run frontend tests
+        run: npm run test
+        working-directory: nextjs-frontend
+
+      - name: Build backend
+        run: npm run build
+        working-directory: backend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: nextjs-frontend
+
+      - name: E2E tests
+        run: npx playwright install --with-deps chromium && npm run test:e2e
+        working-directory: nextjs-frontend

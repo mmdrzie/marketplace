@@ -44,7 +44,9 @@ export function ToastContainer() {
   const [toasts, setToasts] = useState<ToastData[]>([]);
 
   const addToast = useCallback((data: Omit<ToastData, 'id'>) => {
-    const id = Math.random().toString(36).slice(2);
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
     setToasts((prev) => [...prev, { ...data, id }]);
   }, []);
 
@@ -73,7 +75,11 @@ function ToastItem({ toast: t, onClose }: { toast: ToastData; onClose: () => voi
   }, [t.duration, onClose]);
 
   return (
-    <div className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-2xl border backdrop-blur-xl shadow-2xl animate-slide-up ${colors[t.type]}`}>
+    <div
+      role={t.type === 'error' ? 'alert' : 'status'}
+      aria-live={t.type === 'error' ? 'assertive' : 'polite'}
+      className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-2xl border backdrop-blur-xl shadow-2xl animate-slide-up ${colors[t.type]}`}
+    >
       <div className="shrink-0 mt-0.5">
         <SvgIcon className="h-5 w-5">{icons[t.type]}</SvgIcon>
       </div>
@@ -81,7 +87,7 @@ function ToastItem({ toast: t, onClose }: { toast: ToastData; onClose: () => voi
         <p className="text-sm font-bold">{t.title}</p>
         {t.message && <p className="text-xs opacity-80 mt-0.5">{t.message}</p>}
       </div>
-      <button onClick={onClose} className="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+      <button onClick={onClose} aria-label="بستن اعلان" className="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
         <SvgIcon className="h-4 w-4"><path d="M18 6L6 18M6 6l12 12" /></SvgIcon>
       </button>
     </div>

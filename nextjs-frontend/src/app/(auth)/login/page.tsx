@@ -56,6 +56,7 @@ export default function LoginPage() {
               placeholder="حداقل ۸ کاراکتر"
               className="w-full px-4 py-3.5 glass-input rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-left"
               required
+              autoComplete="current-password"
             />
           </div>
         </div>

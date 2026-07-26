@@ -55,10 +55,8 @@ function estimatePrice(data: FormData): number {
 }
 
 function format(v: number) { return (v * 1000000).toLocaleString('fa-IR'); }
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
+
+const TREND_SHAPE = [0.93, 0.95, 0.97, 0.98, 0.99, 1.0];
 
 export default function PriceEstimatorPage() {
   const [step, setStep] = useState(1);
@@ -83,7 +81,7 @@ export default function PriceEstimatorPage() {
   
   const trendData = useMemo(() => {
     if (!estimate) return [];
-    return Array.from({ length: 6 }, (_, i) => estimate - i * 5 + Math.floor((seededRandom(estimate + i * 137) * 2 - 1) * 10));
+    return TREND_SHAPE.map((f) => Math.round(estimate * f));
   }, [estimate]);
 
   const factors = estimate ? [
@@ -162,7 +160,7 @@ export default function PriceEstimatorPage() {
                     </div>
 
                     {form.category && (
-                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                         {BRANDS[form.category].map((b) => (
                           <button
                             key={b}

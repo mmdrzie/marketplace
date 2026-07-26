@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { GlassSelect } from '@/components/common/GlassSelect';
@@ -36,6 +36,32 @@ export default function AdminAllListingsPage() {
   const [page, setPage] = useState(1);
   const [detailTarget, setDetailTarget] = useState<ListingDetail | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string | number; title: string } | null>(null);
+  const detailModalRef = useRef<HTMLDivElement>(null);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const hasOpenModal = !!detailTarget || !!deleteTarget;
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [detailTarget, deleteTarget]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (detailTarget) setDetailTarget(null);
+        else if (deleteTarget) setDeleteTarget(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [detailTarget, deleteTarget]);
+
+  useEffect(() => {
+    if (detailTarget) detailModalRef.current?.focus();
+    if (deleteTarget) deleteModalRef.current?.focus();
+  }, [detailTarget, deleteTarget]);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.listings.allListings(page, statusFilter),
@@ -199,9 +225,10 @@ export default function AdminAllListingsPage() {
       {/* Detail modal */}
       {detailTarget && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDetailTarget(null)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-lg border border-border-subtle shadow-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div ref={detailModalRef} role="dialog" aria-modal="true" aria-labelledby="listing-detail-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-lg border border-border-subtle shadow-2xl max-h-[80vh] overflow-y-auto outline-none" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">{detailTarget.title}</h3>
+              <h3 id="listing-detail-title" className="text-lg font-bold text-foreground">{detailTarget.title}</h3>
               <button onClick={() => setDetailTarget(null)} className="btn btn-ghost btn-sm">
                 <SvgIcon><path d="M6 6l12 12M18 6l-12 12" /></SvgIcon>
               </button>
@@ -233,11 +260,12 @@ export default function AdminAllListingsPage() {
       {/* Delete confirmation */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center" onClick={(e) => e.stopPropagation()}>
+          <div ref={deleteModalRef} role="dialog" aria-modal="true" aria-labelledby="delete-listing-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center outline-none" onClick={(e) => e.stopPropagation()}>
             <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
               <SvgIcon className="h-7 w-7 text-destructive"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></SvgIcon>
             </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">حذف آگهی</h3>
+            <h3 id="delete-listing-title" className="text-lg font-bold text-foreground mb-2">حذف آگهی</h3>
             <p className="text-sm text-muted-foreground mb-1">آیا از حذف <span className="font-medium text-foreground">{deleteTarget.title}</span> اطمینان دارید؟</p>
             <p className="text-xs text-destructive mb-5">این عمل قابل بازگشت نیست</p>
             <div className="flex gap-3">

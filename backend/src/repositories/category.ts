@@ -1,4 +1,5 @@
 import { getDb } from '../config/database.js';
+import { CategoryRepositoryImpl } from '../domain/infrastructure/category/CategoryRepository.impl.js';
 
 export interface CategoryRow {
   id: number;
@@ -24,72 +25,51 @@ export type CreateCategoryData = {
 export type UpdateCategoryData = Partial<CreateCategoryData>;
 
 export class CategoryRepository {
+  private _domainImpl: CategoryRepositoryImpl;
+
+  constructor(domainImpl?: CategoryRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new CategoryRepositoryImpl();
+  }
+
   async findAll(): Promise<CategoryRow[]> {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM categories ORDER BY sort_order, name');
-    return rows as CategoryRow[];
+    const results = await this._domainImpl.findAll();
+    return results.map(r => { const s = r.snapshot(); return { id: s.id, name: s.name, name_en: s.nameEn, slug: s.slug, icon: s.icon, parent_id: s.parentId, sort_order: s.sortOrder, created_at: s.createdAt, updated_at: s.updatedAt }; });
   }
 
   async findBySlug(slug: string): Promise<CategoryRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM categories WHERE slug = $1', [slug]);
-    return rows[0] as CategoryRow | undefined;
+    const result = await this._domainImpl.findBySlug(slug);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, name_en: s.nameEn, slug: s.slug, icon: s.icon, parent_id: s.parentId, sort_order: s.sortOrder, created_at: s.createdAt, updated_at: s.updatedAt };
   }
 
   async findById(id: number): Promise<CategoryRow | undefined> {
-    const db = await getDb();
-    const { rows } = await db.query('SELECT * FROM categories WHERE id = $1', [id]);
-    return rows[0] as CategoryRow | undefined;
+    const result = await this._domainImpl.findById(id);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, name_en: s.nameEn, slug: s.slug, icon: s.icon, parent_id: s.parentId, sort_order: s.sortOrder, created_at: s.createdAt, updated_at: s.updatedAt };
   }
 
   async findChildren(id: number): Promise<CategoryRow[]> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      'SELECT * FROM categories WHERE parent_id = $1 ORDER BY sort_order, name',
-      [id],
-    );
-    return rows as CategoryRow[];
+    const results = await this._domainImpl.findChildren(id);
+    return results.map(r => { const s = r.snapshot(); return { id: s.id, name: s.name, name_en: s.nameEn, slug: s.slug, icon: s.icon, parent_id: s.parentId, sort_order: s.sortOrder, created_at: s.createdAt, updated_at: s.updatedAt }; });
   }
 
   async create(data: CreateCategoryData): Promise<CategoryRow> {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `INSERT INTO categories (name, name_en, slug, icon, parent_id, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [data.name, data.name_en ?? null, data.slug, data.icon ?? null, data.parent_id ?? null, data.sort_order ?? 0],
-    );
-    return rows[0] as CategoryRow;
+    const result = await this._domainImpl.create(data as Record<string, unknown>);
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, name_en: s.nameEn, slug: s.slug, icon: s.icon, parent_id: s.parentId, sort_order: s.sortOrder, created_at: s.createdAt, updated_at: s.updatedAt };
   }
 
   async update(id: number, data: UpdateCategoryData): Promise<CategoryRow | undefined> {
-    const fields: string[] = [];
-    const values: unknown[] = [];
-    let idx = 1;
-
-    for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
-        fields.push(`${key} = $${idx++}`);
-        values.push(value);
-      }
-    }
-
-    if (fields.length === 0) return this.findById(id);
-
-    fields.push('updated_at = NOW()');
-    values.push(id);
-
-    const db = await getDb();
-    const { rows } = await db.query(
-      `UPDATE categories SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
-      values,
-    );
-    return rows[0] as CategoryRow | undefined;
+    const result = await this._domainImpl.update(id, data as Record<string, unknown>);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return { id: s.id, name: s.name, name_en: s.nameEn, slug: s.slug, icon: s.icon, parent_id: s.parentId, sort_order: s.sortOrder, created_at: s.createdAt, updated_at: s.updatedAt };
   }
 
   async delete(id: number): Promise<void> {
-    const db = await getDb();
-    await db.query('DELETE FROM categories WHERE id = $1', [id]);
+    await this._domainImpl.delete(id);
   }
 }
 

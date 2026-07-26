@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Breadcrumbs } from '@/components/common/Breadcrumbs';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { GlassSelect } from '@/components/common/GlassSelect';
-import { ModernLineChart } from '@/components/common/Charts';
 import { cn } from '@/lib/utils';
 
 interface CarSpec {
@@ -25,7 +24,6 @@ interface CarSpec {
   pros: string[];
   cons: string[];
   rating: number;
-  salesData: number[];
 }
 
 const CARS: Record<string, CarSpec> = {
@@ -36,7 +34,7 @@ const CARS: Record<string, CarSpec> = {
     price: '۱۵۰-۲۰۰ میلیون',
     pros: ['قطعات فراوان', 'مصرف سوخت کم', 'قیمت مناسب', 'تعمیرات ارزان'],
     cons: ['ایمنی پایین', 'طراحی قدیمی', 'کمبود آپشن', 'استهلاک بالا'],
-    rating: 65, salesData: [180, 195, 210, 190, 220, 240, 230, 250, 235, 260, 245, 280],
+    rating: 65,
   },
   'پژو ۲۰۶': {
     name: 'پژو ۲۰۶', year: '۱۳۸۰-اکنون', engine: 'TU5', power: 88,
@@ -45,7 +43,7 @@ const CARS: Record<string, CarSpec> = {
     price: '۳۰۰-۴۵۰ میلیون',
     pros: ['شاسی محکم', 'سواری نرم', 'بازار فروش خوب', 'طراحی جوان‌پسند'],
     cons: ['استهلاک گیربکس', 'قطعات گران', 'کمبود فضای عقب', 'مصرف سوخت متوسط'],
-    rating: 78, salesData: [160, 175, 190, 170, 200, 220, 210, 240, 225, 250, 235, 260],
+    rating: 78,
   },
   'سمند': {
     name: 'سمند', year: '۱۳۸۱-اکنون', engine: 'EF7', power: 113,
@@ -54,7 +52,7 @@ const CARS: Record<string, CarSpec> = {
     price: '۲۵۰-۳۵۰ میلیون',
     pros: ['فضای جادار', 'ارزان‌ترین سدان', 'موتور پرقدرت', 'خانوادگی'],
     cons: ['کیفیت مونتاژ', 'طراحی ساده', 'مصرف بالا', 'عدم آپشن'],
-    rating: 70, salesData: [140, 155, 170, 150, 180, 200, 190, 215, 200, 225, 210, 240],
+    rating: 70,
   },
   'هایما S5': {
     name: 'هایما S5', year: '۱۳۹۶-اکنون', engine: '۱.۸ لیتر توربو', power: 160,
@@ -63,7 +61,7 @@ const CARS: Record<string, CarSpec> = {
     price: '۸۰۰-۱۱۰۰ میلیون',
     pros: ['شاسی‌بلند محبوب', 'کابین مدرن', 'امکانات کامل', 'طراحی جذاب'],
     cons: ['قیمت بالا', 'قطعات گران', 'مصرف سوخت', 'خدمات محدود'],
-    rating: 82, salesData: [80, 95, 110, 90, 120, 140, 130, 155, 140, 165, 150, 180],
+    rating: 82,
   },
   'دنا پلاس': {
     name: 'دنا پلاس', year: '۱۳۹۴-اکنون', engine: 'EF7 TC', power: 150,
@@ -72,7 +70,7 @@ const CARS: Record<string, CarSpec> = {
     price: '۵۰۰-۷۵۰ میلیون',
     pros: ['پیشرانه توربو', 'امکانات رفاهی', 'طراحی مدرن', 'قیمت مناسب'],
     cons: ['کیفیت قطعات', 'خدمات محدود', 'استهلاک توربو', 'فروش کند'],
-    rating: 75, salesData: [60, 75, 90, 70, 100, 120, 110, 135, 120, 145, 130, 160],
+    rating: 75,
   },
   'تیبا': {
     name: 'تیبا', year: '۱۳۹۴-اکنون', engine: 'M15', power: 72,
@@ -81,12 +79,11 @@ const CARS: Record<string, CarSpec> = {
     price: '۱۷۰-۲۳۰ میلیون',
     pros: ['اقتصادی', 'کم استهلاک', 'ارزان', 'قطعات فراوان'],
     cons: ['ایمنی پایین', 'طراحی نه چندان جذاب', 'کیفیت داخلی', 'کمبود آپشن'],
-    rating: 60, salesData: [200, 220, 240, 210, 250, 270, 260, 290, 275, 300, 285, 320],
+    rating: 60,
   },
 };
 
 const ALL_NAMES = Object.keys(CARS);
-const MONTHS = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
 
 const SPEC_LABELS: Record<string, string> = {
   year: 'سال تولید', engine: 'پیشرانه', fuel: 'سوخت', transmission: 'گیربکس',
@@ -212,6 +209,7 @@ export default function CarVsCarPage() {
 
           {/* Specs Table */}
           <div className="glass rounded-3xl border border-border-subtle overflow-hidden mb-8">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
@@ -232,33 +230,7 @@ export default function CarVsCarPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-
-          {/* Sales Trend Charts (با تم شیشه‌ای یکپارچه) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {[c1, c2].map((car, idx) => (
-              <div key={idx} className="glass rounded-3xl p-6 border border-border-subtle overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">روند فروش {car.name}</h3>
-                    <p className="text-[11px] text-muted-foreground font-light mt-1">تعداد فروش در ۱۲ ماه گذشته</p>
-                  </div>
-                  <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20">
-                    مجموع: {car.salesData.reduce((a, b) => a + b, 0).toLocaleString('fa-IR')} دستگاه
-                  </span>
-                </div>
-                
-                {/* فضای چارت با بک‌گراند بسیار ظریف و شیشه‌ای */}
-                <div className="relative flex-1 w-full min-h-[16rem]">
-                  <ModernLineChart 
-                    data={car.salesData} 
-                    labels={MONTHS.map(m => m.slice(0, 4))} 
-                    color="var(--color-primary)" 
-                    height={260} 
-                  />
-                </div>
-              </div>
-            ))}
+            </div>
           </div>
 
           {/* Pros/Cons */}

@@ -1,7 +1,7 @@
 'use client';
 
-import type { FleetVehicle, VehicleStatus } from '@/store/fleetStore';
-import { VEHICLE_STATUS_DOT } from '@/store/fleetStore';
+import type { FleetVehicle, VehicleStatus } from '@/store/fleet';
+import { VEHICLE_STATUS_DOT } from '@/store/fleet';
 
 interface FleetMapProps {
   vehicles: FleetVehicle[];

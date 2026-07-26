@@ -124,6 +124,13 @@ export function ParticleBackground({ className }: { className?: string }) {
     window.addEventListener('mousemove', onMove);
     window.addEventListener('click', onClick);
 
+    const onVisibility = () => {
+      if (!document.hidden && aliveRef.current && animRef.current === 0) {
+        animRef.current = requestAnimationFrame(loop);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     aliveRef.current = true;
     const maxDist = Math.min(dim.w, dim.h) * 0.25;
 
@@ -131,6 +138,11 @@ export function ParticleBackground({ className }: { className?: string }) {
 
     function loop() {
       if (!aliveRef.current) return;
+
+      if (document.hidden) {
+        animRef.current = requestAnimationFrame(loop);
+        return;
+      }
 
       const { w, h } = dim;
       const cx = cursorRef.current.x;
@@ -207,6 +219,7 @@ export function ParticleBackground({ className }: { className?: string }) {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('click', onClick);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 

@@ -1,6 +1,7 @@
 # ADR-006: Event Bus
 
-**Status:** Accepted
+**Status:** Superseded by ADR-010  
+**Superseded Date:** 2026-07-22
 
 ## Context
 Cross-cutting concerns (cache invalidation, notifications, analytics) should not be coupled to domain operations. Posting a listing should not care about cache invalidation logic.

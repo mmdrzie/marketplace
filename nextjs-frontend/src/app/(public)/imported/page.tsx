@@ -8,7 +8,6 @@ import { FEATURES } from '@/lib/features';
 import { notFound } from 'next/navigation';
 import { ImportedBadge } from '@/components/imported/ImportedBadge';
 import { PriceHistoryChart } from '@/components/common/Charts';
-import { generateImportPriceTrend } from '@/lib/importChartData';
 import { cn } from '@/lib/utils';
 
 const TABS = [
@@ -47,7 +46,7 @@ export default function ImportedPage() {
     });
   }, [tab, allListings]);
 
-  const chartData = useMemo(() => generateImportPriceTrend(), []);
+  const chartData = useMemo<{ date: string; price: number }[]>(() => [], []);
 
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">

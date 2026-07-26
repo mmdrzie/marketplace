@@ -93,7 +93,7 @@ export function UserMenuButton({ className }: { className?: string }) {
       </button>
 
       {userMenuOpen && (
-        <div className="absolute start-0 top-full mt-2 w-60 glass rounded-2xl z-50 overflow-hidden shadow-2xl animate-dropdown p-2">
+        <div className="absolute start-0 top-full mt-2 w-60 max-w-[calc(100vw-16px)] glass rounded-2xl z-50 overflow-hidden shadow-2xl animate-dropdown p-2">
           <div className="p-3 mb-1 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold shadow-md shrink-0">
@@ -102,7 +102,7 @@ export function UserMenuButton({ className }: { className?: string }) {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-foreground truncate">{user?.name || 'کاربر'}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {user?.role === 'admin' ? 'مدیر سیستم' : user?.role === 'dealer' ? 'نماینده' : user?.role === 'agency' ? 'بنگاه' : 'کاربر'}
+                  {user?.role === 'admin' ? 'مدیر سیستم' : user?.role === 'dealer' ? 'نمایندگی' : user?.role === 'agency' ? 'نمایشگاه' : user?.role === 'store' ? 'فروشگاه' : 'کاربر'}
                 </p>
               </div>
             </div>
@@ -137,6 +137,14 @@ export function UserMenuButton({ className }: { className?: string }) {
               داشبورد
             </Link>
 
+            {user?.role === 'store' && (
+              <Link href="/store/inventory" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-surface-2/50 transition-all group">
+                <SvgIcon className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary">
+                  <circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </SvgIcon>
+                پنل فروشگاه قطعات
+              </Link>
+            )}
             {(user?.role === 'dealer' || user?.role === 'agency') && (
               <Link href="/dealer/listings" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-surface-2/50 transition-all group">
                 <SvgIcon className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary">

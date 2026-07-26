@@ -7,6 +7,7 @@ type Capability =
   | 'conversation:start'
   | 'account:upgrade-dealer'
   | 'account:upgrade-agency'
+  | 'account:upgrade-store'
   | 'admin:access';
 
 interface CapabilityRequirement {
@@ -20,6 +21,7 @@ const CAPABILITY_REQUIREMENTS: Record<Capability, CapabilityRequirement> = {
   'conversation:start': { phoneVerified: true },
   'account:upgrade-dealer': { phoneVerified: true, roles: ['user'] },
   'account:upgrade-agency': { phoneVerified: true, roles: ['user'] },
+  'account:upgrade-store': { phoneVerified: true, roles: ['user'] },
   'admin:access': { phoneVerified: false, roles: ['admin'] },
 };
 

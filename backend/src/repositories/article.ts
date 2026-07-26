@@ -1,4 +1,5 @@
 import { getDb } from '../config/database.js';
+import { ArticleRepositoryImpl } from '../domain/infrastructure/article/ArticleRepository.impl.js';
 
 export interface ArticleRow {
   id: number;
@@ -20,29 +21,26 @@ export interface ArticleRow {
 }
 
 export class ArticleRepository {
+  private _domainImpl: ArticleRepositoryImpl;
+
+  constructor(domainImpl?: ArticleRepositoryImpl) {
+    this._domainImpl = domainImpl ?? new ArticleRepositoryImpl();
+  }
+
   async findAll() {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `SELECT * FROM articles
-       WHERE published_at IS NOT NULL AND deleted_at IS NULL
-       ORDER BY is_pinned DESC, published_at DESC`,
-    );
-    return rows as ArticleRow[];
+    const results = await this._domainImpl.findAll();
+    return results.map(a => { const s = a.snapshot(); return { id: s.id, title: s.title, slug: s.slug, excerpt: s.excerpt, body: s.body, cover_image: s.coverImage, category: s.category, author: s.author, tags: s.tags, is_pinned: s.isPinned, views: s.views, reading_time: s.readingTime, published_at: s.publishedAt, created_at: s.createdAt, updated_at: s.updatedAt, deleted_at: s.deletedAt }; });
   }
 
   async findBySlug(slug: string) {
-    const db = await getDb();
-    const { rows } = await db.query(
-      `SELECT * FROM articles
-       WHERE slug = $1 AND published_at IS NOT NULL AND deleted_at IS NULL`,
-      [slug],
-    );
-    return rows[0] as ArticleRow | undefined;
+    const result = await this._domainImpl.findBySlug(slug);
+    if (!result) return undefined;
+    const s = result.snapshot();
+    return { id: s.id, title: s.title, slug: s.slug, excerpt: s.excerpt, body: s.body, cover_image: s.coverImage, category: s.category, author: s.author, tags: s.tags, is_pinned: s.isPinned, views: s.views, reading_time: s.readingTime, published_at: s.publishedAt, created_at: s.createdAt, updated_at: s.updatedAt, deleted_at: s.deletedAt };
   }
 
   async incrementViews(id: number) {
-    const db = await getDb();
-    await db.query('UPDATE articles SET views = views + 1 WHERE id = $1', [id]);
+    await this._domainImpl.incrementViews(id);
   }
 }
 

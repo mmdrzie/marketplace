@@ -25,8 +25,6 @@ export const ICON_PATHS: Record<string, string> = {
   bell: "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0",
   filter: "M22 3H2l8 9.46V19l4 2v-8.54L22 3z",
   list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
-  arrow_left: "M15 18l-6-6 6-6",
-  arrow_right: "M9 18l6-6-6-6",
   chevron_left: "M15 18l-6-6 6-6",
   chevron_right: "M9 18l6-6-6-6",
 

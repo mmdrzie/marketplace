@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import Link from 'next/link';
@@ -22,6 +22,26 @@ export default function DealerListingsPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Listing | null>(null);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (deleteTarget) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [deleteTarget]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && deleteTarget) setDeleteTarget(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [deleteTarget]);
+
+  useEffect(() => {
+    if (deleteTarget) deleteModalRef.current?.focus();
+  }, [deleteTarget]);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.listings.dealer(statusFilter),
@@ -119,11 +139,12 @@ export default function DealerListingsPage() {
 
       {deleteTarget && (
         <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
-          <div className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center" onClick={(e) => e.stopPropagation()}>
+          <div ref={deleteModalRef} role="dialog" aria-modal="true" aria-labelledby="delete-listing-title" tabIndex={-1}
+            className="glass rounded-2xl p-6 w-full max-w-sm border border-border-subtle shadow-2xl text-center outline-none" onClick={(e) => e.stopPropagation()}>
             <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
               <SvgIcon className="h-7 w-7 text-destructive"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></SvgIcon>
             </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">حذف آگهی</h3>
+            <h3 id="delete-listing-title" className="text-lg font-bold text-foreground mb-2">حذف آگهی</h3>
             <p className="text-sm text-muted-foreground mb-1">آیا از حذف آگهی <span className="font-medium text-foreground">{deleteTarget.title}</span> اطمینان دارید؟</p>
             <p className="text-xs text-destructive mb-5">این عمل قابل بازگشت نیست</p>
             <div className="flex gap-3">

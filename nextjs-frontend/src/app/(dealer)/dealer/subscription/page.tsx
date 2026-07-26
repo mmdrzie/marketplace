@@ -65,6 +65,7 @@ function formatPrice(amount: number) {
 export default function DealerSubscriptionPage() {
   const user = useAuthStore((s) => s.user);
   const isAgency = user?.role === 'agency';
+  const isStore = user?.role === 'store';
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState('professional');
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
@@ -103,7 +104,7 @@ export default function DealerSubscriptionPage() {
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 p-5 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">اشتراک {isAgency ? 'بنگاه' : 'نمایندگی'}</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">اشتراک {isAgency ? 'نمایشگاه' : isStore ? 'فروشگاه' : 'نمایندگی'}</h1>
         <p className="text-sm text-muted-foreground mt-1">طرح و افزونه‌های مناسب کسب‌وکار خود را انتخاب کنید</p>
       </div>
 
