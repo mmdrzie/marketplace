@@ -10,7 +10,9 @@ export class ArticleController {
   }
 
   async get(c: Context): Promise<Response> {
-    const article = await this.repo.findBySlug(c.req.param('slug'));
+    const slug = c.req.param('slug');
+    if (!slug) return c.json({ error: 'Not found' }, 404);
+    const article = await this.repo.findBySlug(slug);
     if (!article) return c.json({ error: 'Not found' }, 404);
     return c.json({ data: article.snapshot() });
   }

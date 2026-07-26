@@ -95,8 +95,9 @@ router.get('/unread-count', auth(), async (c) => {
 });
 
 router.get('/:id', auth(), async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id')!, 10);
   const user = c.get('user');
+
   const row = await findDetailedById(id);
   if (!row) throw AppError.notFound('Conversation not found');
   if (row.buyer_id !== user.id && row.seller_id !== user.id) {
@@ -122,7 +123,7 @@ router.post('/', auth(), rateLimiter('conversation:create'), zValidator('json', 
 });
 
 router.post('/:id/messages', auth(), rateLimiter('sendMessage'), zValidator('json', messageSchema), async (c) => {
-  const conversationId = parseInt(c.req.param('id'), 10);
+  const conversationId = parseInt(c.req.param('id')!, 10);
   const user = c.get('user');
   const { body } = c.req.valid('json');
   const dto = await sendMessage.execute(new SendMessageCommand(conversationId, user.id, body));
@@ -130,7 +131,7 @@ router.post('/:id/messages', auth(), rateLimiter('sendMessage'), zValidator('jso
 });
 
 router.put('/:id/read', auth(), async (c) => {
-  await markRead.execute(new MarkReadCommand(parseInt(c.req.param('id'), 10), c.get('user').id));
+  await markRead.execute(new MarkReadCommand(parseInt(c.req.param('id')!, 10), c.get('user').id));
   return c.json({ data: null });
 });
 

@@ -39,7 +39,7 @@ router.get('/', async (c) => {
     });
   }
 
-  const result = await listingRepo.search(q, filters);
+  const result = await listingRepo.search(q, filters as Parameters<typeof listingRepo.search>[1]);
   cache.set(cacheKey, result, 30000);
 
   return c.json({

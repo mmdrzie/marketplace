@@ -101,7 +101,7 @@ router.get('/unread-count', auth(), async (c) => {
 
 // GET /conversations/:id — full conversation with all messages
 router.get('/:id', auth(), async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id')!, 10);
   const user = c.get('user');
 
   const row = await findDetailedById(id);
@@ -153,7 +153,7 @@ router.post('/:id/messages', auth(), rateLimiter('sendMessage'), zValidator('jso
 
 // PUT /conversations/:id/read — mark all as read
 router.put('/:id/read', auth(), async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id')!, 10);
   const user = c.get('user');
   await markRead.execute(new MarkReadCommand(id, user.id));
   return c.json({ success: true, data: null });

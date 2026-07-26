@@ -84,9 +84,9 @@ export class DealerRepositoryImpl implements DealerRepository {
       total_views: parseInt(l.total_views, 10),
       avg_rating: parseFloat(r.avg_rating),
       total_reviews: parseInt(r.total_reviews, 10),
-      today_views: parseInt(todayViewsRes.rows[0]?.today_views ?? '0', 10),
-      today_contacts: parseInt(contactsRes.rows[0]?.today_contacts ?? '0', 10),
-      unread_messages: parseInt(unreadRes.rows[0]?.unread_messages ?? '0', 10),
+      today_views: parseInt((todayViewsRes.rows[0] as Record<string, string> | undefined)?.today_views ?? '0', 10),
+      today_contacts: parseInt((contactsRes.rows[0] as Record<string, string> | undefined)?.today_contacts ?? '0', 10),
+      unread_messages: parseInt((unreadRes.rows[0] as Record<string, string> | undefined)?.unread_messages ?? '0', 10),
       recent_activities: (activitiesRes.rows as Array<{ id: number; title: string; status: string; created_at: string }>).map(a => ({
         id: a.id,
         description: `ثبت آگهی «${a.title}»`,

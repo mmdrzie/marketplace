@@ -54,7 +54,9 @@ export class VehicleController {
   }
 
   async getBrand(c: Context): Promise<Response> {
-    const brand = await this.vehicleRepo.findBrandBySlug(c.req.param('slug'));
+    const slug = c.req.param('slug');
+    if (!slug) return c.json({ error: 'Not found' }, 404);
+    const brand = await this.vehicleRepo.findBrandBySlug(slug);
     if (!brand) return c.json({ error: 'Not found' }, 404);
     return c.json({ data: brandMapper.toDTO(brand) });
   }

@@ -97,7 +97,7 @@ router.get('/', optionalAuth(), async (c) => {
     model: query.model,
     year_from: query.year_from,
     year_to: query.year_to,
-    sort: query.sort,
+    sort: query.sort as Parameters<typeof listingRepo.findAll>[0]['sort'],
     page: parseIntOrUndefined(query.page),
     perPage: parseIntOrUndefined(query.per_page),
   };
@@ -144,6 +144,7 @@ router.get('/:slug', optionalAuth(), async (c) => {
   const cached = cache.get(cacheKey);
   if (cached) return c.json({ success: true, data: cached });
 
+  if (!slug) throw AppError.notFound('Listing not found');
   const listing = await listingRepo.findBySlug(slug);
   if (!listing) throw AppError.notFound('Listing not found');
 
@@ -205,7 +206,7 @@ router.post('/', auth(), rateLimiter('publishListing'), zValidator('json', creat
 
 // PUT /listings/:id — update listing
 router.put('/:id', auth(), zValidator('json', updateListingSchema), async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id')!, 10);
   const body = c.req.valid('json');
   const user = c.get('user');
 
@@ -230,7 +231,7 @@ router.put('/:id', auth(), zValidator('json', updateListingSchema), async (c) =>
 
 // DELETE /listings/:id — soft delete
 router.delete('/:id', auth(), async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id')!, 10);
   const user = c.get('user');
 
   const listing = await listingRepo.findById(id);
@@ -350,14 +351,14 @@ router.patch('/:id', auth(), zValidator('json', actionSchema), async (c) => {
 
 // POST /listings/:id/favorite — toggle favorite
 router.post('/:id/favorite', auth(), async (c) => {
-  const listingId = parseInt(c.req.param('id'), 10);
+  const listingId = parseInt(c.req.param('id')!, 10);
   const result = await favoriteRepo.toggle(c.get('user').id, listingId);
   return c.json({ success: true, data: result }, result.favorited ? 201 : 200);
 });
 
 // POST /listings/:id/report — report listing
 router.post('/:id/report', auth(), async (c) => {
-  const listingId = parseInt(c.req.param('id'), 10);
+  const listingId = parseInt(c.req.param('id')!, 10);
   const userId = c.get('user').id;
 
   const db = (await import('../config/database.js')).getDb;
@@ -372,7 +373,7 @@ router.post('/:id/report', auth(), async (c) => {
 
 // GET /listings/:id/stats — listing stats (views, messages, favorites)
 router.get('/:id/stats', auth(), async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id')!, 10);
   const listing = await listingRepo.findById(id);
   if (!listing) throw AppError.notFound('Listing not found');
 

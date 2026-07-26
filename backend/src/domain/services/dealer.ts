@@ -22,38 +22,47 @@ export class DealerService {
         ? 'account:upgrade-store'
         : 'account:upgrade-dealer';
 
-    const check = permissionService.check(capability, input.user);
-    if (!check.allowed) {
-      throw AppError.forbidden(check.reason);
+    const allowed = permissionService.can(capability, input.user);
+    if (!allowed) {
+      throw AppError.forbidden('You do not have permission to perform this action');
     }
 
     const existingUser = await this.userRepo.findById(input.user.id);
     if (!existingUser) throw AppError.notFound('User not found');
 
-    existingUser.role = input.role;
-    existingUser.updatedAt = new Date();
-    await this.userRepo.save(existingUser);
+    const snapshot = existingUser.snapshot();
+    const UserEntity = (await import('../entities/user/User.entity.js')).User;
+    const updatedUser = UserEntity.fromSnapshot({ ...snapshot, role: input.role, updatedAt: new Date().toISOString() });
+    await this.userRepo.save(updatedUser);
 
-    const existingDealer = await this.dealerRepo.findByUserId(input.user.id);
+    let existingDealer = await this.dealerRepo.findByUserId(input.user.id);
     if (existingDealer) {
       existingDealer.businessName = input.business_name;
       existingDealer.updatedAt = new Date();
       await this.dealerRepo.save(existingDealer);
     } else {
-      await this.dealerRepo.create({
-        user_id: input.user.id,
-        business_name: input.business_name,
-        dealer_code: undefined,
-        phone: existingUser.phone ?? undefined,
-        address: undefined,
-        description: undefined,
+      const DealerEntity = (await import('../entities/dealer/Dealer.entity.js')).Dealer;
+      const displayName = snapshot.name ?? snapshot.email;
+      existingDealer = DealerEntity.fromSnapshot({
+        id: 0, userId: input.user.id, name: displayName,
+        slug: displayName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+        businessName: input.business_name, logo: null,
+        description: null, phone: existingUser.phone ?? null,
+        address: null, latitude: null, longitude: null,
+        dealerCode: null, subscriptionPlan: null,
+        subscriptionExpiresAt: null, listingsLimit: null,
+        isVerified: false, isActive: true, rating: 0,
+        reviewCount: 0, publicId: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
+      await this.dealerRepo.save(existingDealer);
     }
   }
 
   async myListings(userId: string) {
     const dealer = await this.dealerRepo.findByUserId(userId);
-    if (!dealer || (dealer.role !== 'dealer' && dealer.role !== 'agency' && dealer.role !== 'store')) {
+    if (!dealer) {
       throw AppError.forbidden('Access denied');
     }
     return [];

@@ -106,13 +106,15 @@ export class ListingController {
       provinceId: provinceId ? Number(provinceId) : undefined,
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
-      sort,
+      sort: sort as 'newest' | 'oldest' | 'price_asc' | 'price_desc' | undefined,
     });
     return c.json({ data: result.items.map(l => l.snapshot()), total: result.total });
   }
 
   async getBySlug(c: Context): Promise<Response> {
-    const listing = await this.repo.findBySlug(c.req.param('slug'));
+    const slug = c.req.param('slug');
+    if (!slug) return c.json({ error: 'Not found' }, 404);
+    const listing = await this.repo.findBySlug(slug);
     if (!listing) return c.json({ error: 'Not found' }, 404);
     return c.json({ data: listing.snapshot() });
   }

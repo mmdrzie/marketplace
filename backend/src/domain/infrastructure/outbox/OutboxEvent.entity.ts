@@ -17,7 +17,7 @@ export interface OutboxEventSnapshot {
 }
 
 export class OutboxEvent {
-  private constructor(
+  constructor(
     public readonly id: number,
     public readonly aggregateType: string,
     public readonly aggregateId: string,

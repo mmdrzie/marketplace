@@ -1,5 +1,5 @@
-import { ListingAttribute } from '../../entities/listing/ListingAttribute.entity.js';
-import { ListingMedia } from '../../entities/listing/ListingMedia.entity.js';
+import type { ListingAttribute } from '../../../entities/listing/ListingAttribute.entity.js';
+import type { ListingMedia } from '../../../entities/listing/ListingMedia.entity.js';
 
 export class CreateListingCommand {
   constructor(

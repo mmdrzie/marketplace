@@ -51,7 +51,7 @@ export class AttributeRepositoryImpl implements AttributeRepository {
     await db.query('DELETE FROM attributes WHERE id = $1', [id]);
   }
 
-  private toSnapshot(r: Record<string, unknown>): Record<string, unknown> {
-    return { id: r.id, categoryId: r.category_id, name: r.name, label: r.label, type: r.type, options: r.options, unit: r.unit, isRequired: r.is_required, isFilterable: r.is_filterable, sortOrder: r.sort_order, createdAt: r.created_at, updatedAt: r.updated_at };
+  private toSnapshot(r: Record<string, unknown>): import('../../entities/attribute/Attribute.entity.js').AttributeSnapshot {
+    return { id: r.id as number, categoryId: r.category_id as number, name: r.name as string, label: r.label as string, type: r.type as string, options: r.options ?? null, unit: (r.unit as string) ?? null, isRequired: r.is_required as boolean, isFilterable: r.is_filterable as boolean, sortOrder: r.sort_order as number, createdAt: r.created_at as string, updatedAt: r.updated_at as string };
   }
 }

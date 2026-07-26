@@ -99,12 +99,16 @@ export class OutboxWorker {
           event.markPublished();
           await this.outboxRepo.updateStatus(event);
 
-          await this.auditStore?.write({
+          await this.auditStore?.append({
+            eventId: String(event.id),
             eventType: event.eventType,
+            version: event.eventTypeVersion,
+            occurredAt: event.createdAt.toISOString(),
+            correlationId: '',
+            causationId: null,
             aggregateType: event.aggregateType,
             aggregateId: event.aggregateId,
             payload: event.payload,
-            status: 'processed',
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

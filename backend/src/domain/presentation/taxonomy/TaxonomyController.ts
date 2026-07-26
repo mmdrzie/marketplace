@@ -5,7 +5,10 @@ export class TaxonomyController {
   constructor(private readonly repo: TaxonomyRepository) {}
 
   async getNode(c: Context): Promise<Response> {
-    const node = await this.repo.findBySlug(c.req.param('slug'), c.req.param('type'));
+    const slug = c.req.param('slug');
+    const type = c.req.param('type');
+    if (!slug || !type) return c.json({ error: 'Not found' }, 404);
+    const node = await this.repo.findBySlug(slug, type);
     if (!node) return c.json({ error: 'Not found' }, 404);
     return c.json({ data: node.snapshot() });
   }

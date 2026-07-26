@@ -27,5 +27,5 @@ dashboardRouter.get('/stats', auth('dealer', 'agency', 'store'), (c) => dealerCo
 export { dashboardRouter as dealerDashboardRouter };
 
 const publicRouter = new Hono();
-publicRouter.get('/:id', (c) => dealerController.publicProfile(c));
+publicRouter.get('/:id', (c) => dealerController.getPublicProfile(c));
 export { publicRouter as dealerPublicRouter };
