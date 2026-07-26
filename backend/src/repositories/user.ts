@@ -48,3 +48,9 @@ export async function findUserById(id: string): Promise<UserRow | null> {
   const { rows } = await db.query('SELECT * FROM users WHERE id = $1 AND deleted_at IS NULL', [id]);
   return rows.length ? (rows[0] as UserRow) : null;
 }
+
+export const userRepo = {
+  findById: findUserById,
+  findByEmail: findUserByEmail,
+  create: createUser,
+};
