@@ -33,10 +33,4 @@ export const STEPS = [
   { icon: ICON_PATHS.message, title: 'معامله امن', desc: 'با خریداران واقعی از طریق پیام\u200cرسان داخلی مذاکره و معامله کنید.' },
 ];
 
-export const MARKET_TICKER = [
-  { type: 'فروش', item: 'بیل مکانیکی کوماتسو PC200', location: 'تهران', price: '۸.۵ میلیارد' },
-  { type: 'خرید', item: 'کامیون فول ۳۵۰', location: 'اصفهان', price: '۳.۲ میلیارد' },
-  { type: 'فروش', item: 'گریدر کوماتسو GD405', location: 'خراسان رضوی', price: '۱۲ میلیارد' },
-  { type: 'اجاره', item: 'بیل بک کاترپیلار 320', location: 'خوزستان', price: 'روزانه ۸ میلیون' },
-  { type: 'فروش', item: 'لودر ولوو DL420', location: 'البرز', price: '۹.۸ میلیارد' },
-];
+

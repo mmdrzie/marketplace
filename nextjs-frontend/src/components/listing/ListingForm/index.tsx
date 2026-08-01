@@ -9,13 +9,16 @@ import { useCreateListing, useUpdateListing } from '@/hooks/useListings';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { toast } from '@/components/common/Toast';
 import { Step1Category } from './Step1Category';
-import { Step2Basic } from './Step2Basic';
-import { Step3Attributes } from './Step3Attributes';
-import { Step4Images } from './Step4Images';
-import { Step5Preview } from './Step5Preview';
+import { Step2BrandModel, type Step2BrandModelData } from './Step2BrandModel';
+import { Step2Basic as Step3Basic } from './Step2Basic';
+import { Step3Attributes as Step4Attributes } from './Step3Attributes';
+import { Step4Images as Step5Images } from './Step4Images';
+import { Step5Preview as Step6Preview } from './Step5Preview';
 import { cn } from '@/lib/utils';
 
-const STEPS = ['دسته‌بندی', 'اطلاعات پایه', 'مشخصات', 'تصاویر', 'پیش‌نمایش'];
+const STEPS = ['دسته‌بندی', 'برند و مدل', 'اطلاعات پایه', 'مشخصات', 'تصاویر', 'پیش‌نمایش'];
+
+type AttributeEntry = { attributeId: number; value: string };
 
 interface ListingFormProps {
   listingId?: string | number;
@@ -27,7 +30,11 @@ interface ListingFormProps {
     price_type: string;
     province_id: number;
     city_id: number;
-    attributes: Record<string, string>;
+    vehicleModelId?: number;
+    vehicleVariantId?: number | null;
+    year?: string;
+    mileage?: string;
+    attributes: AttributeEntry[];
     images: Array<{ id: number; url: string; is_primary: boolean }>;
   };
   redirectPath?: string;
@@ -42,6 +49,12 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
 
   const [step, setStep] = useState(0);
   const [categoryId, setCategoryId] = useState<number | null>(initialData?.category_id ?? null);
+  const [brandModel, setBrandModel] = useState<Step2BrandModelData>({
+    vehicleModelId: (initialData as Record<string, unknown>)?.vehicleModelId as number ?? null,
+    vehicleVariantId: (initialData as Record<string, unknown>)?.vehicleVariantId as number ?? null,
+    year: (initialData as Record<string, unknown>)?.year as string ?? '',
+    mileage: (initialData as Record<string, unknown>)?.mileage as string ?? '',
+  });
   const [basicData, setBasicData] = useState({
     title: initialData?.title ?? '',
     description: initialData?.description ?? '',
@@ -50,7 +63,7 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
     province_id: initialData?.province_id != null ? String(initialData.province_id) : '',
     city_id: initialData?.city_id != null ? String(initialData.city_id) : '',
   });
-  const [attributes, setAttributes] = useState<Record<string, string>>(initialData?.attributes ?? {});
+  const [attributes, setAttributes] = useState<AttributeEntry[]>(initialData?.attributes ?? []);
   const [objectKeys, setObjectKeys] = useState<string[]>([]);
   const [skipImages, setSkipImages] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -75,6 +88,21 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
     if (!categoryId || !allCategories) return undefined;
     return allCategories.find((c: { id: number }) => c.id === categoryId)?.name;
   }, [categoryId, allCategories]);
+  const { data: categoryAttrs } = useQuery({
+    queryKey: queryKeys.attributes.byCategory(categorySlug),
+    queryFn: async () => {
+      const res = await api.get(`/categories/${categorySlug}/attributes`);
+      return res.data.data as Array<{ id: number; name: string; label: string; type: string }>;
+    },
+    enabled: !!categorySlug,
+    staleTime: 300000,
+  });
+  const attributeLabels = useMemo(() => {
+    if (!categoryAttrs) return undefined;
+    const map: Record<number, string> = {};
+    for (const a of categoryAttrs) map[a.id] = a.label;
+    return map;
+  }, [categoryAttrs]);
   const provinceName = useMemo(() => {
     if (!basicData.province_id || !provinces) return undefined;
     return provinces.find((p: { id: number }) => p.id === Number(basicData.province_id))?.name;
@@ -89,6 +117,12 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
     if (initialized.current || !initialData) return;
     initialized.current = true;
     setCategoryId(initialData.category_id);
+    setBrandModel({
+      vehicleModelId: (initialData as Record<string, unknown>)?.vehicleModelId as number ?? null,
+      vehicleVariantId: (initialData as Record<string, unknown>)?.vehicleVariantId as number ?? null,
+      year: (initialData as Record<string, unknown>)?.year as string ?? '',
+      mileage: (initialData as Record<string, unknown>)?.mileage as string ?? '',
+    });
     setBasicData({
       title: initialData.title,
       description: initialData.description,
@@ -97,15 +131,16 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
       province_id: String(initialData.province_id),
       city_id: String(initialData.city_id),
     });
-    setAttributes(initialData.attributes ?? {});
+    setAttributes(initialData.attributes ?? []);
   }, [initialData]);
 
   const restoreDraft = useCallback((saved: Record<string, unknown>) => {
     if (isEditMode) return;
     if (saved.step !== undefined) setStep(saved.step as number);
     if (saved.categoryId !== undefined) setCategoryId(saved.categoryId as number | null);
+    if (saved.brandModel) setBrandModel(saved.brandModel as Step2BrandModelData);
     if (saved.basicData) setBasicData(saved.basicData as typeof basicData);
-    if (saved.attributes) setAttributes(saved.attributes as Record<string, string>);
+    if (saved.attributes) setAttributes(saved.attributes as AttributeEntry[]);
     if (saved.objectKeys) setObjectKeys(saved.objectKeys as string[]);
     if (saved.skipImages !== undefined) setSkipImages(saved.skipImages as boolean);
     if (!draftNotified.current) {
@@ -115,28 +150,33 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
   }, [isEditMode]);
 
   const autoSaveData = useMemo(
-    () => isEditMode ? {} : { step, categoryId, basicData, attributes, objectKeys, skipImages },
-    [isEditMode, step, categoryId, basicData, attributes, objectKeys, skipImages],
+    () => isEditMode ? {} : { step, categoryId, brandModel, basicData, attributes, objectKeys, skipImages },
+    [isEditMode, step, categoryId, brandModel, basicData, attributes, objectKeys, skipImages],
   );
   const { clearDraft } = useAutoSave(autoSaveData, restoreDraft);
 
   const canProceed = useCallback(() => {
     switch (step) {
       case 0: return categoryId !== null;
-      case 1: return basicData.title.trim().length >= 5 && basicData.description.trim().length >= 5 && basicData.province_id !== '' && basicData.city_id !== '';
-      case 2: return true;
-      case 3: return objectKeys.length > 0 || skipImages;
-      case 4: return true;
+      case 1: return brandModel.vehicleModelId !== null;
+      case 2: return basicData.title.trim().length >= 5 && basicData.description.trim().length >= 5 && basicData.province_id !== '' && basicData.city_id !== '';
+      case 3: return true;
+      case 4: return objectKeys.length > 0 || skipImages;
+      case 5: return true;
       default: return false;
     }
-  }, [step, categoryId, basicData, objectKeys.length, skipImages]);
+  }, [step, categoryId, brandModel.vehicleModelId, basicData, objectKeys.length, skipImages]);
 
   const handleSubmit = async () => {
-    if (!categoryId) return;
+    if (!categoryId || !brandModel.vehicleModelId) return;
     setSubmitting(true);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       category_id: categoryId,
+      vehicleModelId: brandModel.vehicleModelId,
+      vehicleVariantId: brandModel.vehicleVariantId ?? undefined,
+      year: brandModel.year ? parseInt(brandModel.year) : undefined,
+      mileage: brandModel.mileage ? parseInt(brandModel.mileage) : undefined,
       title: basicData.title.trim(),
       description: basicData.description.trim(),
       price: basicData.price ? Number(basicData.price) : null,
@@ -207,24 +247,27 @@ export function ListingForm({ listingId, initialData, redirectPath }: ListingFor
 
       <div className="glass rounded-3xl p-6 md:p-10 border border-border-subtle shadow-sm min-h-[400px]">
         {step === 0 && <Step1Category selected={categoryId} onSelect={setCategoryId} disabled={isEditMode} />}
-        {step === 1 && <Step2Basic data={basicData} onChange={setBasicData} />}
-        {step === 2 && categorySlug && (
-          <Step3Attributes categorySlug={categorySlug} values={attributes} onChange={setAttributes} />
+        {step === 1 && <Step2BrandModel data={brandModel} onChange={setBrandModel} categorySlug={categorySlug} />}
+        {step === 2 && <Step3Basic data={basicData} onChange={setBasicData} />}
+        {step === 3 && categorySlug && (
+          <Step4Attributes categorySlug={categorySlug} values={attributes} onChange={setAttributes} />
         )}
-        {step === 3 && (
-          <Step4Images
+        {step === 4 && (
+          <Step5Images
             objectKeys={objectKeys}
             onKeysChange={setObjectKeys}
             skipImages={skipImages}
             onSkipImagesChange={setSkipImages}
           />
         )}
-        {step === 4 && (
-          <Step5Preview
+        {step === 5 && (
+          <Step6Preview
             data={{ ...basicData, category_id: categoryId, attributes }}
             categoryName={categoryName}
             cityName={cityName}
             provinceName={provinceName}
+            attributeLabels={attributeLabels}
+            brandModel={brandModel}
           />
         )}
       </div>

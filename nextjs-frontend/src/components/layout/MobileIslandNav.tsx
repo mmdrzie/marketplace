@@ -14,6 +14,7 @@ function SvgIcon({ children, className = 'h-5 w-5' }: { children: React.ReactNod
 
 const QUICK_LINKS = [
   { href: '/news', label: 'اخبار بازار', icon: <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />, keywords: 'news اخبار مقاله' },
+  { href: '/encyclopedia', label: 'دانشنامه', icon: <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />, keywords: 'دانشنامه راهنما تعمیرات encyclopedia guide' },
   { href: '/market-pulse', label: 'نبض بازار', icon: <path d="M18 20V10M12 20V4M6 20v-6" />, keywords: 'pulse نبض قیمت' },
   { href: '/price-estimator', label: 'برآورد قیمت', icon: <><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>, keywords: 'price قیمت برآورد' },
   { href: '/car-matchmaker', label: 'مشاور خرید', icon: <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />, keywords: 'مشاور خرید پیشنهاد' },
@@ -21,6 +22,10 @@ const QUICK_LINKS = [
   { href: '/compare', label: 'مقایسه آگهی‌ها', icon: <path d="M4 6h16M4 12h16M4 18h16" />, keywords: 'مقایسه آگهی' },
   { href: '/imported', label: 'خودروهای وارداتی', icon: <><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></>, keywords: 'وارداتی خارجی imported customs' },
   { href: '/parts', label: 'قطعات یدکی', icon: <><circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>, keywords: 'قطعات یدکی ادوات parts' },
+  { href: '/catalog/tuning', label: 'قطعات تیونینگ', icon: <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />, keywords: 'تیونینگ tuning ارتقا قطعات' },
+  { href: '/catalog/accessory', label: 'اکسسوری خودرو', icon: <path d="M12 3l1.9 5.8a2 2 0 001.3 1.3L21 12l-5.8 1.9a2 2 0 00-1.3 1.3L12 21l-1.9-5.8a2 2 0 00-1.3-1.3L3 12l5.8-1.9a2 2 0 001.3-1.3L12 3z" />, keywords: 'اکسسوری تزئینات جانبی خودرو' },
+  { href: '/workshops', label: 'تعمیرکاران و تیونرها', icon: <path d="M12 15l3.5-3.5M20.3 18a10 10 0 10-16.6 0" />, keywords: 'تعمیرکار تیونر تعمیرگاه مکانیک' },
+  { href: '/insurance', label: 'بیمه', icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />, keywords: 'بیمه ایران آسیا شخص ثالث بدنه insurance' },
   { href: '/search', label: 'جستجوی پیشرفته', icon: <><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>, keywords: 'جستجو search فیلتر' },
   { href: '/dashboard/listings/new', label: 'ثبت آگهی', icon: <path d="M12 5v14M5 12h14" />, keywords: 'ثبت آگهی فروش' },
 ];

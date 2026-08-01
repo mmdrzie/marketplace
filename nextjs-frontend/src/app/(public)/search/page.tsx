@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, Fragment, useEffect } from 'react';
+import { useState, useCallback, Fragment, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -29,6 +29,7 @@ const Icon = ({ d, className = "w-5 h-5" }: { d: string; className?: string }) =
 
 type Filters = {
   category: string;
+  subcategories: string;
   province_id: string;
   city_id: string;
   sort: string;
@@ -38,19 +39,50 @@ type Filters = {
   year_to: string;
   price_min: string;
   price_max: string;
+  seller_type: string;
+  mileage_from: string;
+  mileage_to: string;
+  mileage_zero: string;
+  gearbox: string;
+  has_photo: string;
+  has_price: string;
+  color: string;
+  fuel_type: string;
+  special_case: string;
+  body_condition: string;
+  cylinders: string;
+  drivetrain: string;
   attributeFilters: Record<string, string>;
 };
 
 const DEFAULT_FILTERS: Filters = {
-  category: '', province_id: '', city_id: '', sort: 'newest',
+  category: '', subcategories: '', province_id: '', city_id: '', sort: 'newest',
   brand: '', model: '', year_from: '', year_to: '',
   price_min: '', price_max: '', attributeFilters: {},
+  seller_type: '', mileage_from: '', mileage_to: '', mileage_zero: '',
+  gearbox: '', has_photo: '', has_price: '', color: '',
+  fuel_type: '', special_case: '', body_condition: '',
+  cylinders: '', drivetrain: '',
 };
+
+function findDeep(cat: { slug: string; children?: { slug: string; name: string }[] }, slug: string): { slug: string; name: string } | null {
+  if (cat.slug === slug) return { slug: cat.slug, name: (cat as any).name || slug };
+  if (!cat.children) return null;
+  for (const child of cat.children) {
+    const found = findDeep(child, slug);
+    if (found) return found;
+  }
+  return null;
+}
 
 function parseFiltersFromParams(sp: URLSearchParams): Filters {
   const attr: Record<string, string> = {};
+  const rawCat = sp.get('category') || '';
+  const rawSub = sp.get('subcategories') || '';
+  const hasCommas = rawCat.includes(',');
   return {
-    category: sp.get('category') || '',
+    category: hasCommas && !rawSub ? '' : rawCat,
+    subcategories: hasCommas && !rawSub ? rawCat : rawSub,
     province_id: sp.get('province') || '',
     city_id: sp.get('city_id') || '',
     sort: sp.get('sort') || 'newest',
@@ -60,14 +92,28 @@ function parseFiltersFromParams(sp: URLSearchParams): Filters {
     year_to: sp.get('year_to') || '',
     price_min: sp.get('price_min') || '',
     price_max: sp.get('price_max') || '',
+    seller_type: sp.get('seller_type') || '',
+    mileage_from: sp.get('mileage_from') || '',
+    mileage_to: sp.get('mileage_to') || '',
+    mileage_zero: sp.get('mileage_zero') || '',
+    gearbox: sp.get('gearbox') || '',
+    has_photo: sp.get('has_photo') || '',
+    has_price: sp.get('has_price') || '',
+    color: sp.get('color') || '',
+    fuel_type: sp.get('fuel_type') || '',
+    special_case: sp.get('special_case') || '',
+    body_condition: sp.get('body_condition') || '',
+    cylinders: sp.get('cylinders') || '',
+    drivetrain: sp.get('drivetrain') || '',
     attributeFilters: attr,
   };
 }
 
 function filtersToParams(filters: Filters, query: string, page: number): Record<string, unknown> {
+  const cat = filters.subcategories || filters.category || undefined;
   return {
     q: query || undefined,
-    category: filters.category || undefined,
+    category: cat,
     province: filters.province_id || undefined,
     city_id: filters.city_id || undefined,
     brand: filters.brand || undefined,
@@ -76,6 +122,19 @@ function filtersToParams(filters: Filters, query: string, page: number): Record<
     year_to: filters.year_to || undefined,
     price_min: filters.price_min || undefined,
     price_max: filters.price_max || undefined,
+    seller_type: filters.seller_type || undefined,
+    mileage_from: filters.mileage_from || undefined,
+    mileage_to: filters.mileage_to || undefined,
+    mileage_zero: filters.mileage_zero || undefined,
+    gearbox: filters.gearbox || undefined,
+    has_photo: filters.has_photo || undefined,
+    has_price: filters.has_price || undefined,
+    color: filters.color || undefined,
+    fuel_type: filters.fuel_type || undefined,
+    special_case: filters.special_case || undefined,
+    body_condition: filters.body_condition || undefined,
+    cylinders: filters.cylinders || undefined,
+    drivetrain: filters.drivetrain || undefined,
     sort: filters.sort,
     page,
     ...filters.attributeFilters,
@@ -120,6 +179,7 @@ export default function SearchPage() {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set('q', debouncedQuery);
     if (filters.category) params.set('category', filters.category);
+    if (filters.subcategories) params.set('subcategories', filters.subcategories);
     if (filters.province_id) params.set('province', filters.province_id);
     if (filters.city_id) params.set('city_id', filters.city_id);
     if (filters.sort !== 'newest') params.set('sort', filters.sort);
@@ -129,10 +189,38 @@ export default function SearchPage() {
     if (filters.year_to) params.set('year_to', filters.year_to);
     if (filters.price_min) params.set('price_min', filters.price_min);
     if (filters.price_max) params.set('price_max', filters.price_max);
+    if (filters.seller_type) params.set('seller_type', filters.seller_type);
+    if (filters.mileage_from) params.set('mileage_from', filters.mileage_from);
+    if (filters.mileage_to) params.set('mileage_to', filters.mileage_to);
+    if (filters.mileage_zero) params.set('mileage_zero', filters.mileage_zero);
+    if (filters.gearbox) params.set('gearbox', filters.gearbox);
+    if (filters.has_photo) params.set('has_photo', filters.has_photo);
+    if (filters.has_price) params.set('has_price', filters.has_price);
+    if (filters.color) params.set('color', filters.color);
+    if (filters.fuel_type) params.set('fuel_type', filters.fuel_type);
+    if (filters.special_case) params.set('special_case', filters.special_case);
+    if (filters.body_condition) params.set('body_condition', filters.body_condition);
+    if (filters.cylinders) params.set('cylinders', filters.cylinders);
+    if (filters.drivetrain) params.set('drivetrain', filters.drivetrain);
     if (page > 1) params.set('page', String(page));
     const qs = params.toString();
     router.replace(qs ? `/search?${qs}` : '/search', { scroll: false });
   }, [debouncedQuery, filters, page, router]);
+
+  // Normalize URL state: when subcategories are set but category is empty,
+  // find the parent from the category tree (handles homepage multi-select redirect)
+  useEffect(() => {
+    if (!apiCategories?.length) return;
+    if (!filters.subcategories || filters.category) return;
+    const slugs = filters.subcategories.split(',');
+    for (const top of apiCategories) {
+      const childSlugs = (top.children ?? []).map((c: { slug: string }) => c.slug);
+      if (slugs.some((s: string) => childSlugs.includes(s))) {
+        setFilters(prev => ({ ...prev, category: top.slug }));
+        break;
+      }
+    }
+  }, [apiCategories]);
 
   const updateFilters = useCallback((newFilters: Filters) => {
     setFilters(newFilters);
@@ -147,6 +235,27 @@ export default function SearchPage() {
     (p: { id: number; name: string }) => String(p.id) === filters.province_id
   )?.name;
 
+  const subcatNames = useMemo(() => {
+    if (!filters.subcategories || !apiCategories) return [];
+    const slugs = filters.subcategories.split(',');
+    return slugs.map(s => {
+      for (const top of apiCategories) {
+        const found = findDeep(top, s);
+        if (found) return { slug: s, name: found.name };
+      }
+      return { slug: s, name: s };
+    });
+  }, [filters.subcategories, apiCategories]);
+
+  const ACTIVE_FILTER_LABELS: Record<string, string> = {
+    seller_type: 'نوع فروشنده',
+    mileage_zero: 'صفر کیلومتر',
+    gearbox: 'گیربکس',
+    has_photo: 'عکس دار',
+    has_price: 'قیمت دار',
+    color: 'رنگ',
+  };
+
   const activeFilters = [
     filters.brand && { key: 'brand', label: filters.brand },
     filters.model && { key: 'model', label: filters.model },
@@ -156,9 +265,29 @@ export default function SearchPage() {
     filters.price_max && { key: 'price_max', label: `قیمت تا ${Number(filters.price_max).toLocaleString('fa-IR')}` },
     filters.category && { key: 'category', label: categoryLabel || filters.category },
     filters.province_id && { key: 'province_id', label: provinceLabel || filters.province_id },
+    filters.seller_type && { key: 'seller_type', label: `${ACTIVE_FILTER_LABELS.seller_type}: ${filters.seller_type === 'personal' ? 'شخصی' : 'نمایشگاه'}` },
+    filters.mileage_zero && { key: 'mileage_zero', label: ACTIVE_FILTER_LABELS.mileage_zero },
+    filters.mileage_from && { key: 'mileage_from', label: `کارکرد از ${Number(filters.mileage_from).toLocaleString('fa-IR')}` },
+    filters.mileage_to && { key: 'mileage_to', label: `کارکرد تا ${Number(filters.mileage_to).toLocaleString('fa-IR')}` },
+    filters.gearbox && { key: 'gearbox', label: `${ACTIVE_FILTER_LABELS.gearbox}: ${filters.gearbox === 'automatic' ? 'اتوماتیک' : 'دنده‌ای'}` },
+    filters.has_photo && { key: 'has_photo', label: ACTIVE_FILTER_LABELS.has_photo },
+    filters.has_price && { key: 'has_price', label: ACTIVE_FILTER_LABELS.has_price },
+    filters.color && { key: 'color', label: `${ACTIVE_FILTER_LABELS.color}: ${filters.color}` },
+    filters.fuel_type && { key: 'fuel_type', label: `سوخت: ${filters.fuel_type}` },
+    filters.special_case && { key: 'special_case', label: `ویژه: ${filters.special_case}` },
+    filters.body_condition && { key: 'body_condition', label: `بدنه: ${filters.body_condition}` },
+    filters.cylinders && { key: 'cylinders', label: filters.cylinders },
+    filters.drivetrain && { key: 'drivetrain', label: `دیفرانسیل: ${filters.drivetrain}` },
+    ...subcatNames.map(s => ({ key: `subcat:${s.slug}`, label: s.name })),
   ].filter(Boolean) as { key: string; label: string }[];
 
   const removeFilter = (key: string) => {
+    if (key.startsWith('subcat:')) {
+      const slug = key.slice(7);
+      const next = filters.subcategories.split(',').filter(s => s !== slug).join(',');
+      updateFilters({ ...filters, subcategories: next });
+      return;
+    }
     updateFilters({ ...filters, [key]: '' });
   };
 

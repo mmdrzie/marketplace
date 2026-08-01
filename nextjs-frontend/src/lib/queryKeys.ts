@@ -21,6 +21,16 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => ['articles', params] as const,
     detail: (slug: string) => ['articles', 'detail', slug] as const,
   },
+  contents: {
+    all: ['contents'] as const,
+    list: (params?: Record<string, unknown>) => ['contents', params] as const,
+    detail: (slug: string) => ['contents', 'detail', slug] as const,
+    types: ['contents', 'types'] as const,
+    categories: (parentId?: number | string | null) => ['contents', 'categories', parentId] as const,
+    byEntity: (type: string, id: number | string) => ['contents', 'entity', type, id] as const,
+    bookmarks: ['contents', 'bookmarks'] as const,
+    related: (id: number | string) => ['contents', 'related', id] as const,
+  },
   categories: {
     all: ['categories'] as const,
     tree: ['categories', 'tree'] as const,

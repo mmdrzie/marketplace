@@ -7,6 +7,7 @@ const LABELS: Record<string, string> = {
   '': 'خانه',
   categories: 'دسته‌بندی‌ها',
   news: 'اخبار و مقالات',
+  encyclopedia: 'دانشنامه',
   listings: 'آگهی‌ها',
   search: 'جستجو',
   dashboard: 'پنل کاربری',

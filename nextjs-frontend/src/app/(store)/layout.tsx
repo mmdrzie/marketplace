@@ -21,9 +21,10 @@ import {
 
 const NAV_LINKS: NavItem[] = [
   { href: '/store/inventory', label: 'مدیریت قطعات', icon: StoreIcon },
+  { href: '/store/suggestions', label: 'پیشنهاد قطعه جدید', icon: (c?: string) => StoreIcon(c) },
   { href: '/store/orders', label: 'سفارشات', icon: OrdersIcon },
   { href: '/store/stats', label: 'آمار فروش', icon: StatsIcon },
-  { href: '/store/subscription', label: 'اشتراک', icon: SubscriptionIcon },
+  { href: '/store/register', label: 'پروفایل فروشگاه', icon: SubscriptionIcon },
 ];
 
 const SECTIONS: NavSection[] = [

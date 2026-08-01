@@ -110,7 +110,7 @@ export function PriceDepreciationChart({ items, className = '' }: PriceDepreciat
           );
         })}
       </svg>
-      <div className="flex items-center justify-center gap-4 mt-3" dir="ltr">
+      <div className="flex items-center justify-center gap-4 mt-3 flex-wrap" dir="ltr">
         {allCurves.map((c, i) => (
           <div key={i} className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 rounded-full" style={{ backgroundColor: c.color }} />

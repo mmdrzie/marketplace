@@ -78,6 +78,29 @@ export class UserController {
 
   async getProfile(c: Context): Promise<Response> {
     const user = c.get('user');
+    if (process.env.NODE_ENV === 'development' && user.id.startsWith('dev-')) {
+      return c.json({
+        success: true,
+        data: {
+          id: user.id,
+          email: user.email,
+          name: user.email === 'admin@marketplace.com' ? 'مدیر سایت'
+            : user.email === 'demo@marketplace.com' ? 'کاربر آزمایشی'
+            : user.email === 'dealer@marketplace.com' ? 'نماینده نمونه'
+            : user.email === 'agency@marketplace.com' ? 'آژانس نمونه'
+            : user.email === 'store@marketplace.com' ? 'فروشگاه نمونه'
+            : 'کاربر تست',
+          role: user.role,
+          phone: '09120000000',
+          avatar: null,
+          city: null,
+          status: 'active',
+          phoneVerified: true,
+          emailVerified: true,
+          created_at: new Date().toISOString(),
+        },
+      });
+    }
     const profile = await authService.getMe(user.id);
     return c.json({ success: true, data: profile });
   }

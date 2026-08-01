@@ -37,8 +37,8 @@ export default function AdminReportsPage() {
         <div className="space-y-2">
           {(reports as Array<{ id: number; reporter?: { name: string }; reason: string; description?: string; status: string; created_at: string }>).map((report) => (
             <div key={report.id} className="glass rounded-2xl p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="font-medium text-foreground">گزارش دهنده:</span>
                     <span className="text-foreground">{report.reporter?.name || 'کاربر'}</span>
@@ -58,7 +58,7 @@ export default function AdminReportsPage() {
                     { value: 'reviewed', label: 'بررسی شده' },
                     { value: 'dismissed', label: 'رد شده' },
                   ]}
-                  className="w-36"
+                  className="w-full sm:w-36"
                 />
               </div>
             </div>

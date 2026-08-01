@@ -56,6 +56,7 @@ export function Footer() {
               {[
                 { href: '/', label: 'صفحه اصلی' },
                 { href: '/news', label: 'اخبار و مقالات' },
+                { href: '/encyclopedia', label: 'دانشنامه' },
                 { href: '/market-pulse', label: 'بازار یاب' },
                 { href: '/price-estimator', label: 'قیمت ماشین' },
                 { href: '/car-matchmaker', label: 'مشاور خرید' },
@@ -65,6 +66,10 @@ export function Footer() {
                 { href: '/imported/charts', label: 'نمودارهای بازار واردات' },
                 { href: '/imported/customs-calc', label: 'محاسبه هزینه واردات' },
                 { href: '/parts', label: 'قطعات یدکی و ادوات' },
+                { href: '/catalog/tuning', label: 'قطعات تیونینگ' },
+                { href: '/catalog/accessory', label: 'اکسسوری خودرو' },
+                { href: '/workshops', label: 'تعمیرکاران و تیونرها' },
+                { href: '/insurance', label: 'بیمه خودرو و ماشین‌آلات' },
                 { href: '/search', label: 'جستجوی پیشرفته' },
                 { href: '/cursor-test', label: 'تست کرسور' },
                 { href: '/dashboard/listings/new', label: 'ثبت آگهی رایگان' },
@@ -83,9 +88,12 @@ export function Footer() {
             <h3 className="font-bold text-sm text-foreground mb-5">دسته‌بندی‌ها</h3>
             <div className="space-y-3">
               {[
-                { href: '/categories/car', label: 'خودرو' },
-                { href: '/categories/truck', label: 'کامیون و تریلی' },
-                { href: '/categories/heavy', label: 'ماشین‌آلات سنگین' },
+                { href: '/categories/sedan', label: 'خودرو' },
+                { href: '/categories/motorcycles', label: 'موتورسیکلت' },
+                { href: '/categories/truck', label: 'کامیون' },
+                { href: '/categories/tractor-head', label: 'کشنده' },
+                { href: '/categories/trailer', label: 'تریلر' },
+                { href: '/categories/light-truck', label: 'کامیونت' },
               ].map((link) => (
                 <Link key={link.href} href={link.href} className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
                   <span className="w-1.5 h-1.5 rounded-full bg-border-subtle group-hover:bg-primary transition-colors"></span>

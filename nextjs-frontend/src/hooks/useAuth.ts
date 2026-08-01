@@ -51,7 +51,7 @@ export function useAuth() {
     code: string,
     password: string,
     name: string,
-    role: 'user' | 'dealer' | 'agency' | 'store' = 'user',
+    role: 'user' | 'dealer' | 'agency' | 'store' | 'workshop' = 'user',
   ) => {
     setLoading(true);
     setError(null);

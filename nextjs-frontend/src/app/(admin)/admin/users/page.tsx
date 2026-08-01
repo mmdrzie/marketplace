@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجوی کاربر..." className="flex-1 px-4 py-2.5 bg-surface border border-border-subtle rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground placeholder:text-muted-foreground" />
         <GlassSelect
           value={roleFilter}
@@ -119,7 +119,7 @@ export default function AdminUsersPage() {
             { value: 'admin', label: 'مدیر' },
           ]}
           placeholder="همه نقش‌ها"
-          className="w-44"
+          className="w-full sm:w-44"
         />
       </div>
 
@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
             <h3 id="delete-user-title" className="text-lg font-bold text-foreground mb-2">حذف کاربر</h3>
             <p className="text-sm text-muted-foreground mb-1">آیا از حذف کاربر <span className="font-medium text-foreground">{deleteTarget.name || 'بدون نام'}</span> اطمینان دارید؟</p>
             <p className="text-xs text-destructive mb-5">این عمل قابل بازگشت نیست</p>
-            <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 btn btn-ghost">انصراف</button>
               <button onClick={() => deleteUserMutation.mutate(deleteTarget.id)} disabled={deleteUserMutation.isPending} className="flex-1 py-2.5 btn btn-danger">
                 {deleteUserMutation.isPending ? 'در حال حذف...' : 'حذف کاربر'}

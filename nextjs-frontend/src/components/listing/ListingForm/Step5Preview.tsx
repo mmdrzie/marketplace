@@ -18,6 +18,15 @@ const Icon = ({ path, className = "h-5 w-5" }: { path: JSX.Element; className?: 
   </svg>
 );
 
+type AttributeEntry = { attributeId: number; value: string };
+
+interface BrandModelData {
+  vehicleModelId: number | null;
+  vehicleVariantId: number | null;
+  year: string;
+  mileage: string;
+}
+
 interface Step5PreviewProps {
   data: {
     category_id: number | null;
@@ -27,15 +36,17 @@ interface Step5PreviewProps {
     price_type: string;
     province_id: string;
     city_id: string;
-    attributes: Record<string, string>;
+    attributes: AttributeEntry[];
   };
   categoryName?: string;
   cityName?: string;
   provinceName?: string;
+  attributeLabels?: Record<number, string>;
+  brandModel?: BrandModelData;
 }
 
-export function Step5Preview({ data, categoryName, cityName, provinceName }: Step5PreviewProps) {
-  const validAttributes = Object.entries(data.attributes).filter(([, value]) => value);
+export function Step5Preview({ data, categoryName, cityName, provinceName, attributeLabels, brandModel }: Step5PreviewProps) {
+  const validAttributes = data.attributes.filter(a => a.value);
 
   return (
     <div className="animate-fade-in space-y-10">
@@ -101,13 +112,13 @@ export function Step5Preview({ data, categoryName, cityName, provinceName }: Ste
               مشخصات فنی
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {validAttributes.map(([key, value]) => (
+              {validAttributes.map((attr) => (
                 <div 
-                  key={key} 
+                  key={attr.attributeId} 
                   className="flex items-center justify-between p-4 bg-surface-2/30 border border-border-subtle rounded-xl"
                 >
-                  <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">{key.replace(/_/g, ' ')}</span>
-                  <span className="font-bold text-foreground text-sm">{value}</span>
+                  <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">{attributeLabels?.[attr.attributeId] ?? `ویژگی ${attr.attributeId}`}</span>
+                  <span className="font-bold text-foreground text-sm">{attr.value}</span>
                 </div>
               ))}
             </div>

@@ -49,7 +49,10 @@ export class VehicleController {
   }
 
   async listBrands(c: Context): Promise<Response> {
-    const brands = await this.vehicleRepo.findAllBrands(true);
+    const category = c.req.query('category');
+    const brands = category
+      ? await this.vehicleRepo.findBrandsByCategory(category, true)
+      : await this.vehicleRepo.findAllBrands(true);
     return c.json({ data: brands.map(b => brandMapper.toDTO(b)) });
   }
 
@@ -63,7 +66,10 @@ export class VehicleController {
 
   async listModels(c: Context): Promise<Response> {
     const brandId = Number(c.req.param('brandId'));
-    const models = await this.vehicleRepo.findModelsByBrand(brandId, true);
+    const category = c.req.query('category');
+    const models = category
+      ? await this.vehicleRepo.findModelsByBrandAndCategory(brandId, category, true)
+      : await this.vehicleRepo.findModelsByBrand(brandId, true);
     return c.json({ data: models.map(m => modelMapper.toDTO(m)) });
   }
 

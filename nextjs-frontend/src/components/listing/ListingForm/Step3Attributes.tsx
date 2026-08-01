@@ -10,10 +10,12 @@ import { cn } from '@/lib/utils';
 // استایل مشترک برای اینپوت‌ها و سلکت‌ها در تم دارک و لایت
 const inputSelectClasses = "w-full px-4 py-3.5 glass-input rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 appearance-none disabled:opacity-40 disabled:cursor-not-allowed";
 
+type AttributeEntry = { attributeId: number; value: string };
+
 interface Step3AttributesProps {
   categorySlug: string | null;
-  values: Record<string, string>;
-  onChange: (values: Record<string, string>) => void;
+  values: AttributeEntry[];
+  onChange: (values: AttributeEntry[]) => void;
 }
 
 export function Step3Attributes({ categorySlug, values, onChange }: Step3AttributesProps) {
@@ -30,7 +32,14 @@ export function Step3Attributes({ categorySlug, values, onChange }: Step3Attribu
 
   const attributes = apiAttrs as Attribute[] ?? [];
 
-  const setValue = (name: string, value: string) => onChange({ ...values, [name]: value });
+  const getValue = (id: number) => values.find(a => a.attributeId === id)?.value || '';
+  const setValue = (id: number, value: string) => {
+    const next = [...values];
+    const idx = next.findIndex(a => a.attributeId === id);
+    if (idx >= 0) next[idx] = { attributeId: id, value };
+    else next.push({ attributeId: id, value });
+    onChange(next);
+  };
 
   return (
     <div className="animate-fade-in space-y-12">
@@ -61,8 +70,8 @@ export function Step3Attributes({ categorySlug, values, onChange }: Step3Attribu
                   {(attr.type === 'text' || attr.type === 'number') && (
                     <input 
                       type={attr.type} 
-                      value={values[attr.name] || ''} 
-                      onChange={(e) => setValue(attr.name, e.target.value)} 
+                      value={getValue(attr.id)} 
+                      onChange={(e) => setValue(attr.id, e.target.value)} 
                       className={inputSelectClasses} 
                       placeholder={attr.label} 
                     />
@@ -71,8 +80,8 @@ export function Step3Attributes({ categorySlug, values, onChange }: Step3Attribu
                   {/* سلکت */}
                   {attr.type === 'select' && (
                     <GlassSelect
-                      value={values[attr.name] || ''}
-                      onChange={(val) => setValue(attr.name, val)}
+                      value={getValue(attr.id)}
+                      onChange={(val) => setValue(attr.id, val)}
                       options={attr.options?.map((opt: string) => ({ value: opt, label: opt })) || []}
                       placeholder="انتخاب کنید"
                     />
@@ -83,20 +92,20 @@ export function Step3Attributes({ categorySlug, values, onChange }: Step3Attribu
                     <div className="flex gap-2 bg-surface-2/40 border border-border-subtle rounded-full p-1.5 w-full max-w-xs">
                       <button
                         type="button"
-                        onClick={() => setValue(attr.name, '1')}
+                        onClick={() => setValue(attr.id, '1')}
                         className={cn(
                           'flex-1 py-2 rounded-full text-xs font-medium transition-all',
-                          values[attr.name] === '1' ? 'bg-success/15 text-success shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                          getValue(attr.id) === '1' ? 'bg-success/15 text-success shadow-sm' : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
                         بله
                       </button>
                       <button
                         type="button"
-                        onClick={() => setValue(attr.name, '0')}
+                        onClick={() => setValue(attr.id, '0')}
                         className={cn(
                           'flex-1 py-2 rounded-full text-xs font-medium transition-all',
-                          values[attr.name] === '0' ? 'bg-destructive/15 text-destructive shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                          getValue(attr.id) === '0' ? 'bg-destructive/15 text-destructive shadow-sm' : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
                         خیر

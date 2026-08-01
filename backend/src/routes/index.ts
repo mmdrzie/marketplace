@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { healthRouter } from './health.js';
 import { authRouter } from './auth.js';
+import { devLoginRouter } from './dev-login.js';
 import { emailRouter } from './email.js';
 import { phoneRouter } from './phone.js';
 import { categoryRouter } from './categories.js';
@@ -43,11 +44,19 @@ import { meV2Router } from './v2-me.js';
 import { healthV2Router } from './v2-health.js';
 import { conversationV2Router } from './v2-conversations.js';
 import { uploadV2Router } from './v2-uploads.js';
+import { partsV2Router } from './v2-parts.js';
+import { contentV2Router } from './v2-contents.js';
+import { v2CatalogsRoutes } from './v2-catalogs.js';
+import { workshopV2Router } from './v2-workshops.js';
 
 const router = new Hono();
 
+router.get('/', (c) => c.json({ success: true, data: { name: 'Marketplace API', version: '1.0.0', docs: '/api/v1/docs' } }));
+router.get('/v2', (c) => c.json({ success: true, data: { version: '2.0.0', endpoints: ['parts', 'listings', 'users', 'vehicles', 'categories', 'dealers', 'payments', 'tenders', 'articles', 'favorites', 'notifications', 'conversations', 'auth', 'me', 'health', 'upload', 'contents'] } }));
+
 router.route('/health', healthRouter);
 router.route('/auth', authRouter);
+router.route('/dev', devLoginRouter);
 router.route('/email', emailRouter);
 router.route('/phone', phoneRouter);
 router.route('/categories', categoryRouter);
@@ -92,5 +101,9 @@ router.route('/v2/me', meV2Router);
 router.route('/v2/health', healthV2Router);
 router.route('/v2/conversations', conversationV2Router);
 router.route('/v2/upload', uploadV2Router);
+router.route('/v2/parts', partsV2Router);
+router.route('/v2/contents', contentV2Router);
+router.route('/v2/catalogs', v2CatalogsRoutes);
+router.route('/v2/workshops', workshopV2Router);
 
 export { router as apiRouter };

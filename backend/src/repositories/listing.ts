@@ -30,6 +30,10 @@ export interface ListingRow {
 export type CreateListingData = {
   user_id: string;
   category_id: number;
+  vehicle_model_id: number;
+  vehicle_variant_id?: number | null;
+  year?: number | null;
+  mileage?: number | null;
   title: string;
   slug: string;
   description?: string;
@@ -46,6 +50,10 @@ export interface UpdateListingData {
   price?: number;
   price_type?: PriceType;
   category_id?: number;
+  vehicle_model_id?: number;
+  vehicle_variant_id?: number | null;
+  year?: number | null;
+  mileage?: number | null;
   province_id?: number | null;
   city_id?: number | null;
   status?: ListingStatus;
@@ -74,6 +82,19 @@ export interface ListingFilters {
   model?: string;
   year_from?: string;
   year_to?: string;
+  seller_type?: string;
+  mileage_from?: string;
+  mileage_to?: string;
+  mileage_zero?: string;
+  gearbox?: string;
+  has_photo?: string;
+  has_price?: string;
+  color?: string;
+  fuel_type?: string;
+  special_case?: string;
+  body_condition?: string;
+  cylinders?: string;
+  drivetrain?: string;
   sort?: 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'views' | 'title';
   page?: number;
   perPage?: number;
@@ -107,6 +128,7 @@ const ALLOWED_LISTING_FIELDS = new Set([
   'title', 'description', 'price', 'price_type', 'category_id', 'province_id',
   'city_id', 'status', 'is_featured', 'views', 'primary_image', 'published_at',
   'expires_at', 'user_id', 'slug', 'email', 'phone', 'whatsapp', 'telegram',
+  'vehicle_model_id', 'vehicle_variant_id', 'year', 'mileage',
 ]);
 
 export class ListingRepository {
@@ -130,7 +152,7 @@ export class ListingRepository {
     }
 
     if (filters.category) {
-      wheres.push(`l.category_id = (SELECT id FROM categories WHERE slug = $${p++})`);
+      wheres.push(`l.category_id IN (SELECT id FROM categories WHERE slug = ANY(string_to_array($${p++}, ',')))`);
       params.push(filters.category);
     }
     if (filters.province) {
@@ -155,24 +177,75 @@ export class ListingRepository {
       params.push(parseInt(filters.city_id, 10));
     }
     if (filters.brand) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND a_b.value ILIKE $${p++})`);
-      params.push(`%${filters.brand}%`);
+      wheres.push(`EXISTS (SELECT 1 FROM vehicle_models vm_b JOIN brands b_b ON b_b.id = vm_b.brand_id WHERE vm_b.id = l.vehicle_model_id AND b_b.slug = $${p++})`);
+      params.push(filters.brand);
     }
     if (filters.model) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_m JOIN attributes a_m ON a_m.id = la_m.attribute_id WHERE la_m.listing_id = l.id AND a_m.name = 'model' AND la_m.value ILIKE $${p++})`);
+      wheres.push(`EXISTS (SELECT 1 FROM vehicle_models vm_m WHERE vm_m.id = l.vehicle_model_id AND vm_m.name ILIKE $${p++})`);
       params.push(`%${filters.model}%`);
     }
     if (filters.year_from) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yf JOIN attributes a_yf ON a_yf.id = la_yf.attribute_id WHERE la_yf.listing_id = l.id AND a_yf.name = 'year' AND la_yf.value::int >= $${p++})`);
+      wheres.push(`l.year >= $${p++}`);
       params.push(parseInt(filters.year_from, 10));
     }
     if (filters.year_to) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND la_yt.value::int <= $${p++})`);
+      wheres.push(`l.year <= $${p++}`);
       params.push(parseInt(filters.year_to, 10));
+    }
+    if (filters.seller_type) {
+      if (filters.seller_type === 'personal') {
+        wheres.push(`NOT EXISTS (SELECT 1 FROM dealer_profiles dp WHERE dp.user_id = l.user_id)`);
+      } else if (filters.seller_type === 'dealership') {
+        wheres.push(`EXISTS (SELECT 1 FROM dealer_profiles dp WHERE dp.user_id = l.user_id)`);
+      }
+    }
+    if (filters.mileage_zero === '1') {
+      wheres.push(`l.mileage = 0`);
+    }
+    if (filters.mileage_from) {
+      wheres.push(`l.mileage >= $${p++}`);
+      params.push(parseInt(filters.mileage_from, 10));
+    }
+    if (filters.mileage_to) {
+      wheres.push(`l.mileage <= $${p++}`);
+      params.push(parseInt(filters.mileage_to, 10));
+    }
+    if (filters.gearbox) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_g JOIN attributes a_g ON a_g.id = la_g.attribute_id WHERE la_g.listing_id = l.id AND a_g.name = 'gearbox' AND la_g.value = $${p++})`);
+      params.push(filters.gearbox);
+    }
+    if (filters.has_photo === '1') {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)`);
+    }
+    if (filters.has_price === '1') {
+      wheres.push(`l.price > 0`);
+    }
+    if (filters.color) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_c JOIN attributes a_c ON a_c.id = la_c.attribute_id WHERE la_c.listing_id = l.id AND a_c.name = 'color' AND la_c.value = ANY(string_to_array($${p++}, ',')))`);
+      params.push(filters.color);
+    }
+    if (filters.fuel_type) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_ft JOIN attributes a_ft ON a_ft.id = la_ft.attribute_id WHERE la_ft.listing_id = l.id AND a_ft.name = 'fuel_type' AND la_ft.value = $${p++})`);
+      params.push(filters.fuel_type);
+    }
+    if (filters.special_case) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_sc JOIN attributes a_sc ON a_sc.id = la_sc.attribute_id WHERE la_sc.listing_id = l.id AND a_sc.name = 'special_case' AND la_sc.value = $${p++})`);
+      params.push(filters.special_case);
+    }
+    if (filters.body_condition) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_bc JOIN attributes a_bc ON a_bc.id = la_bc.attribute_id WHERE la_bc.listing_id = l.id AND a_bc.name = 'body_condition' AND la_bc.value = $${p++})`);
+      params.push(filters.body_condition);
+    }
+    if (filters.cylinders) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_cyl JOIN attributes a_cyl ON a_cyl.id = la_cyl.attribute_id WHERE la_cyl.listing_id = l.id AND a_cyl.name = 'cylinders' AND la_cyl.value = $${p++})`);
+      params.push(filters.cylinders);
+    }
+    if (filters.drivetrain) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_dt JOIN attributes a_dt ON a_dt.id = la_dt.attribute_id WHERE la_dt.listing_id = l.id AND a_dt.name = 'drivetrain' AND la_dt.value = $${p++})`);
+      params.push(filters.drivetrain);
     }
 
     const where = wheres.join(' AND ');
-
     let orderBy = 'ORDER BY l.created_at DESC';
     if (filters.sort === 'price_asc') orderBy = 'ORDER BY l.price ASC';
     else if (filters.sort === 'price_desc') orderBy = 'ORDER BY l.price DESC';
@@ -253,12 +326,143 @@ export class ListingRepository {
   async create(data: CreateListingData) {
     const db = await getDb();
     const { rows } = await db.query(
-      `INSERT INTO listings (user_id, category_id, province_id, city_id, title, slug, description, price, price_type, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO listings (user_id, category_id, vehicle_model_id, vehicle_variant_id, year, mileage, province_id, city_id, title, slug, description, price, price_type, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
-      [data.user_id, data.category_id, data.province_id ?? null, data.city_id ?? null, data.title, data.slug, data.description ?? '', data.price ?? 0, data.price_type ?? 'fixed', data.status ?? 'draft'],
+      [data.user_id, data.category_id, data.vehicle_model_id, data.vehicle_variant_id ?? null, data.year ?? null, data.mileage ?? null, data.province_id ?? null, data.city_id ?? null, data.title, data.slug, data.description ?? '', data.price ?? 0, data.price_type ?? 'fixed', data.status ?? 'draft'],
     );
     return rows[0] as ListingRow;
+  }
+
+  async createWithRelations(
+    data: CreateListingData,
+    attributes?: { attributeId: number; value: string }[],
+    images?: { url: string; thumbnail_url?: string; medium_url?: string; is_primary?: boolean; sort_order?: number }[],
+  ) {
+    const db = await getDb();
+    try {
+      await db.query('BEGIN');
+
+      if (data.vehicle_variant_id) {
+        const { rows: vRows } = await db.query(
+          'SELECT model_id FROM vehicle_variants WHERE id = $1',
+          [data.vehicle_variant_id],
+        );
+        if (!vRows[0]) throw new Error('Vehicle variant not found');
+        if ((vRows[0] as { model_id: number }).model_id !== data.vehicle_model_id) {
+          throw new Error('Vehicle variant does not belong to the specified model');
+        }
+      }
+
+      const { rows } = await db.query(
+        `INSERT INTO listings (user_id, category_id, vehicle_model_id, vehicle_variant_id, year, mileage, province_id, city_id, title, slug, description, price, price_type, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+         RETURNING *`,
+        [data.user_id, data.category_id, data.vehicle_model_id, data.vehicle_variant_id ?? null, data.year ?? null, data.mileage ?? null, data.province_id ?? null, data.city_id ?? null, data.title, data.slug, data.description ?? '', data.price ?? 0, data.price_type ?? 'fixed', data.status ?? 'draft'],
+      );
+      const listing = rows[0] as ListingRow;
+
+      if (attributes?.length) {
+        const vals: string[] = [];
+        const params: unknown[] = [listing.id];
+        let p = 2;
+        for (const a of attributes) {
+          vals.push(`($${p++}, $${p++}, $${p++})`);
+          params.push(listing.id, a.attributeId, a.value);
+        }
+        await db.query(
+          `INSERT INTO listing_attributes (listing_id, attribute_id, value) VALUES ${vals.join(', ')}`,
+          params,
+        );
+      }
+
+      if (images?.length) {
+        const vals: string[] = [];
+        const params: unknown[] = [];
+        let p = 1;
+        for (const img of images) {
+          vals.push(`($${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++})`);
+          params.push(listing.id, img.url, img.thumbnail_url ?? null, img.medium_url ?? null, img.is_primary ?? false, img.sort_order ?? 0);
+        }
+        await db.query(
+          `INSERT INTO listing_images (listing_id, url, thumbnail_url, medium_url, is_primary, sort_order) VALUES ${vals.join(', ')}`,
+          params,
+        );
+      }
+
+      await db.query('COMMIT');
+      return listing;
+    } catch (err) {
+      await db.query('ROLLBACK');
+      throw err;
+    }
+  }
+
+  async updateWithRelations(
+    id: number,
+    data: UpdateListingData,
+    attributes?: { attributeId: number; value: string }[],
+  ) {
+    const db = await getDb();
+    try {
+      await db.query('BEGIN');
+
+      if (data.vehicle_variant_id !== undefined && data.vehicle_variant_id !== null && data.vehicle_model_id) {
+        const { rows: vRows } = await db.query(
+          'SELECT model_id FROM vehicle_variants WHERE id = $1',
+          [data.vehicle_variant_id],
+        );
+        if (!vRows[0]) throw new Error('Vehicle variant not found');
+        if ((vRows[0] as { model_id: number }).model_id !== data.vehicle_model_id) {
+          throw new Error('Vehicle variant does not belong to the specified model');
+        }
+      }
+
+      const fields: string[] = [];
+      const values: unknown[] = [];
+      let idx = 1;
+      for (const [key, value] of Object.entries(data)) {
+        if (value === undefined) continue;
+        if (!ALLOWED_LISTING_FIELDS.has(key)) continue;
+        fields.push(`${key} = $${idx++}`);
+        values.push(value);
+      }
+      if (fields.length > 0) {
+        fields.push('updated_at = NOW()');
+        values.push(id);
+        const { rows } = await db.query(
+          `UPDATE listings SET ${fields.join(', ')} WHERE id = $${idx} AND deleted_at IS NULL RETURNING *`,
+          values,
+        );
+        if (!rows[0]) {
+          await db.query('ROLLBACK');
+          return undefined;
+        }
+      }
+
+      if (attributes !== undefined) {
+        await db.query('DELETE FROM listing_attributes WHERE listing_id = $1', [id]);
+        if (attributes.length > 0) {
+          const vals: string[] = [];
+          const params: unknown[] = [id];
+          let p = 2;
+          for (const a of attributes) {
+            vals.push(`($${p++}, $${p++}, $${p++})`);
+            params.push(id, a.attributeId, a.value);
+          }
+          await db.query(
+            `INSERT INTO listing_attributes (listing_id, attribute_id, value) VALUES ${vals.join(', ')}`,
+            params,
+          );
+        }
+      }
+
+      await db.query('COMMIT');
+      return this.findById(id);
+    } catch (err) {
+      await db.query('ROLLBACK');
+      throw err;
+    }
   }
 
   async update(id: number, data: UpdateListingData) {
@@ -315,7 +519,7 @@ export class ListingRepository {
     await db.query('UPDATE listings SET views = views + 1 WHERE id = $1', [id]);
   }
 
-  async setAttributes(listingId: number, attributes: { attribute_id: number; value: string }[]) {
+  async setAttributes(listingId: number, attributes: { attributeId: number; value: string }[]) {
     const db = await getDb();
     await db.query('DELETE FROM listing_attributes WHERE listing_id = $1', [listingId]);
     if (attributes.length === 0) return;
@@ -325,7 +529,7 @@ export class ListingRepository {
     let p = 2;
     for (const attr of attributes) {
       values.push(`($${p++}, $${p++}, $${p++})`);
-      params.push(listingId, attr.attribute_id, attr.value);
+      params.push(listingId, attr.attributeId, attr.value);
     }
     await db.query(
       `INSERT INTO listing_attributes (listing_id, attribute_id, value) VALUES ${values.join(', ')}`,
@@ -380,7 +584,7 @@ export class ListingRepository {
     let p = 4;
 
     if (filters.category) {
-      wheres.push(`l.category_id = (SELECT id FROM categories WHERE slug = $${p++})`);
+      wheres.push(`l.category_id IN (SELECT id FROM categories WHERE slug = ANY(string_to_array($${p++}, ',')))`);
       params.push(filters.category);
     }
     if (filters.province) {
@@ -401,24 +605,75 @@ export class ListingRepository {
       params.push(parseInt(filters.city_id, 10));
     }
     if (filters.brand) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_b JOIN attributes a_b ON a_b.id = la_b.attribute_id WHERE la_b.listing_id = l.id AND a_b.name = 'brand' AND a_b.value ILIKE $${p++})`);
-      params.push(`%${filters.brand}%`);
+      wheres.push(`EXISTS (SELECT 1 FROM vehicle_models vm_b JOIN brands b_b ON b_b.id = vm_b.brand_id WHERE vm_b.id = l.vehicle_model_id AND b_b.slug = $${p++})`);
+      params.push(filters.brand);
     }
     if (filters.model) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_m JOIN attributes a_m ON a_m.id = la_m.attribute_id WHERE la_m.listing_id = l.id AND a_m.name = 'model' AND la_m.value ILIKE $${p++})`);
+      wheres.push(`EXISTS (SELECT 1 FROM vehicle_models vm_m WHERE vm_m.id = l.vehicle_model_id AND vm_m.name ILIKE $${p++})`);
       params.push(`%${filters.model}%`);
     }
     if (filters.year_from) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yf JOIN attributes a_yf ON a_yf.id = la_yf.attribute_id WHERE la_yf.listing_id = l.id AND a_yf.name = 'year' AND la_yf.value::int >= $${p++})`);
+      wheres.push(`l.year >= $${p++}`);
       params.push(parseInt(filters.year_from, 10));
     }
     if (filters.year_to) {
-      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_yt JOIN attributes a_yt ON a_yt.id = la_yt.attribute_id WHERE la_yt.listing_id = l.id AND a_yt.name = 'year' AND la_yt.value::int <= $${p++})`);
+      wheres.push(`l.year <= $${p++}`);
       params.push(parseInt(filters.year_to, 10));
+    }
+    if (filters.seller_type) {
+      if (filters.seller_type === 'personal') {
+        wheres.push(`NOT EXISTS (SELECT 1 FROM dealer_profiles dp WHERE dp.user_id = l.user_id)`);
+      } else if (filters.seller_type === 'dealership') {
+        wheres.push(`EXISTS (SELECT 1 FROM dealer_profiles dp WHERE dp.user_id = l.user_id)`);
+      }
+    }
+    if (filters.mileage_zero === '1') {
+      wheres.push(`l.mileage = 0`);
+    }
+    if (filters.mileage_from) {
+      wheres.push(`l.mileage >= $${p++}`);
+      params.push(parseInt(filters.mileage_from, 10));
+    }
+    if (filters.mileage_to) {
+      wheres.push(`l.mileage <= $${p++}`);
+      params.push(parseInt(filters.mileage_to, 10));
+    }
+    if (filters.gearbox) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_g JOIN attributes a_g ON a_g.id = la_g.attribute_id WHERE la_g.listing_id = l.id AND a_g.name = 'gearbox' AND la_g.value = $${p++})`);
+      params.push(filters.gearbox);
+    }
+    if (filters.has_photo === '1') {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)`);
+    }
+    if (filters.has_price === '1') {
+      wheres.push(`l.price > 0`);
+    }
+    if (filters.color) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_c JOIN attributes a_c ON a_c.id = la_c.attribute_id WHERE la_c.listing_id = l.id AND a_c.name = 'color' AND la_c.value = ANY(string_to_array($${p++}, ',')))`);
+      params.push(filters.color);
+    }
+    if (filters.fuel_type) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_ft JOIN attributes a_ft ON a_ft.id = la_ft.attribute_id WHERE la_ft.listing_id = l.id AND a_ft.name = 'fuel_type' AND la_ft.value = $${p++})`);
+      params.push(filters.fuel_type);
+    }
+    if (filters.special_case) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_sc JOIN attributes a_sc ON a_sc.id = la_sc.attribute_id WHERE la_sc.listing_id = l.id AND a_sc.name = 'special_case' AND la_sc.value = $${p++})`);
+      params.push(filters.special_case);
+    }
+    if (filters.body_condition) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_bc JOIN attributes a_bc ON a_bc.id = la_bc.attribute_id WHERE la_bc.listing_id = l.id AND a_bc.name = 'body_condition' AND la_bc.value = $${p++})`);
+      params.push(filters.body_condition);
+    }
+    if (filters.cylinders) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_cyl JOIN attributes a_cyl ON a_cyl.id = la_cyl.attribute_id WHERE la_cyl.listing_id = l.id AND a_cyl.name = 'cylinders' AND la_cyl.value = $${p++})`);
+      params.push(filters.cylinders);
+    }
+    if (filters.drivetrain) {
+      wheres.push(`EXISTS (SELECT 1 FROM listing_attributes la_dt JOIN attributes a_dt ON a_dt.id = la_dt.attribute_id WHERE la_dt.listing_id = l.id AND a_dt.name = 'drivetrain' AND la_dt.value = $${p++})`);
+      params.push(filters.drivetrain);
     }
 
     const where = wheres.join(' AND ');
-
     let orderBy = 'ORDER BY CASE WHEN l.title ILIKE $2 THEN 0 WHEN l.description ILIKE $2 THEN 1 ELSE 2 END, l.created_at DESC';
     if (filters.sort === 'price_asc') orderBy = 'ORDER BY l.price ASC';
     else if (filters.sort === 'price_desc') orderBy = 'ORDER BY l.price DESC';

@@ -6,6 +6,7 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
+  useMotionTemplate,
   type SpringOptions,
   AnimatePresence,
 } from 'framer-motion';
@@ -30,7 +31,7 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 const DEFAULT_MAGNIFICATION = 80;
 const DEFAULT_DISTANCE = 180;
-const DEFAULT_PANEL_HEIGHT = 56;
+const DEFAULT_PANEL_HEIGHT = 72;
 const SCROLL_THRESHOLD = 10;
 
 type DockProps = {
@@ -110,7 +111,7 @@ function DockPanel({
           'mx-auto flex w-fit items-center gap-2 z-50',
           className
         )}
-        style={{ height: panelHeight }}
+        style={{ minHeight: panelHeight }}
         role="toolbar"
         aria-label="Application dock"
     >
@@ -127,6 +128,9 @@ function DockItem({ children, className }: DockItemProps) {
   const { distance, magnification, mouseX, spring } = useDock();
 
   const isHovered = useMotionValue(0);
+  const spotX = useMotionValue(0);
+  const spotY = useMotionValue(0);
+  const spotOpacity = useMotionValue(0);
 
   const mouseDistance = useTransform(mouseX, (val) => {
     const domRect = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
@@ -143,26 +147,57 @@ function DockItem({ children, className }: DockItemProps) {
   const itemScale = useTransform(isHovered, [0, 1], [1, 1.1]);
   const scaleSpring = useSpring(itemScale, spring);
 
+  const spotlight = useMotionTemplate`radial-gradient(100px circle at ${spotX}px ${spotY}px, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 70%)`;
+  const glareAngleMem = useMotionValue(0);
+  const glareOpacityVal = useMotionValue(0);
+  const glareBg = useMotionTemplate`linear-gradient(${glareAngleMem}deg, color-mix(in srgb, var(--color-primary) 8%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--color-primary) 8%, transparent) 100%)`;
+
+  const handleLocalMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    spotX.set(px);
+    spotY.set(py);
+
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
+    glareAngleMem.set((angle + 180) % 360);
+  };
+
   return (
     <motion.div
       ref={ref}
       style={{ width, scale: scaleSpring }}
-      onHoverStart={() => isHovered.set(1)}
-      onHoverEnd={() => isHovered.set(0)}
+      onHoverStart={() => { isHovered.set(1); spotOpacity.set(1); glareOpacityVal.set(1); }}
+      onHoverEnd={() => { isHovered.set(0); spotOpacity.set(0); glareOpacityVal.set(0); }}
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
+      onMouseMove={handleLocalMove}
       className={cn(
-        'relative inline-flex aspect-square items-center justify-center rounded-full bg-surface-2/70',
+        'relative inline-flex aspect-square items-center justify-center rounded-full bg-surface-2/70 overflow-hidden',
         className
       )}
       tabIndex={0}
       role="button"
       aria-haspopup="true"
     >
-      {Children.map(children, (child) => {
-        if (typeof (child as React.ReactElement)?.type === 'string') return child;
-        return cloneElement(child as React.ReactElement<Record<string, unknown>>, { width, isHovered });
-      })}
+      <motion.div
+        className="absolute inset-0 rounded-full pointer-events-none z-0"
+        style={{ background: spotlight, opacity: spotOpacity }}
+      />
+      <motion.div
+        className="absolute inset-0 rounded-full pointer-events-none z-[1]"
+        style={{ background: glareBg, opacity: useTransform(glareOpacityVal, [0, 1], [0, 0.5]) }}
+      />
+      <div className="relative z-[2] flex items-center justify-center w-full h-full">
+        {Children.map(children, (child) => {
+          if (typeof (child as React.ReactElement)?.type === 'string') return child;
+          return cloneElement(child as React.ReactElement<Record<string, unknown>>, { width, isHovered });
+        })}
+      </div>
     </motion.div>
   );
 }
@@ -202,6 +237,18 @@ function DockLabel({ children, className, ...rest }: DockLabelProps) {
   );
 }
 
+function DockStaticLabel({ active, children, className }: { active?: boolean; children: React.ReactNode; className?: string }) {
+  return (
+    <span className={cn(
+      'text-[10px] leading-tight text-center truncate w-14 select-none transition-colors duration-200',
+      active ? 'text-primary font-medium' : 'text-muted-foreground/60',
+      className
+    )}>
+      {children}
+    </span>
+  );
+}
+
 function DockIcon({ children, className, ...rest }: DockIconProps) {
   const restProps = rest as Record<string, unknown>;
   const width = restProps['width'] as MotionValue<number>;
@@ -232,6 +279,7 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 
 const QUICK_LINKS = [
   { href: '/news', label: 'اخبار بازار', icon: <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />, keywords: 'news اخبار مقاله' },
+  { href: '/encyclopedia', label: 'دانشنامه', icon: <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />, keywords: 'دانشنامه راهنما تعمیرات encyclopedia guide' },
   { href: '/market-pulse', label: 'نبض بازار', icon: <path d="M3 3v18h18" />, keywords: 'pulse نبض قیمت' },
   { href: '/price-estimator', label: 'برآورد قیمت', icon: <circle cx="12" cy="12" r="10" />, keywords: 'price قیمت برآورد' },
   { href: '/car-matchmaker', label: 'مشاور خرید', icon: <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />, keywords: 'مشاور خرید پیشنهاد' },
@@ -240,6 +288,10 @@ const QUICK_LINKS = [
   { href: '/imported', label: 'خودروهای وارداتی', icon: <><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></>, keywords: 'وارداتی خارجی imported customs' },
   { href: '/imported/customs-calc', label: 'محاسبه هزینه واردات', icon: <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />, keywords: 'customs گمرک تعرفه واردات' },
   { href: '/parts', label: 'قطعات یدکی', icon: <><circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>, keywords: 'قطعات یدکی ادوات parts' },
+  { href: '/catalog/tuning', label: 'قطعات تیونینگ', icon: <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />, keywords: 'تیونینگ tuning ارتقا قطعات' },
+  { href: '/catalog/accessory', label: 'اکسسوری خودرو', icon: <path d="M12 3l1.9 5.8a2 2 0 001.3 1.3L21 12l-5.8 1.9a2 2 0 00-1.3 1.3L12 21l-1.9-5.8a2 2 0 00-1.3-1.3L3 12l5.8-1.9a2 2 0 001.3-1.3L12 3z" />, keywords: 'اکسسوری تزئینات جانبی خودرو' },
+  { href: '/workshops', label: 'تعمیرکاران و تیونرها', icon: <path d="M12 15l3.5-3.5M20.3 18a10 10 0 10-16.6 0" />, keywords: 'تعمیرکار تیونر تعمیرگاه مکانیک' },
+  { href: '/insurance', label: 'بیمه', icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />, keywords: 'بیمه ایران آسیا شخص ثالث بدنه insurance' },
   { href: '/pricing', label: 'تعرفه‌ها', icon: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />, keywords: 'pricing قیمت تعرفه اشتراک' },
   { href: '/search', label: 'جستجوی پیشرفته', icon: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />, keywords: 'جستجو search فیلتر' },
   { href: '/dashboard/listings/new', label: 'ثبت آگهی', icon: <path d="M12 5v14M5 12h14" />, keywords: 'ثبت آگهی فروش' },
@@ -249,6 +301,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/', label: 'صفحه اصلی', icon: <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /> },
   { href: '/listings', label: 'آگهی‌ها', icon: <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /> },
   { href: '/news', label: 'اخبار', icon: <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /> },
+  { href: '/encyclopedia', label: 'دانشنامه', icon: <path d="M4 19.5A2.5 2.5 0 016.5 17H20" /> },
   { href: '/categories', label: 'دسته‌بندی‌ها', icon: <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z M3 7a2 2 0 012-2h3l2 2h7a2 2 0 012 2" /> },
   { isDashboard: true, label: 'داشبورد' },
   { isQuickAccess: true, label: 'دسترسی سریع' },
@@ -331,84 +384,86 @@ export function Dock() {
             {NAV_LINKS.map((link) => {
               if (link.isToggle) {
                 return (
-                  <DockItem key="theme-toggle">
-                    <button
-                      onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                      className="flex h-full w-full items-center justify-center text-muted-foreground"
-                      aria-label={isDark ? 'تغییر به حالت روز' : 'تغییر به حالت شب'}
-                    >
-                      {mounted ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                          {isDark ? (
-                            <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></>
-                          ) : (
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                          )}
-                        </svg>
-                      ) : (
-                        <div className="h-5 w-5 bg-surface-3 rounded" />
-                      )}
-                    </button>
-                    <DockLabel>{link.label}</DockLabel>
-                  </DockItem>
+                  <div key="theme-toggle" className="flex flex-col items-center gap-1">
+                    <DockItem>
+                      <button
+                        onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                        className="flex h-full w-full items-center justify-center text-muted-foreground"
+                        aria-label={isDark ? 'تغییر به حالت روز' : 'تغییر به حالت شب'}
+                      >
+                        {mounted ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                            {isDark ? (
+                              <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></>
+                            ) : (
+                              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                            )}
+                          </svg>
+                        ) : (
+                          <div className="h-5 w-5 bg-surface-3 rounded" />
+                        )}
+                      </button>
+                    </DockItem>
+                    <DockStaticLabel>{link.label}</DockStaticLabel>
+                  </div>
                 );
               }
               if (link.isDashboard) {
                 if (!isAuthenticated) return null;
                 const href = user?.role === 'admin' ? '/admin' : '/dashboard';
+                const dashActive = pathname === href || pathname.startsWith(href + '/');
                 return (
-                  <Link key="dashboard" href={href} className="relative">
-                    <DockItem>
+                  <Link key="dashboard" href={href} className="flex flex-col items-center gap-1">
+                    <DockItem className={cn(dashActive ? 'text-primary' : '')}>
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-muted-foreground">
                         <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
                       </svg>
-                      <DockLabel>{link.label}</DockLabel>
                     </DockItem>
+                    <DockStaticLabel active={dashActive}>{link.label}</DockStaticLabel>
                   </Link>
                 );
               }
               if (link.isUserMenu) {
                 if (!isAuthenticated) return null;
                 return (
-                  <div key="user-menu" className="relative flex items-center">
+                  <div key="user-menu" className="flex flex-col items-center gap-1">
                     <UserMenuButton />
+                    <DockStaticLabel>{link.label}</DockStaticLabel>
                   </div>
                 );
               }
               if (link.isQuickAccess) {
                 return (
-                  <DockItem key="quick-access">
-                    <button
-                      onClick={() => {
-                        setQuickOpen(true);
-                        setQuickQuery('');
-                        setTimeout(() => searchInputRef.current?.focus(), 50);
-                      }}
-                      className="flex h-full w-full items-center justify-center text-muted-foreground"
-                      aria-label="دسترسی سریع"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </button>
-                    <DockLabel>{link.label}</DockLabel>
-                  </DockItem>
+                  <div key="quick-access" className="flex flex-col items-center gap-1">
+                    <DockItem>
+                      <button
+                        onClick={() => {
+                          setQuickOpen(true);
+                          setQuickQuery('');
+                          setTimeout(() => searchInputRef.current?.focus(), 50);
+                        }}
+                        className="flex h-full w-full items-center justify-center text-muted-foreground"
+                        aria-label="دسترسی سریع"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                          <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </button>
+                    </DockItem>
+                    <DockStaticLabel>{link.label}</DockStaticLabel>
+                  </div>
                 );
               }
               if (!link.href) return null;
               const active = isActive(link.href!);
               return (
-                <Link key={link.href} href={link.href!} className="relative" aria-label={link.label}>
+                <Link key={link.href} href={link.href!} className="flex flex-col items-center gap-1" aria-label={link.label}>
                   <DockItem className={cn(active ? 'text-primary' : '')}>
                     <DockIcon className={cn(active ? 'text-primary' : '')}>
                       <SvgIcon className="h-5 w-5">{link.icon}</SvgIcon>
                     </DockIcon>
-                    <DockLabel>{link.label}</DockLabel>
                   </DockItem>
-                  <span className={cn(
-                    'absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary transition-opacity duration-200',
-                    active ? 'opacity-100' : 'opacity-0'
-                  )} />
+                  <DockStaticLabel active={active}>{link.label}</DockStaticLabel>
                 </Link>
               );
             })}

@@ -18,6 +18,8 @@ import { ProvinceRepositoryImpl } from './domain/infrastructure/province/Provinc
 import { CategoryRepositoryImpl } from './domain/infrastructure/category/CategoryRepository.impl.js';
 import { AttributeRepositoryImpl } from './domain/infrastructure/attribute/AttributeRepository.impl.js';
 import { ArticleRepositoryImpl } from './domain/infrastructure/article/ArticleRepository.impl.js';
+import { ContentRepositoryImpl } from './domain/infrastructure/content/ContentRepository.impl.js';
+import { ContentService } from './domain/services/contentService.js';
 import { FavoriteRepositoryImpl } from './domain/infrastructure/favorite/FavoriteRepository.impl.js';
 import { NotificationPreferencesRepositoryImpl } from './domain/infrastructure/notificationPreferences/NotificationPreferencesRepository.impl.js';
 
@@ -45,6 +47,7 @@ import { ProvinceController } from './domain/presentation/province/ProvinceContr
 import { CategoryController } from './domain/presentation/category/CategoryController.js';
 import { AttributeController } from './domain/presentation/attribute/AttributeController.js';
 import { ArticleController } from './domain/presentation/article/ArticleController.js';
+import { ContentController } from './domain/presentation/content/ContentController.js';
 import { FavoriteController } from './domain/presentation/favorite/FavoriteController.js';
 import { NotificationPreferencesController } from './domain/presentation/notificationPreferences/NotificationPreferencesController.js';
 import { EmailVerificationController } from './domain/presentation/email/EmailVerificationController.js';
@@ -74,6 +77,8 @@ const provinceRepo = new ProvinceRepositoryImpl();
 const categoryRepo = new CategoryRepositoryImpl();
 const attributeRepo = new AttributeRepositoryImpl();
 const articleRepo = new ArticleRepositoryImpl();
+const contentRepo = new ContentRepositoryImpl();
+const contentService = new ContentService();
 const favoriteRepo = new FavoriteRepositoryImpl();
 const notificationPrefsRepo = new NotificationPreferencesRepositoryImpl();
 
@@ -121,6 +126,7 @@ export const provinceController = new ProvinceController(provinceRepo);
 export const categoryController = new CategoryController(categoryRepo);
 export const attributeController = new AttributeController(attributeRepo);
 export const articleController = new ArticleController(articleRepo);
+export const contentController = new ContentController(contentRepo, contentService);
 export const favoriteController = new FavoriteController(favoriteRepo);
 export const notificationPrefsController = new NotificationPreferencesController(notificationPrefsRepo);
 export const emailVerificationController = new EmailVerificationController();
@@ -165,8 +171,12 @@ export const di = {
     category: categoryRepo,
     attribute: attributeRepo,
     article: articleRepo,
+    content: contentRepo,
     favorite: favoriteRepo,
     notificationPreferences: notificationPrefsRepo,
+  },
+  services: {
+    content: contentService,
   },
   projection: {
     listing: listingProjectionRepo,

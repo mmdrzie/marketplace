@@ -27,6 +27,36 @@ const nextConfig: NextConfig = bundleAnalyzer({
     optimizePackageImports: ['@tanstack/react-query', 'react-icons', 'framer-motion'],
   },
   allowedDevOrigins: (process.env.NEXT_PUBLIC_DEV_ORIGINS || 'localhost').split(',').map(s => s.trim()),
+
+  async redirects() {
+    return [
+      {
+        source: '/tuning/:path*',
+        destination: '/catalog/tuning/:path*',
+        permanent: true,
+      },
+      {
+        source: '/catalog/tuning',
+        destination: '/catalog/tuning/parts',
+        permanent: true,
+      },
+      {
+        source: '/catalog/tuning/',
+        destination: '/catalog/tuning/parts',
+        permanent: true,
+      },
+      {
+        source: '/catalog/accessory',
+        destination: '/catalog/accessory/parts',
+        permanent: true,
+      },
+      {
+        source: '/catalog/accessory/',
+        destination: '/catalog/accessory/parts',
+        permanent: true,
+      },
+    ];
+  },
 });
 
 export default nextConfig;

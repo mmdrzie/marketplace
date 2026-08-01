@@ -11,7 +11,7 @@ const Icon = ({ d, className = 'w-5 h-5' }: { d: string; className?: string }) =
 
 import { ICON_PATHS } from '@/lib/icons';
 
-export function SectionHeader({ eyebrow, title, cta }: { eyebrow: string; title: string; cta?: { href: string; label: string } }) {
+export function SectionHeader({ eyebrow, title, cta }: { eyebrow: string; title: string; cta?: { href?: string; label: string; onClick?: () => void } }) {
   return (
     <SlideUp rootMargin="-60px" className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b border-border pb-6">
       <div>
@@ -21,12 +21,17 @@ export function SectionHeader({ eyebrow, title, cta }: { eyebrow: string; title:
         </span>
         <h2 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">{title}</h2>
       </div>
-      {cta && (
+      {cta && (cta.href ? (
         <Link href={cta.href} className="btn btn-glass btn-sm group shrink-0">
           {cta.label}
           <Icon d={ICON_PATHS.arrow} className="w-4 h-4 rotate-180 transition-transform group-hover:-translate-x-1" />
         </Link>
-      )}
+      ) : (
+        <button type="button" onClick={cta.onClick} className="btn btn-glass btn-sm group shrink-0">
+          {cta.label}
+          <Icon d={ICON_PATHS.arrow} className="w-4 h-4 rotate-180 transition-transform group-hover:-translate-x-1" />
+        </button>
+      ))}
     </SlideUp>
   );
 }

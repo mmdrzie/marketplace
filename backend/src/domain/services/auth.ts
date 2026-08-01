@@ -128,7 +128,7 @@ export class AuthService {
     type: 'email' | 'phone';
     identifier: string;
     code: string;
-    role?: 'user' | 'dealer' | 'agency' | 'store';
+    role?: 'user' | 'dealer' | 'agency' | 'store' | 'workshop';
   }) {
     const stored = await this.verificationRepo.findLatestRegistrationOtp(input.identifier, input.type);
     if (!stored) throw AppError.otpInvalid();

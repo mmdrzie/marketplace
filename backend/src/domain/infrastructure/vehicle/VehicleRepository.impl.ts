@@ -27,6 +27,19 @@ export class VehicleRepositoryImpl implements VehicleRepository {
     return (rows as Record<string, unknown>[]).map(r => Brand.fromSnapshot(this.brandRow(r)));
   }
 
+  async findBrandsByCategory(categorySlug: string, activeOnly = true): Promise<Brand[]> {
+    const db = await getDb();
+    const { rows } = await db.query(
+      `SELECT b.* FROM brands b
+       JOIN brand_categories bc ON bc.brand_id = b.id
+       JOIN categories c ON c.id = bc.category_id
+       WHERE c.slug = $1 AND b.deleted_at IS NULL${activeOnly ? ' AND b.is_active = true' : ''}
+       ORDER BY b.name`,
+      [categorySlug],
+    );
+    return (rows as Record<string, unknown>[]).map(r => Brand.fromSnapshot(this.brandRow(r)));
+  }
+
   async saveBrand(brand: Brand): Promise<void> {
     const db = await getDb();
     const s = brand.snapshot();
@@ -59,6 +72,18 @@ export class VehicleRepositoryImpl implements VehicleRepository {
     const { rows } = await db.query(
       `SELECT * FROM vehicle_models WHERE brand_id = $1 AND deleted_at IS NULL${activeOnly ? ' AND is_active = true' : ''} ORDER BY name`,
       [brandId],
+    );
+    return (rows as Record<string, unknown>[]).map(r => VehicleModel.fromSnapshot(this.modelRow(r)));
+  }
+
+  async findModelsByBrandAndCategory(brandId: number, categorySlug: string, activeOnly = true): Promise<VehicleModel[]> {
+    const db = await getDb();
+    const { rows } = await db.query(
+      `SELECT vm.* FROM vehicle_models vm
+       JOIN categories c ON c.id = vm.category_id
+       WHERE vm.brand_id = $1 AND c.slug = $2 AND vm.deleted_at IS NULL${activeOnly ? ' AND vm.is_active = true' : ''}
+       ORDER BY vm.name`,
+      [brandId, categorySlug],
     );
     return (rows as Record<string, unknown>[]).map(r => VehicleModel.fromSnapshot(this.modelRow(r)));
   }

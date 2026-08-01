@@ -9,6 +9,8 @@ import { notificationPreferencesRepo } from '../repositories/notificationPrefere
 
 const router = new Hono();
 
+router.get('/', auth(), (c) => userController.getProfile(c));
+
 router.put('/', auth(), zValidator('json', updateProfileSchema), (c) => userController.updateProfile(c));
 
 router.post('/avatar', auth(), zValidator('json', z.object({

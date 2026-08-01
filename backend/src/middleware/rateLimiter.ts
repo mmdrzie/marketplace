@@ -42,6 +42,10 @@ function sweepExpired(now: number) {
 
 export function rateLimiter(name: string): MiddlewareHandler {
   return async (c, next) => {
+    if (process.env.NODE_ENV === 'development') {
+      await next();
+      return;
+    }
     sweepExpired(Date.now());
     const config = rateLimits[name];
     if (!config) {

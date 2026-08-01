@@ -112,7 +112,7 @@ export default function ComparePage() {
               
               {/* Radar Chart Section */}
               {radarSeries.length >= 2 && (
-                <div className="glass rounded-3xl p-6 md:p-8 border border-border-subtle shadow-sm overflow-hidden">
+                <div className="glass rounded-3xl p-6 md:p-8 border border-border-subtle shadow-sm overflow-x-auto">
                   <h3 className="text-sm font-bold text-foreground mb-8 uppercase tracking-wider flex items-center gap-2">
                     <span className="w-1 h-4 bg-primary rounded-full"></span>
                     مقایسه فنی (رادار)
@@ -130,7 +130,7 @@ export default function ComparePage() {
 
               {/* Depreciation Chart Section */}
               {depreciationItems.length >= 2 && (
-                <div className="glass rounded-3xl p-6 md:p-8 border border-border-subtle shadow-sm overflow-hidden">
+                <div className="glass rounded-3xl p-6 md:p-8 border border-border-subtle shadow-sm overflow-x-auto">
                   <h3 className="text-sm font-bold text-foreground mb-8 uppercase tracking-wider flex items-center gap-2">
                     <span className="w-1 h-4 bg-primary rounded-full"></span>
                     نمودار استهلاک قیمت

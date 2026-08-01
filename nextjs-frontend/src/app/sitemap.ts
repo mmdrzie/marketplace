@@ -16,17 +16,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 0.8,
     },
-    {
-      url: `${baseUrl}/categories/car`,
+    ...['sedan', 'motorcycles', 'tractor-head', 'trailer', 'truck', 'light-truck', 'industrial-machinery', 'agricultural-machinery', 'construction-machinery', 'bus-van', 'parts'].map((slug) => ({
+      url: `${baseUrl}/categories/${slug}`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: 'daily' as const,
       priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/categories/truck`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
+    })),
   ];
 }

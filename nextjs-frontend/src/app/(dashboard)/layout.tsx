@@ -77,6 +77,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       label: 'سایر',
       links: [
         { href: '/parts', label: 'قطعات یدکی و ادوات', icon: PartsIcon },
+        { href: '/catalog/tuning', label: 'قطعات تیونینگ', icon: PartsIcon },
+        { href: '/catalog/accessory', label: 'اکسسوری خودرو', icon: PartsIcon },
+        { href: '/workshops', label: 'تعمیرکاران و تیونرها', icon: PartsIcon },
+        { href: '/workshop', label: 'پنل تعمیرکار', icon: PartsIcon },
         { href: '/dealer/subscription', label: 'خرید اشتراک حرفه‌ای', icon: SubscriptionIcon },
         { href: '/', label: 'بازگشت به سایت', icon: BackToSiteIcon },
       ],

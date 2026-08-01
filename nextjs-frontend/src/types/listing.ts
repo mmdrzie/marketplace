@@ -29,6 +29,10 @@ export interface ListingDetail extends Listing {
   attributes: AttributeValue[];
   is_favorited?: boolean;
   expires_at?: string | null;
+  vehicle_model_id?: number;
+  vehicle_variant_id?: number | null;
+  year?: number | null;
+  mileage?: number | null;
 }
 
 export interface ListingImage {

@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, lazy, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function LoginPage() {
+const DevLoginSection = lazy(() =>
+  import('@/components/dev/TestLoginSection').catch(() => ({ default: () => null }))
+);
+
+function LoginInner() {
   const router = useRouter();
+  const sp = useSearchParams();
+  const redirectTo = sp.get('redirect');
   const { loginWithEmail, loading, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +23,7 @@ export default function LoginPage() {
     if (!email || !password) return;
     try {
       await loginWithEmail(email, password);
-      router.push('/');
+      router.push(redirectTo || '/');
     } catch { /* ignore */ }
   };
 
@@ -74,9 +80,23 @@ export default function LoginPage() {
 
         <div className="flex items-center justify-between text-sm">
           <Link href="/forgot-password" className="text-primary hover:brightness-110 font-medium">رمز عبور را فراموش کرده‌اید؟</Link>
-          <Link href="/register" className="text-muted-foreground hover:text-foreground transition-colors font-light">ثبت نام</Link>
+          <Link href={redirectTo ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'} className="text-muted-foreground hover:text-foreground transition-colors font-light">ثبت نام</Link>
         </div>
       </form>
+
+      {process.env.NODE_ENV === 'development' && (
+        <Suspense fallback={null}>
+          <DevLoginSection />
+        </Suspense>
+      )}
     </FadeIn>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
   );
 }

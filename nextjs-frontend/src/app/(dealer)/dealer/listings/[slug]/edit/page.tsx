@@ -53,9 +53,11 @@ export default function DealerEditListingPage() {
     price_type: listing.price_type,
     province_id: listing.province_id ?? 0,
     city_id: listing.city_id ?? 0,
-    attributes: Object.fromEntries(
-      (listing.attributes ?? []).map((a) => [a.name, a.value])
-    ),
+    vehicleModelId: listing.vehicle_model_id ?? undefined,
+    vehicleVariantId: listing.vehicle_variant_id ?? null,
+    year: listing.year != null ? String(listing.year) : undefined,
+    mileage: listing.mileage != null ? String(listing.mileage) : undefined,
+    attributes: (listing.attributes ?? []).map((a) => ({ attributeId: a.attribute_id, value: a.value })),
     images: listing.images ?? [],
   };
 

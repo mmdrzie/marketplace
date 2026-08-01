@@ -24,9 +24,13 @@ const createListingSchema = z.object({
   price: z.number().int().min(0).optional(),
   price_type: z.enum(['fixed', 'negotiable', 'auction']).optional(),
   category_id: z.number().int().positive(),
+  vehicleModelId: z.number().int().positive(),
+  vehicleVariantId: z.number().int().positive().optional(),
+  year: z.number().int().min(1300).max(1500).optional(),
+  mileage: z.number().int().min(0).optional(),
   province_id: z.number().int().positive().optional(),
   city_id: z.number().int().positive().optional(),
-  attributes: z.array(z.object({ attribute_id: z.number().int().positive(), value: z.string() })).optional(),
+  attributes: z.array(z.object({ attributeId: z.number().int().positive(), value: z.string() })).optional(),
   images: z.array(z.object({
     url: z.string(),
     thumbnail_url: z.string().optional(),
@@ -36,7 +40,7 @@ const createListingSchema = z.object({
   })).optional(),
 });
 
-const updateListingSchema = createListingSchema.partial().omit({ images: true, attributes: true });
+const updateListingSchema = createListingSchema.partial().omit({ images: true });
 
 const actionSchema = z.object({
   action: z.enum(['submit', 'sold', 'renew', 'approve', 'reject']),
@@ -97,6 +101,19 @@ router.get('/', optionalAuth(), async (c) => {
     model: query.model,
     year_from: query.year_from,
     year_to: query.year_to,
+    seller_type: query.seller_type,
+    mileage_from: query.mileage_from,
+    mileage_to: query.mileage_to,
+    mileage_zero: query.mileage_zero,
+    gearbox: query.gearbox,
+    has_photo: query.has_photo,
+    has_price: query.has_price,
+    color: query.color,
+    fuel_type: query.fuel_type,
+    special_case: query.special_case,
+    body_condition: query.body_condition,
+    cylinders: query.cylinders,
+    drivetrain: query.drivetrain,
     sort: query.sort as Parameters<typeof listingRepo.findAll>[0]['sort'],
     page: parseIntOrUndefined(query.page),
     perPage: parseIntOrUndefined(query.per_page),
@@ -174,25 +191,25 @@ router.post('/', auth(), rateLimiter('publishListing'), zValidator('json', creat
   const baseSlug = generateSlug(body.title);
   const slug = await ensureUniqueSlug(baseSlug);
 
-  const listing = await listingRepo.create({
-    user_id: user.id,
-    category_id: body.category_id,
-    title: body.title,
-    slug,
-    description: body.description,
-    price: body.price,
-    price_type: body.price_type || 'fixed',
-    province_id: body.province_id ?? null,
-    city_id: body.city_id ?? null,
-  });
-
-  if (body.attributes?.length) {
-    await listingRepo.setAttributes(listing.id, body.attributes);
-  }
-
-  if (body.images?.length) {
-    await listingRepo.addImages(listing.id, body.images);
-  }
+  const listing = await listingRepo.createWithRelations(
+    {
+      user_id: user.id,
+      category_id: body.category_id,
+      vehicle_model_id: body.vehicleModelId,
+      vehicle_variant_id: body.vehicleVariantId ?? null,
+      year: body.year ?? null,
+      mileage: body.mileage ?? null,
+      title: body.title,
+      slug,
+      description: body.description,
+      price: body.price,
+      price_type: body.price_type || 'fixed',
+      province_id: body.province_id ?? null,
+      city_id: body.city_id ?? null,
+    },
+    body.attributes,
+    body.images,
+  );
 
   await outboxWriter.write({
     aggregateType: 'listing', aggregateId: String(listing.id),
@@ -214,7 +231,7 @@ router.put('/:id', auth(), zValidator('json', updateListingSchema), async (c) =>
   if (!listing) throw AppError.notFound('Listing not found');
   if (listing.user_id !== user.id) throw AppError.forbidden('You can only edit your own listings');
 
-  const updated = await listingRepo.update(id, body);
+  const updated = await listingRepo.updateWithRelations(id, body, body.attributes);
 
   cache.invalidate(`listing:${listing.slug}`);
   cache.invalidatePattern('listings:');

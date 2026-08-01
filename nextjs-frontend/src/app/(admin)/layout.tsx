@@ -12,6 +12,7 @@ import { PanelSidebar, type NavItem, type NavSection } from '@/components/layout
 import { useSidebarState } from '@/hooks/useSidebarState';
 import {
   HomeIcon,
+  StoreIcon,
   ModerationIcon,
   ListingsIcon,
   UsersIcon,
@@ -30,10 +31,18 @@ const NAV_LINKS: NavItem[] = [
   { href: '/admin/moderation', label: 'در انتظار تایید', icon: ModerationIcon },
   { href: '/admin/listings', label: 'همه آگهی‌ها', icon: ListingsIcon },
   { href: '/admin/users', label: 'کاربران', icon: UsersIcon },
+  { href: '/admin/stores', label: 'فروشگاه‌ها', icon: StoreIcon },
   { href: '/admin/reports', label: 'گزارشات', icon: ReportsIcon },
   { href: '/admin/categories', label: 'دسته‌بندی‌ها', icon: CategoriesIcon },
   { href: '/admin/attributes', label: 'ویژگی‌ها', icon: AttributesIcon },
   { href: '/admin/provinces', label: 'استان‌ها و شهرها', icon: ProvincesIcon },
+  { href: '/admin/contents', label: 'مدیریت محتوا', icon: ListingsIcon },
+  { href: '/admin/contents/categories', label: 'دسته‌بندی محتوا', icon: CategoriesIcon },
+  { href: '/admin/contents/types', label: 'انواع محتوا', icon: AttributesIcon },
+  { href: '/admin/parts', label: 'کاتالوگ قطعات', icon: StoreIcon },
+  { href: '/admin/parts/categories', label: 'دسته‌بندی قطعات', icon: CategoriesIcon },
+  { href: '/admin/parts/suggestions', label: 'پیشنهادات فروشندگان', icon: ModerationIcon },
+  { href: '/admin/workshops', label: 'تعمیرکاران و تیونرها', icon: StoreIcon },
   { href: '/admin/settings', label: 'تنظیمات', icon: SettingsIcon },
 ];
 

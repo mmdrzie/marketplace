@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +13,17 @@ type RegisterMethod = 'email' | 'phone';
 type Step = 'form' | 'otp';
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterInner />
+    </Suspense>
+  );
+}
+
+function RegisterInner() {
   const router = useRouter();
+  const sp = useSearchParams();
+  const redirectTo = sp.get('redirect');
   const { sendRegisterOtp, registerWithOtp, loading, error } = useAuth();
   const [method, setMethod] = useState<RegisterMethod>('email');
   const [name, setName] = useState('');
@@ -25,7 +35,7 @@ export default function RegisterPage() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  const [accountRole, setAccountRole] = useState<'user' | 'dealer' | 'agency' | 'store'>('user');
+  const [accountRole, setAccountRole] = useState<'user' | 'dealer' | 'agency' | 'store' | 'workshop'>('user');
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -119,7 +129,7 @@ export default function RegisterPage() {
     setLocalError(null);
     try {
       await registerWithOtp(identifier.trim(), method, otp, password, name.trim(), accountRole);
-      router.push('/');
+      router.push(redirectTo || '/');
     } catch {
       // error handled by hook
     }
@@ -171,6 +181,7 @@ export default function RegisterPage() {
           { value: 'dealer', label: 'نمایندگی' },
           { value: 'agency', label: 'نمایشگاه' },
           { value: 'store', label: 'فروشگاه' },
+          { value: 'workshop', label: 'تعمیرکار / تیونر' },
         ] as const).map((opt) => (
           <button
             key={opt.value}
@@ -355,7 +366,7 @@ export default function RegisterPage() {
         )}
 
         <p className="text-center text-sm text-muted-foreground font-light">
-          حساب کاربری دارید؟ <Link href="/login" className="text-primary font-medium hover:underline transition-colors">ورود به حساب</Link>
+          حساب کاربری دارید؟ <Link href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'} className="text-primary font-medium hover:underline transition-colors">ورود به حساب</Link>
         </p>
       </div>
     </FadeIn>

@@ -38,6 +38,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     { href: '/search', label: 'جستجو' },
     { href: '/categories', label: 'دسته‌بندی‌ها' },
     { href: '/news', label: 'اخبار' },
+    { href: '/encyclopedia', label: 'دانشنامه' },
     { href: '/compare', label: 'مقایسه' },
     { href: '/car-vs-car', label: 'ماشین با ماشین' },
     { href: '/market-pulse', label: 'نبض بازار' },
@@ -45,6 +46,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     { href: '/tenders', label: 'مناقصات' },
     { href: '/imported', label: 'وارداتی' },
     { href: '/parts', label: 'قطعات یدکی' },
+    { href: '/catalog/tuning', label: 'قطعات تیونینگ' },
+    { href: '/catalog/accessory', label: 'اکسسوری خودرو' },
+    { href: '/workshops', label: 'تعمیرکاران و تیونرها' },
+    { href: '/insurance', label: 'بیمه' },
     { href: '/pricing', label: 'تعرفه‌ها' },
   ];
 

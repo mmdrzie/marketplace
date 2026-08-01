@@ -5,12 +5,12 @@ import { authConfig } from '../config/auth.js';
 export interface AuthUser {
   id: string;
   email: string;
-  role: 'user' | 'dealer' | 'agency' | 'store' | 'admin';
+  role: 'user' | 'dealer' | 'agency' | 'store' | 'workshop' | 'admin';
   phoneVerified: boolean;
   emailVerified: boolean;
 }
 
-const ROLES = ['user', 'dealer', 'agency', 'store', 'admin'] as const;
+const ROLES = ['user', 'dealer', 'agency', 'store', 'workshop', 'admin'] as const;
 
 export function auth(...allowedRoles: string[]) {
   return async (c: Context, next: Next) => {

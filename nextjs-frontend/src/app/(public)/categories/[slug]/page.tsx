@@ -11,43 +11,13 @@ import { ListingGrid } from '@/components/listing/ListingGrid';
 import { SortSelect } from '@/components/search/SortSelect';
 import { AttributeFilters } from '@/components/search/AttributeFilters';
 import { GlassSelect } from '@/components/common/GlassSelect';
+import { SearchableSelect } from '@/components/common/SearchableSelect';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { StaggerContainer } from '@/components/common/MotionDiv.client';
 import { SkeletonListings } from '@/components/common/Skeleton';
 import type { Category } from '@/types';
-import { HEAVY_BRANDS } from '@/lib/brands';
-
-const BRANDS = HEAVY_BRANDS;
-
-const MODELS_BY_BRAND: Record<string, string[]> = {
-  'کوماتسو': ['PC200', 'PC300', 'PC400', 'PC600', 'PC1250', 'D65', 'D85', 'D155', 'D375', 'WA380', 'WA470', 'WA600', 'WA900', 'GD511', 'HM400'],
-  'کاترپیلار': ['320D', '330D', '336D', '345D', '365C', '390F', 'D6', 'D8', 'D9', 'D10', 'D11', '950', '966', '980', '988', '992', '140', '16', '725', '740', '777', '789'],
-  'هیتاچی': ['ZX135', 'ZX200', 'ZX330', 'ZX470', 'ZX650', 'ZX890', 'EX1200', 'ZW180', 'ZW220', 'ZW310', 'ZW370'],
-  'ولوو': ['EC200', 'EC350', 'EC480', 'EC700', 'EC950', 'L60', 'L90', 'L120', 'L180', 'L220', 'G720', 'A25', 'A40', 'A60'],
-  'JCB': ['3CX', '4CX', 'JS200', 'JS240', 'JS330', 'JS370', '426', '436', '531', '540'],
-  'لیبهر': ['R914', 'R924', 'R936', 'R944', 'R954', 'R966', 'PR724', 'PR754', 'PR776', 'L524', 'L538', 'L556', 'L580'],
-  'سانی': ['SY135', 'SY215', 'SY335', 'SY485', 'SY750', 'SY980', 'STC250', 'SRT55', 'SRT95'],
-  'XCMG': ['XE60', 'XE215', 'XE335', 'XE470', 'XE900', 'XE3000', 'LW300', 'LW500', 'LW800', 'GR215', 'GR300'],
-  'SDLG': ['LG918', 'LG936', 'LG956', 'LG958', 'LG968', 'G9138', 'G9190'],
-  'لونگ‌گونگ': ['ZL50', 'CDM855', 'LG8160', 'LG8200', 'ZL30'],
-  'دووسان': ['DX225', 'DX300', 'DX380', 'DX420', 'DX480', 'DX520', 'DL200', 'DL300', 'DL420'],
-  'هیوندای': ['R210', 'R305', 'R380', 'R480', 'R520', 'R800', 'R1400', 'HL760', 'HL960', 'HL980'],
-  'بیلاروس': ['500', '800', '900', '82.1', '1221', '1502'],
-  'تراکتور ایران': ['IT285', 'IT399', 'IT450', 'IT620', 'IT850', 'IT900', 'IT1100', 'IT1300'],
-  'جان دیر': ['5045', '5075', '5090', '5100', '6125', '6145', '6195', '3150', '624', '644'],
-  'مسی فرگوسن': ['285', '375', '399', '485', '4690', '5450', '5630', '5650'],
-  'نیوهلند': ['8040', '8050', '9070', 'TT175', 'T6020', 'T6030', 'T7070', 'T7060'],
-  'کیس': ['CX75', 'CX210', 'CX350', 'CX490', '845', '750', '1150', '1650'],
-  'اسکانیا': ['P360', 'G440', 'G460', 'R420', 'R500', 'R620', 'S730', '113'],
-  'ولوو تراکس': ['FH440', 'FH460', 'FH500', 'FH540', 'FH16', 'FM420', 'FM460', 'FM540', 'FMX'],
-  'مان': ['TGS 18.440', 'TGS 26.440', 'TGS 33.480', 'TGX 18.480', 'TGX 26.500', 'TGX 18.640'],
-  'رنو تراکس': ['K440', 'T460', 'T520', 'K520', 'C460', 'C520', 'Magnum 520'],
-  'بنز': ['Actros 1840', 'Actros 2640', 'Actros 3340', 'Actros 4148', 'Atego 1518', 'Axor 1835', '1923', 'Unimog U400', 'Zetros'],
-  'فوتون': ['Auman', 'BJ3253', 'BJ3313', 'Foton Lovol'],
-  'کامیونت': ['NPR', 'NQR', 'FVR', 'FTR', 'Giga', 'Forward'],
-  'هینو': ['300', '500', '700', 'Dutro', 'Profia'],
-};
+import { getBrandsByCategory, getModelsByBrand } from '@/lib/taxonomy';
 
 const CURRENT_YEAR = new Date().getFullYear() - 621;
 const YEARS = Array.from({ length: 26 }, (_, i) => String(CURRENT_YEAR - i));
@@ -132,25 +102,30 @@ export default function CategoryPage() {
     ...attrFilters,
   });
 
+  const brands = getBrandsByCategory(slug);
+  const models = getModelsByBrand(brand, slug);
+
   const filterContent = (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium mb-1.5 block text-foreground">برند</label>
-          <GlassSelect
+          <SearchableSelect
             value={brand}
             onChange={(val) => { setBrand(val); setModel(''); }}
-            options={BRANDS.map((b) => ({ value: b, label: b }))}
+            options={brands.map((b) => ({ value: b, label: b }))}
             placeholder="همه برندها"
+            searchPlaceholder="جستجوی برند..."
           />
         </div>
         <div>
           <label className="text-sm font-medium mb-1.5 block text-foreground">مدل محصول</label>
-          <GlassSelect
+          <SearchableSelect
             value={model}
             onChange={(val) => setModel(val)}
-            options={(brand ? (MODELS_BY_BRAND[brand] || []) : []).map((m) => ({ value: m, label: m }))}
+            options={models.map((m) => ({ value: m, label: m }))}
             placeholder="همه مدل‌ها"
+            searchPlaceholder="جستجوی مدل..."
             disabled={!brand}
           />
         </div>

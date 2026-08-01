@@ -1,6 +1,6 @@
 import { Slug } from '../value-objects/Slug.js';
 
-export type UserRole = 'user' | 'dealer' | 'agency' | 'store' | 'admin';
+export type UserRole = 'user' | 'dealer' | 'agency' | 'store' | 'workshop' | 'admin';
 export type UserStatus = 'active' | 'banned' | 'suspended';
 
 export interface UserSnapshot {

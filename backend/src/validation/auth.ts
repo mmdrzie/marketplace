@@ -12,7 +12,7 @@ export const registerWithOtpSchema = z.object({
   type: z.enum(['email', 'phone']),
   identifier: z.string().min(3).max(255),
   code: z.string().length(6, 'OTP code must be 6 digits'),
-  role: z.enum(['user', 'dealer', 'agency', 'store']).optional().default('user'),
+  role: z.enum(['user', 'dealer', 'agency', 'store', 'workshop']).optional().default('user'),
 });
 
 export const sendRegisterOtpSchema = z.object({

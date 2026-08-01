@@ -169,7 +169,7 @@ export default function CarVsCarPage() {
           </div>
 
           {/* Visual Bar Comparison */}
-          <div className="glass rounded-3xl p-6 md:p-8 border border-border-subtle mb-8 overflow-hidden">
+          <div className="glass rounded-3xl p-6 md:p-8 border border-border-subtle mb-8 overflow-x-auto">
             <h3 className="text-sm font-bold text-foreground mb-8 uppercase tracking-wider flex items-center gap-2">
               <span className="w-1 h-4 bg-primary rounded-full"></span>
               مقایسه بصری مشخصات
@@ -186,7 +186,7 @@ export default function CarVsCarPage() {
                 return (
                   <div key={spec.key as string}>
                     <div className="text-center mb-3 text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{spec.label}</div>
-                    <div className="flex items-center justify-center gap-4">
+                    <div className="flex items-center justify-center gap-4 min-w-[320px]">
                       <div className="flex-1 flex items-center gap-3 flex-row-reverse">
                         <span className="text-xs font-medium text-foreground w-14 text-left shrink-0">{v1.toLocaleString('fa-IR')}</span>
                         <div className="flex-1 h-2 bg-surface-2/50 rounded-full overflow-hidden">

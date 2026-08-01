@@ -1,47 +1,94 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { AttributeFilters } from './AttributeFilters';
-import { HEAVY_BRANDS } from '@/lib/brands';
 import { GlassSelect } from '@/components/common/GlassSelect';
+import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { getBrandsByCategory, getModelsByBrand } from '@/lib/taxonomy';
 import type { Category } from '@/types';
-
-const BRANDS = HEAVY_BRANDS;
-
-const MODELS_BY_BRAND: Record<string, string[]> = {
-  'کوماتسو': ['PC200', 'PC300', 'PC400', 'PC600', 'PC1250', 'D65', 'D85', 'D155', 'D375', 'WA380', 'WA470', 'WA600', 'WA900', 'GD511', 'HM400'],
-  'کاترپیلار': ['320D', '330D', '336D', '345D', '365C', '390F', 'D6', 'D8', 'D9', 'D10', 'D11', '950', '966', '980', '988', '992', '140', '16', '725', '740', '777', '789'],
-  'هیتاچی': ['ZX135', 'ZX200', 'ZX330', 'ZX470', 'ZX650', 'ZX890', 'EX1200', 'ZW180', 'ZW220', 'ZW310', 'ZW370'],
-  'ولوو': ['EC200', 'EC350', 'EC480', 'EC700', 'EC950', 'L60', 'L90', 'L120', 'L180', 'L220', 'G720', 'A25', 'A40', 'A60'],
-  'JCB': ['3CX', '4CX', 'JS200', 'JS240', 'JS330', 'JS370', '426', '436', '531', '540'],
-  'لیبهر': ['R914', 'R924', 'R936', 'R944', 'R954', 'R966', 'PR724', 'PR754', 'PR776', 'L524', 'L538', 'L556', 'L580'],
-  'سانی': ['SY135', 'SY215', 'SY335', 'SY485', 'SY750', 'SY980', 'STC250', 'SRT55', 'SRT95'],
-  'XCMG': ['XE60', 'XE215', 'XE335', 'XE470', 'XE900', 'XE3000', 'LW300', 'LW500', 'LW800', 'GR215', 'GR300'],
-  'SDLG': ['LG918', 'LG936', 'LG956', 'LG958', 'LG968', 'G9138', 'G9190'],
-  'لونگ‌گونگ': ['ZL50', 'CDM855', 'LG8160', 'LG8200', 'ZL30'],
-  'دووسان': ['DX225', 'DX300', 'DX380', 'DX420', 'DX480', 'DX520', 'DL200', 'DL300', 'DL420'],
-  'هیوندای': ['R210', 'R305', 'R380', 'R480', 'R520', 'R800', 'R1400', 'HL760', 'HL960', 'HL980'],
-  'بیلاروس': ['500', '800', '900', '82.1', '1221', '1502'],
-  'تراکتور ایران': ['IT285', 'IT399', 'IT450', 'IT620', 'IT850', 'IT900', 'IT1100', 'IT1300'],
-  'جان دیر': ['5045', '5075', '5090', '5100', '6125', '6145', '6195', '3150', '624', '644'],
-  'مسی فرگوسن': ['285', '375', '399', '485', '4690', '5450', '5630', '5650'],
-  'نیوهلند': ['8040', '8050', '9070', 'TT175', 'T6020', 'T6030', 'T7070', 'T7060'],
-  'کیس': ['CX75', 'CX210', 'CX350', 'CX490', '845', '750', '1150', '1650'],
-  'اسکانیا': ['P360', 'G440', 'G460', 'R420', 'R500', 'R620', 'S730', '113'],
-  'ولوو تراکس': ['FH440', 'FH460', 'FH500', 'FH540', 'FH16', 'FM420', 'FM460', 'FM540', 'FMX'],
-  'مان': ['TGS 18.440', 'TGS 26.440', 'TGS 33.480', 'TGX 18.480', 'TGX 26.500', 'TGX 18.640'],
-  'رنو تراکس': ['K440', 'T460', 'T520', 'K520', 'C460', 'C520', 'Magnum 520'],
-  'بنز': ['Actros 1840', 'Actros 2640', 'Actros 3340', 'Actros 4148', 'Atego 1518', 'Axor 1835', '1923', 'Unimog U400', 'Zetros'],
-  'فوتون': ['Auman', 'BJ3253', 'BJ3313', 'Foton Lovol'],
-  'کامیونت': ['NPR', 'NQR', 'FVR', 'FTR', 'Giga', 'Forward'],
-  'هینو': ['300', '500', '700', 'Dutro', 'Profia'],
-};
 
 const CURRENT_YEAR = new Date().getFullYear() - 621;
 const YEARS = Array.from({ length: 26 }, (_, i) => String(CURRENT_YEAR - i));
 
-type Filters = {
+const CUSTOM_OPTION = '__custom__';
+
+const PRICE_PRESETS = [
+  { value: '300000000', label: '۳۰۰ میلیون' },
+  { value: '500000000', label: '۵۰۰ میلیون' },
+  { value: '700000000', label: '۷۰۰ میلیون' },
+  { value: '1000000000', label: '۱ میلیارد' },
+  { value: '1500000000', label: '۱ میلیارد و ۵۰۰ میلیون' },
+  { value: '3000000000', label: '۳ میلیارد' },
+  { value: '5000000000', label: '۵ میلیارد' },
+  { value: '7000000000', label: '۷ میلیارد' },
+  { value: '10000000000', label: '۱۰ میلیارد' },
+  { value: '15000000000', label: '۱۵ میلیارد' },
+  { value: CUSTOM_OPTION, label: 'وارد کردن مقدار دلخواه' },
+];
+
+const MILEAGE_PRESETS = [
+  { value: '1000', label: '۱,۰۰۰ کیلومتر' },
+  { value: '5000', label: '۵,۰۰۰ کیلومتر' },
+  { value: '10000', label: '۱۰,۰۰۰ کیلومتر' },
+  { value: '20000', label: '۲۰,۰۰۰ کیلومتر' },
+  { value: '30000', label: '۳۰,۰۰۰ کیلومتر' },
+  { value: '40000', label: '۴۰,۰۰۰ کیلومتر' },
+  { value: '50000', label: '۵۰,۰۰۰ کیلومتر' },
+  { value: '60000', label: '۶۰,۰۰۰ کیلومتر' },
+  { value: '70000', label: '۷۰,۰۰۰ کیلومتر' },
+  { value: '80000', label: '۸۰,۰۰۰ کیلومتر' },
+  { value: '90000', label: '۹۰,۰۰۰ کیلومتر' },
+  { value: '100000', label: '۱۰۰,۰۰۰ کیلومتر' },
+  { value: '150000', label: '۱۵۰,۰۰۰ کیلومتر' },
+  { value: CUSTOM_OPTION, label: 'وارد کردن به صورت دستی' },
+];
+
+const COLORS = [
+  { value: 'white', label: 'سفید', css: 'bg-white border border-border' },
+  { value: 'black', label: 'مشکی', css: 'bg-gray-900 text-white' },
+  { value: 'silver', label: 'نقره‌ای', css: 'bg-gray-300' },
+  { value: 'gray', label: 'نوک مدادی', css: 'bg-gray-500' },
+  { value: 'blue', label: 'آبی', css: 'bg-blue-600' },
+  { value: 'brown', label: 'قهوه‌ای', css: 'bg-amber-800 text-white' },
+  { value: 'red', label: 'قرمز', css: 'bg-red-600' },
+  { value: 'green', label: 'یشمی', css: 'bg-emerald-700 text-white' },
+];
+
+// Body condition options specific to commercial vehicles (truck, bus, van, etc.)
+const COMMERCIAL_BODY_CONDITIONS = [
+  'بدون رنگ', 'لپی رنگ', 'لپی تعویض', 'سینی جلو رنگ', 'سینی جلو تعویض',
+  'قیچی رنگ', 'یک لکه رنگ', 'چند لکه رنگ', 'دو لکه رنگ', 'دور رنگ',
+  'صافکاری بدون رنگ', 'گلگیر رنگ', 'کاپوت تعویض', 'گلگیر تعویض',
+  'کامل رنگ', 'درب تعویض', 'یک درب رنگ', 'کاپوت رنگ', 'دو درب رنگ',
+  'تصادفی', 'اتاق تعویض', 'سوخته', 'اوراقی', 'با سابقه تعمیر',
+  'بدون سابقه تعمیر',
+];
+
+const SUBCAT_LABEL: Record<string, string> = {
+  vehicles: 'نوع بدنه',
+  'construction-machinery': 'نوع ماشین‌آلات',
+  'agricultural-machinery': 'نوع ماشین‌آلات',
+  'industrial-machinery': 'نوع تجهیزات',
+  motorcycles: 'نوع موتورسیکلت',
+  'bus-van': 'نوع وسیله',
+  truck: 'نوع محور',
+  trailer: 'نوع تریلر',
+  'light-truck': 'نوع کاربری',
+  'tractor-head': 'نوع کشنده',
+  parts: 'دسته قطعات',
+};
+
+const COMMERCIAL_SUBCATS = new Set([
+  'truck', 'bus-van', 'light-truck', 'tractor-head', 'trailer',
+  'bus', 'minibus', 'van',
+  'kshndh-tk-mhvr', 'kshndh-dv-mhvr', 'kamyvn-tk-mhvr', 'kamyvn-dv-mhvr',
+  'kamyvn-chhar-mhvr', 'kamyvnt-khavr', 'tryl-r-dv-mhvr', 'tryl-r-sh-mhvr',
+  'tryl-r-kmrshkn-bvzhy',
+]);
+
+export type Filters = {
   category: string;
+  subcategories: string;
   province_id: string;
   city_id: string;
   sort: string;
@@ -51,6 +98,19 @@ type Filters = {
   year_to: string;
   price_min: string;
   price_max: string;
+  seller_type: string;
+  mileage_from: string;
+  mileage_to: string;
+  mileage_zero: string;
+  gearbox: string;
+  has_photo: string;
+  has_price: string;
+  color: string;
+  fuel_type: string;
+  special_case: string;
+  body_condition: string;
+  cylinders: string;
+  drivetrain: string;
   attributeFilters: Record<string, string>;
 };
 
@@ -59,6 +119,17 @@ interface FilterPanelProps {
   onFilterChange: (filters: Filters) => void;
   categories: Category[];
   provinces: Array<{ id: number; name: string; cities: Array<{ id: number; name: string }> }>;
+}
+
+function findCategory(slug: string, cats: Category[]): Category | null {
+  for (const cat of cats) {
+    if (cat.slug === slug) return cat;
+    if (cat.children) {
+      const found = findCategory(slug, cat.children);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 export function FilterPanel({ filters, onFilterChange, categories, provinces }: FilterPanelProps) {
@@ -76,6 +147,7 @@ export function FilterPanel({ filters, onFilterChange, categories, provinces }: 
   const resetFilters = useCallback(() => {
     onFilterChange({
       category: '',
+      subcategories: '',
       province_id: '',
       city_id: '',
       sort: 'newest',
@@ -85,17 +157,42 @@ export function FilterPanel({ filters, onFilterChange, categories, provinces }: 
       year_to: '',
       price_min: '',
       price_max: '',
+      seller_type: '',
+      mileage_from: '',
+      mileage_to: '',
+      mileage_zero: '',
+      gearbox: '',
+      has_photo: '',
+      has_price: '',
+      color: '',
+      fuel_type: '',
+      special_case: '',
+      body_condition: '',
+      cylinders: '',
+      drivetrain: '',
       attributeFilters: {},
     });
   }, [onFilterChange]);
 
-  const hasActiveFilters = filters.category || filters.province_id || filters.brand || filters.model || filters.year_from || filters.year_to || filters.price_min || filters.price_max || Object.keys(filters.attributeFilters).length > 0;
+  const hasActiveFilters = filters.category || filters.subcategories || filters.province_id || filters.brand || filters.model || filters.year_from || filters.year_to || filters.price_min || filters.price_max || filters.seller_type || filters.mileage_from || filters.mileage_to || filters.mileage_zero || filters.gearbox || filters.has_photo || filters.has_price || filters.color || filters.fuel_type || filters.special_case || filters.body_condition || filters.cylinders || filters.drivetrain || Object.keys(filters.attributeFilters).length > 0;
+
+  const subcatLabel = filters.category ? SUBCAT_LABEL[filters.category] : '';
+  const selectedSubcats = useMemo(() => new Set(filters.subcategories ? filters.subcategories.split(',').filter(Boolean) : []), [filters.subcategories]);
+
+  const toggleSubcat = useCallback((slug: string) => {
+    const next = new Set(selectedSubcats);
+    if (next.has(slug)) next.delete(slug); else next.add(slug);
+    emit({ subcategories: Array.from(next).join(',') });
+  }, [emit, selectedSubcats]);
+
+  // Static local data — instant, no API calls
+  const brands = getBrandsByCategory(filters.category || undefined);
+  const models = getModelsByBrand(filters.brand, filters.category || undefined);
 
   const allCategories = categories ?? [];
   const allProvinces = provinces ?? [];
   const selectedProvince = provinces?.find((p) => p.id === Number(filters.province_id));
   const cities = selectedProvince?.cities ?? [];
-  const selectedBrandModels = MODELS_BY_BRAND[filters.brand] || [];
 
   return (
     <div className="space-y-5">
@@ -116,31 +213,133 @@ export function FilterPanel({ filters, onFilterChange, categories, provinces }: 
         <label className="block text-xs font-bold text-muted-foreground mb-2">دسته‌بندی</label>
         <GlassSelect
           value={filters.category}
-          onChange={(val) => emit({ category: val, brand: '', model: '', attributeFilters: {} })}
-          options={allCategories?.map((cat: Category) => ({ value: cat.slug, label: cat.name })) || []}
+          onChange={(val) => emit({ category: val, subcategories: '', brand: '', model: '', attributeFilters: {} })}
+          options={allCategories?.filter((cat: Category) => cat.slug !== 'parts').map((cat: Category) => ({ value: cat.slug, label: cat.name })) || []}
           placeholder="همه دسته‌بندی‌ها"
         />
+      </div>
+
+      {(() => {
+        const selectedCat = filters.category ? findCategory(filters.category, allCategories) : null;
+        if (!selectedCat?.children?.length) return null;
+        return (
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground mb-2">{subcatLabel || 'زیردسته'}</label>
+            <div className="flex flex-wrap gap-2">
+              {selectedCat.children.map((child) => {
+                const active = selectedSubcats.has(child.slug);
+                return (
+                  <button
+                    key={child.slug}
+                    type="button"
+                    onClick={() => toggleSubcat(child.slug)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                      active
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {child.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      <div>
+        <label className="block text-xs font-bold text-muted-foreground mb-2">فروشنده</label>
+        <div className="flex gap-2">
+          {[
+            { value: '', label: 'همه' },
+            { value: 'personal', label: 'شخصی' },
+            { value: 'dealership', label: 'نمایشگاه' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => emit({ seller_type: opt.value })}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                filters.seller_type === opt.value || (!filters.seller_type && opt.value === '')
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-muted-foreground mb-2">برند</label>
-          <GlassSelect
+          <SearchableSelect
             value={filters.brand}
             onChange={(val) => emit({ brand: val, model: '' })}
-            options={BRANDS.map((b) => ({ value: b, label: b }))}
+            options={brands.map((b) => ({ value: b, label: b }))}
             placeholder="همه برندها"
+            searchPlaceholder="جستجوی برند..."
           />
         </div>
 
         <div>
           <label className="block text-xs font-bold text-muted-foreground mb-2">مدل محصول</label>
-          <GlassSelect
+          <SearchableSelect
             value={filters.model}
             onChange={(val) => emit({ model: val })}
-            options={selectedBrandModels.map((m) => ({ value: m, label: m }))}
+            options={models.map((m) => ({ value: m, label: m }))}
             placeholder="همه مدل‌ها"
+            searchPlaceholder="جستجوی مدل..."
             disabled={!filters.brand}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-muted-foreground mb-2">گیربکس</label>
+        <div className="flex gap-2">
+          {[
+            { value: '', label: 'همه' },
+            { value: 'automatic', label: 'اتوماتیک' },
+            { value: 'manual', label: 'دنده‌ای' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => emit({ gearbox: opt.value })}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                filters.gearbox === opt.value || (!filters.gearbox && opt.value === '')
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-muted-foreground mb-2">استان</label>
+          <GlassSelect
+            value={filters.province_id}
+            onChange={(val) => emit({ province_id: val, city_id: '' })}
+            options={allProvinces?.map((p: { id: number; name: string }) => ({ value: String(p.id), label: p.name })) || []}
+            placeholder="همه استان‌ها"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-muted-foreground mb-2">شهر</label>
+          <GlassSelect
+            value={filters.city_id}
+            onChange={(val) => emit({ city_id: val })}
+            options={(cities as Array<{ id: number; name: string }>).map((c) => ({ value: String(c.id), label: c.name }))}
+            placeholder="همه شهرها"
+            disabled={!filters.province_id}
           />
         </div>
       </div>
@@ -167,47 +366,270 @@ export function FilterPanel({ filters, onFilterChange, categories, provinces }: 
       </div>
 
       <div>
+        <label className="block text-xs font-bold text-muted-foreground mb-2">کارکرد (کیلومتر)</label>
+        <button
+          type="button"
+          onClick={() => emit({ mileage_zero: filters.mileage_zero === '1' ? '' : '1', mileage_from: '', mileage_to: '' })}
+          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all mb-3 ${
+            filters.mileage_zero === '1'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          }`}
+        >
+          صفر کیلومتر
+        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <GlassSelect
+              value={MILEAGE_PRESETS.find((p) => p.value === filters.mileage_from)?.value || (filters.mileage_from ? CUSTOM_OPTION : '')}
+              onChange={(val) => emit({ mileage_from: val === CUSTOM_OPTION ? '' : val, mileage_zero: '' })}
+              options={MILEAGE_PRESETS}
+              placeholder="از کارکرد"
+              disabled={filters.mileage_zero === '1'}
+            />
+            {(!filters.mileage_from || !MILEAGE_PRESETS.some((p) => p.value === filters.mileage_from)) && (
+              <input
+                value={filters.mileage_from}
+                onChange={(e) => emit({ mileage_from: e.target.value, mileage_zero: '' })}
+                className="glass-input rounded-xl px-3 py-2 text-xs text-foreground mt-2"
+                placeholder="مقدار دلخواه"
+                type="number"
+                disabled={filters.mileage_zero === '1'}
+              />
+            )}
+          </div>
+          <div>
+            <GlassSelect
+              value={MILEAGE_PRESETS.find((p) => p.value === filters.mileage_to)?.value || (filters.mileage_to ? CUSTOM_OPTION : '')}
+              onChange={(val) => emit({ mileage_to: val === CUSTOM_OPTION ? '' : val, mileage_zero: '' })}
+              options={MILEAGE_PRESETS}
+              placeholder="تا کارکرد"
+              disabled={filters.mileage_zero === '1'}
+            />
+            {(!filters.mileage_to || !MILEAGE_PRESETS.some((p) => p.value === filters.mileage_to)) && (
+              <input
+                value={filters.mileage_to}
+                onChange={(e) => emit({ mileage_to: e.target.value, mileage_zero: '' })}
+                className="glass-input rounded-xl px-3 py-2 text-xs text-foreground mt-2"
+                placeholder="مقدار دلخواه"
+                type="number"
+                disabled={filters.mileage_zero === '1'}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
         <label className="block text-xs font-bold text-muted-foreground mb-2">محدوده قیمت</label>
         <div className="grid grid-cols-2 gap-2">
-          <input
-            value={filters.price_min}
-            onChange={(e) => emit({ price_min: e.target.value })}
-            className="glass-input rounded-xl px-3 py-2 text-xs text-foreground"
-            placeholder="حداقل"
-            type="number"
-          />
-          <input
-            value={filters.price_max}
-            onChange={(e) => emit({ price_max: e.target.value })}
-            className="glass-input rounded-xl px-3 py-2 text-xs text-foreground"
-            placeholder="حداکثر"
-            type="number"
-          />
+          <div>
+            <GlassSelect
+              value={PRICE_PRESETS.find((p) => p.value === filters.price_min)?.value || (filters.price_min ? CUSTOM_OPTION : '')}
+              onChange={(val) => emit({ price_min: val === CUSTOM_OPTION ? '' : val })}
+              options={PRICE_PRESETS}
+              placeholder="از قیمت"
+            />
+            {(!filters.price_min || !PRICE_PRESETS.some((p) => p.value === filters.price_min)) && (
+              <input
+                value={filters.price_min}
+                onChange={(e) => emit({ price_min: e.target.value })}
+                className="glass-input rounded-xl px-3 py-2 text-xs text-foreground mt-2"
+                placeholder="مقدار دلخواه"
+                type="number"
+              />
+            )}
+          </div>
+          <div>
+            <GlassSelect
+              value={PRICE_PRESETS.find((p) => p.value === filters.price_max)?.value || (filters.price_max ? CUSTOM_OPTION : '')}
+              onChange={(val) => emit({ price_max: val === CUSTOM_OPTION ? '' : val })}
+              options={PRICE_PRESETS}
+              placeholder="تا قیمت"
+            />
+            {(!filters.price_max || !PRICE_PRESETS.some((p) => p.value === filters.price_max)) && (
+              <input
+                value={filters.price_max}
+                onChange={(e) => emit({ price_max: e.target.value })}
+                className="glass-input rounded-xl px-3 py-2 text-xs text-foreground mt-2"
+                placeholder="مقدار دلخواه"
+                type="number"
+              />
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground mb-2">استان</label>
-          <GlassSelect
-            value={filters.province_id}
-            onChange={(val) => emit({ province_id: val, city_id: '' })}
-            options={allProvinces?.map((p: { id: number; name: string }) => ({ value: String(p.id), label: p.name })) || []}
-            placeholder="همه استان‌ها"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-muted-foreground mb-2">شهر</label>
-          <GlassSelect
-            value={filters.city_id}
-            onChange={(val) => emit({ city_id: val })}
-            options={(cities as Array<{ id: number; name: string }>).map((c) => ({ value: String(c.id), label: c.name }))}
-            placeholder="همه شهرها"
-            disabled={!filters.province_id}
-          />
-        </div>
+      <div className="flex gap-2">
+        {[
+          { key: 'has_photo' as const, label: 'عکس دار' },
+          { key: 'has_price' as const, label: 'قیمت دار' },
+        ].map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => emit({ [opt.key]: filters[opt.key] === '1' ? '' : '1' })}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+              filters[opt.key] === '1'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
+
+      {filters.category === 'vehicles' && (
+        <>
+          {!COMMERCIAL_SUBCATS.has(filters.category) && [...selectedSubcats].some(s => COMMERCIAL_SUBCATS.has(s)) ? (
+            <div className="border-t border-border/40 pt-4">
+              <div className="mb-3">
+                <label className="block text-xs font-bold text-muted-foreground mb-2">رنگ بدنه</label>
+                <div className="flex flex-wrap gap-2">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => emit({ color: filters.color === c.value ? '' : c.value })}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+                        filters.color === c.value
+                          ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary ring-offset-1'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      <span className={`w-3 h-3 rounded-full ${c.css}`} />
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-border/30 pt-3">
+                <label className="block text-xs font-bold text-muted-foreground mb-2">وضعیت بدنه</label>
+                <div className="flex flex-wrap gap-2">
+                  {COMMERCIAL_BODY_CONDITIONS.map((v) => (
+                    <button key={v} type="button" onClick={() => emit({ body_condition: filters.body_condition === v ? '' : v })}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filters.body_condition === v ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{v}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="border-t border-border/40 pt-4">
+                <span className="block text-xs font-bold text-muted-foreground mb-3">ویژگی‌های خودرو</span>
+
+                <div className="mb-3">
+                  <label className="block text-xs font-bold text-muted-foreground mb-2">رنگ بدنه</label>
+                  <div className="flex flex-wrap gap-2">
+                    {COLORS.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => emit({ color: filters.color === c.value ? '' : c.value })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+                          filters.color === c.value
+                            ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary ring-offset-1'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        <span className={`w-3 h-3 rounded-full ${c.css}`} />
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/30 pt-3 mb-3">
+                  <label className="block text-xs font-bold text-muted-foreground mb-2">نوع سوخت</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['بنزینی', 'دوگانه سوز', 'دیزلی', 'برقی', 'برقی با ژنراتور', 'هیبریدی', 'پلاگین هیبرید', 'هیبرید ملایم'].map((v) => (
+                      <button key={v} type="button" onClick={() => emit({ fuel_type: filters.fuel_type === v ? '' : v })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filters.fuel_type === v ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{v}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/30 pt-3 mb-3">
+                  <label className="block text-xs font-bold text-muted-foreground mb-2">موارد خاص</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['کلاسیک', 'آفرود', 'منطقه آزاد'].map((v) => (
+                      <button key={v} type="button" onClick={() => emit({ special_case: filters.special_case === v ? '' : v })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filters.special_case === v ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{v}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/30 pt-3 mb-3">
+                  <label className="block text-xs font-bold text-muted-foreground mb-2">وضعیت بدنه</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['خط و خش جزئی', 'بدون رنگ', 'یک لکه رنگ', 'چند لکه رنگ', 'دو لکه رنگ', 'صافکاری بدون رنگ', 'دور رنگ', 'گلگیر رنگ', 'گلگیر تعویض', 'کاپوت تعویض', 'کامل رنگ', 'درب تعویض', 'یک درب رنگ', 'کاپوت رنگ', 'دو درب رنگ', 'تصادفی', 'اتاق تعویض', 'سوخته', 'اوراقی'].map((v) => (
+                      <button key={v} type="button" onClick={() => emit({ body_condition: filters.body_condition === v ? '' : v })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filters.body_condition === v ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{v}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/30 pt-3 mb-3">
+                  <label className="block text-xs font-bold text-muted-foreground mb-2">تعداد سیلندر</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['4 سیلندر', '6 سیلندر', '8 سیلندر', '10 سیلندر', '12 سیلندر'].map((v) => (
+                      <button key={v} type="button" onClick={() => emit({ cylinders: filters.cylinders === v ? '' : v })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filters.cylinders === v ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{v}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/30 pt-3">
+                  <label className="block text-xs font-bold text-muted-foreground mb-2">دیفرانسیل</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['تک دیفرانسیل', 'دیفرانسیل عقب', 'دیفرانسیل جلو', 'دو دیفرانسیل', 'تمام چرخ متحرک'].map((v) => (
+                      <button key={v} type="button" onClick={() => emit({ drivetrain: filters.drivetrain === v ? '' : v })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filters.drivetrain === v ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{v}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {COMMERCIAL_SUBCATS.has(filters.category) && (
+        <div className="border-t border-border/40 pt-4">
+          <div className="mb-3">
+            <label className="block text-xs font-bold text-muted-foreground mb-2">رنگ بدنه</label>
+            <div className="flex flex-wrap gap-2">
+              {COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => emit({ color: filters.color === c.value ? '' : c.value })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 ${
+                    filters.color === c.value
+                      ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary ring-offset-1'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  <span className={`w-3 h-3 rounded-full ${c.css}`} />
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-border/30 pt-3">
+            <label className="block text-xs font-bold text-muted-foreground mb-2">وضعیت بدنه</label>
+            <div className="flex flex-wrap gap-2">
+              {COMMERCIAL_BODY_CONDITIONS.map((v) => (
+                <button key={v} type="button" onClick={() => emit({ body_condition: filters.body_condition === v ? '' : v })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filters.body_condition === v ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{v}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <AttributeFilters categorySlug={filters.category || null} filters={filters.attributeFilters} onChange={handleAttrChange} />
     </div>

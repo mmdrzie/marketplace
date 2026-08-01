@@ -32,7 +32,7 @@ export const components = {
         name: { type: 'string' },
         email: { type: 'string', format: 'email' },
         phone: { type: 'string' },
-        role: { type: 'string', enum: ['user', 'dealer', 'admin'] },
+        role: { type: 'string', enum: ['user', 'dealer', 'agency', 'store', 'workshop', 'admin'] },
         emailVerifiedAt: { type: 'string', format: 'date-time', nullable: true },
         phoneVerifiedAt: { type: 'string', format: 'date-time', nullable: true },
         createdAt: { type: 'string', format: 'date-time' },

@@ -49,6 +49,10 @@ export default function DealerLayout({ children }: { children: React.ReactNode }
       label: 'لینک‌های جانبی',
       links: [
         { href: '/parts', label: 'قطعات یدکی و ادوات', icon: PartsIcon },
+        { href: '/catalog/tuning', label: 'قطعات تیونینگ', icon: PartsIcon },
+        { href: '/catalog/accessory', label: 'اکسسوری خودرو', icon: PartsIcon },
+        { href: '/workshops', label: 'تعمیرکاران و تیونرها', icon: PartsIcon },
+        { href: '/workshop', label: 'پنل تعمیرکار', icon: PartsIcon },
         { href: '/dashboard', label: 'داشبورد اصلی', icon: HomeIcon },
         { href: '/', label: 'بازگشت به سایت', icon: BackToSiteIcon },
       ],

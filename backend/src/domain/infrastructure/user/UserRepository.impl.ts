@@ -31,17 +31,17 @@ export class UserRepositoryImpl implements UserRepository {
 
     if (!existing) {
       await db.query(
-        `INSERT INTO users (id, email, name, phone, role, status, avatar, public_id, password_hash, city, email_verified, phone_verified)
+        `INSERT INTO users (id, email, name, phone, role, status, avatar, public_id, password_hash, city, email_verified_at, phone_verified_at)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
          ON CONFLICT (id) DO NOTHING`,
-        [s.id, s.email, s.name, s.phone, s.role, s.status, s.avatar, s.publicId, s.passwordHash, s.city, s.emailVerified, s.phoneVerified],
+        [s.id, s.email, s.name, s.phone, s.role, s.status, s.avatar, s.publicId, s.passwordHash, s.city, s.emailVerified ? new Date().toISOString() : null, s.phoneVerified ? new Date().toISOString() : null],
       );
     } else {
       await db.query(
         `UPDATE users SET name=$1, phone=$2, role=$3, status=$4, avatar=$5,
-         password_hash=$6, city=$7, email_verified=$8, phone_verified=$9, updated_at=NOW()
+         password_hash=$6, city=$7, email_verified_at=$8, phone_verified_at=$9, updated_at=NOW()
          WHERE id=$10`,
-        [s.name, s.phone, s.role, s.status, s.avatar, s.passwordHash, s.city, s.emailVerified, s.phoneVerified, s.id],
+        [s.name, s.phone, s.role, s.status, s.avatar, s.passwordHash, s.city, s.emailVerified ? new Date().toISOString() : null, s.phoneVerified ? new Date().toISOString() : null, s.id],
       );
     }
   }
@@ -62,7 +62,7 @@ export class UserRepositoryImpl implements UserRepository {
       status: row.status as 'active' | 'banned' | 'suspended',
       avatar: row.avatar as string | null, publicId: row.public_id as string | null,
       passwordHash: row.password_hash as string | null, city: row.city as string | null,
-      emailVerified: row.email_verified as boolean, phoneVerified: row.phone_verified as boolean,
+      emailVerified: row.email_verified_at != null, phoneVerified: row.phone_verified_at != null,
       createdAt: row.created_at as string, updatedAt: row.updated_at as string,
       deletedAt: row.deleted_at as string | null,
     };

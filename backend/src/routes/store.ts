@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { storeController } from '../container.js';
+import { partsController } from '../domain/presentation/parts/PartsController.js';
 import { auth } from '../middleware/auth.js';
 
 const router = new Hono();
@@ -20,12 +21,23 @@ const updateInventorySchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
+// Register store profile
+router.post('/register', auth('store'), (c) => partsController.registerStore(c));
+
+// Store profile
+router.get('/profile', auth('store'), (c) => partsController.getMyProfile(c));
+router.put('/profile', auth('store'), (c) => partsController.updateMyProfile(c));
+
 // Inventory CRUD
 router.get('/inventory', auth('store'), (c) => storeController.listInventory(c));
 router.post('/inventory', auth('store'), zValidator('json', addInventorySchema), (c) => storeController.addInventory(c));
 router.put('/inventory/:id', auth('store'), zValidator('json', updateInventorySchema), (c) => storeController.updateInventory(c));
 router.delete('/inventory/:id', auth('store'), (c) => storeController.deleteInventory(c));
 router.get('/inventory/stats', auth('store'), (c) => storeController.inventoryStats(c));
+
+// Parts suggestions
+router.post('/suggestions', auth('store'), (c) => partsController.createSuggestion(c));
+router.get('/suggestions', auth('store'), (c) => partsController.getMySuggestions(c));
 
 // Stats & subscription (shared with dealer service)
 router.get('/stats', auth('store'), (c) => storeController.stats(c));
