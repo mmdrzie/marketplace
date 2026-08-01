@@ -1,14 +1,10 @@
 'use client';
 
-import { useState, lazy, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { useAuth } from '@/hooks/useAuth';
-
-const DevLoginSection = lazy(() =>
-  import('@/components/dev/TestLoginSection').catch(() => ({ default: () => null }))
-);
 
 function LoginInner() {
   const router = useRouter();
@@ -83,12 +79,6 @@ function LoginInner() {
           <Link href={redirectTo ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'} className="text-muted-foreground hover:text-foreground transition-colors font-light">ثبت نام</Link>
         </div>
       </form>
-
-      {process.env.NODE_ENV === 'development' && (
-        <Suspense fallback={null}>
-          <DevLoginSection />
-        </Suspense>
-      )}
     </FadeIn>
   );
 }
