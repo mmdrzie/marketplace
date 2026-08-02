@@ -16,6 +16,7 @@ export interface UserSnapshot {
   city: string | null;
   emailVerified: boolean;
   phoneVerified: boolean;
+  hasPassword: boolean;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -35,6 +36,7 @@ export class User {
     public city: string | null,
     public emailVerified: boolean,
     public phoneVerified: boolean,
+    public hasPassword: boolean,
     public readonly createdAt: Date,
     public updatedAt: Date,
     public deletedAt: Date | null,
@@ -44,7 +46,7 @@ export class User {
     return new User(
       s.id, s.email, s.name, s.phone, s.role, s.status,
       s.avatar, s.publicId, s.passwordHash, s.city,
-      s.emailVerified, s.phoneVerified,
+      s.emailVerified, s.phoneVerified, s.hasPassword,
       new Date(s.createdAt), new Date(s.updatedAt),
       s.deletedAt ? new Date(s.deletedAt) : null,
     );
@@ -57,10 +59,17 @@ export class User {
       avatar: this.avatar, publicId: this.publicId,
       passwordHash: this.passwordHash, city: this.city,
       emailVerified: this.emailVerified, phoneVerified: this.phoneVerified,
+      hasPassword: this.hasPassword,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       deletedAt: this.deletedAt?.toISOString() ?? null,
     };
+  }
+
+  setPassword(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+    this.hasPassword = true;
+    this.updatedAt = new Date();
   }
 
   verifyEmail(): void {

@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FadeIn } from '@/components/common/MotionDiv';
 import { useAuth } from '@/hooks/useAuth';
+import { GoogleButton } from '@/components/auth/GoogleButton';
+import { OtpInput } from '@/components/auth/OtpInput';
 
 const inputClass =
   'w-full px-4 py-3.5 glass-input rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 appearance-none';
@@ -36,7 +38,6 @@ function RegisterInner() {
   const [otpSent, setOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [accountRole, setAccountRole] = useState<'user' | 'dealer' | 'agency' | 'store' | 'workshop'>('user');
-  const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -88,36 +89,9 @@ function RegisterInner() {
       setStep('otp');
       setOtpSent(true);
       startResendTimer();
-      setTimeout(() => codeRefs.current[0]?.focus(), 100);
     } catch {
       // error handled by hook
     }
-  };
-
-  const handleCodeChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return;
-    const newCode = [...code];
-    newCode[index] = value.slice(-1);
-    setCode(newCode);
-    if (value && index < 5) {
-      codeRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      codeRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (!pasted) return;
-    const newCode = code.map((_, i) => pasted[i] || '');
-    setCode(newCode);
-    const nextEmpty = newCode.findIndex((c) => !c);
-    const focusIndex = nextEmpty === -1 ? 5 : nextEmpty;
-    codeRefs.current[focusIndex]?.focus();
   };
 
   const handleSubmit = async () => {
@@ -142,7 +116,6 @@ function RegisterInner() {
       setCode(['', '', '', '', '', '']);
       setOtpSent(true);
       startResendTimer();
-      codeRefs.current[0]?.focus();
     } catch {
       // error handled by hook
     }
@@ -173,6 +146,16 @@ function RegisterInner() {
           برای شروع، یکی از روش‌های ثبت‌نام را انتخاب کنید
         </p>
       </div>
+
+      {step === 'form' && <GoogleButton label="ثبت‌نام با گوگل" redirect={redirectTo} />}
+
+      {step === 'form' && (
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-px bg-border-subtle" />
+          <span className="text-xs text-muted-foreground">یا با ایمیل و تلفن</span>
+          <div className="flex-1 h-px bg-border-subtle" />
+        </div>
+      )}
 
       {/* نوع حساب */}
       <div className="flex mb-4 bg-surface-2/40 rounded-xl p-1 border border-border/50">
@@ -321,20 +304,8 @@ function RegisterInner() {
               </p>
 
               {/* فیلدهای ۶ رقمی کد */}
-              <div className="flex gap-2 justify-center mb-6" dir="ltr" onPaste={handlePaste}>
-                {code.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { codeRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleCodeChange(i, e.target.value)}
-                    onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                    className="w-12 h-14 text-center text-lg font-bold bg-surface-2 border border-border rounded-xl text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  />
-                ))}
+              <div className="mb-6">
+                <OtpInput value={code} onChange={setCode} disabled={loading} />
               </div>
 
               {/* تایمر و ارسال مجدد */}

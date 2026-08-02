@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
-import bcrypt from 'bcryptjs';
-import { jwtVerify, SignJWT } from 'jose';
+import { jwtVerify } from 'jose';
 import { User } from '../entities/user/User.entity.js';
 import type { UserRepository } from '../entities/user/User.repository.js';
 import type { DealerRepository } from '../entities/dealer/Dealer.repository.js';
@@ -15,18 +14,24 @@ import { authConfig } from '../../config/auth.js';
 import { AppError } from '../../errors.js';
 import { EmailService } from '../../services/email/index.js';
 import { SmsService } from '../../services/sms/index.js';
-
-const SALT_ROUNDS = 12;
-const OTP_LENGTH = 6;
-const OTP_TTL_MS = 5 * 60 * 1000;
-const OTP_RATE_WINDOW_SEC = 3600;
-const OTP_MAX_PER_WINDOW = 3;
+import { PasswordAuthProvider, type RegisterMethod, generateOtpCode, sha256Hex, OTP_TTL_MS, OTP_RATE_WINDOW_SEC, OTP_MAX_PER_WINDOW } from '../providers/password.js';
+import { GoogleAuthProvider } from '../providers/google.js';
+import { OauthAccountRepositoryImpl } from '../infrastructure/oauth/OauthAccountRepository.impl.js';
+import { OneTimeTokenRepositoryImpl } from '../infrastructure/oauth/OneTimeTokenRepository.impl.js';
+import { OauthLoginLogRepositoryImpl } from '../infrastructure/oauth/OauthLoginLogRepository.impl.js';
+import type {
+  AuthSession,
+  AuthIdentity,
+  AuthCore,
+  IssueSessionOptions,
+  SanitizedUser,
+} from '../providers/AuthProvider.js';
 
 function sha256(value: string): string {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
-function sanitizeUser(user: User) {
+function sanitizeUser(user: User): SanitizedUser {
   return {
     id: user.id,
     email: user.email,
@@ -36,13 +41,10 @@ function sanitizeUser(user: User) {
     city: user.city,
     emailVerified: user.emailVerified,
     phoneVerified: user.phoneVerified,
+    hasPassword: user.hasPassword,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   };
-}
-
-function generateOtp(): string {
-  return crypto.randomInt(100000, 999999).toString();
 }
 
 const refreshLocks = new Map<string, Promise<unknown>>();
@@ -63,13 +65,25 @@ async function withRefreshLock<T>(userId: string, fn: () => Promise<T>): Promise
   return promise as Promise<T>;
 }
 
-export class AuthService {
+/**
+ * Auth core. Owns provider-agnostic concerns:
+ * - session issuance (access + refresh + cookie-ready tokens)
+ * - user creation from normalized identities
+ * - refresh rotation, logout, profile
+ * - delegation to registered auth providers (password, google, ...)
+ *
+ * See ADR-012 (docs/adr/ADR-012-auth-providers.md).
+ */
+export class AuthService implements AuthCore {
   private emailService: EmailService;
   private smsService: SmsService;
   private userRepo: UserRepository;
   private refreshTokenRepo: RefreshTokenRepository;
   private dealerRepo: DealerRepository;
   private verificationRepo: VerificationRepository;
+
+  readonly passwordProvider: PasswordAuthProvider;
+  readonly googleProvider: GoogleAuthProvider;
 
   constructor(
     emailService?: EmailService,
@@ -85,228 +99,223 @@ export class AuthService {
     this.refreshTokenRepo = refreshTokenRepo ?? new RefreshTokenRepositoryImpl();
     this.dealerRepo = dealerRepo ?? new DealerRepositoryImpl();
     this.verificationRepo = verificationRepo ?? new VerificationRepositoryImpl();
+
+    this.passwordProvider = new PasswordAuthProvider({
+      emailService: this.emailService,
+      smsService: this.smsService,
+      userRepo: this.userRepo,
+      verificationRepo: this.verificationRepo,
+      sessionIssuer: this,
+    });
+
+    this.googleProvider = new GoogleAuthProvider({
+      userRepo: this.userRepo,
+      oauthRepo: new OauthAccountRepositoryImpl(),
+      oneTimeRepo: new OneTimeTokenRepositoryImpl(),
+      loginLogRepo: new OauthLoginLogRepositoryImpl(),
+      verificationRepo: this.verificationRepo,
+      emailService: this.emailService,
+      core: this,
+      passwordProvider: this.passwordProvider,
+    });
   }
 
-  /* ---- Registration OTP ---- */
+  /* ---- Session issuance (SessionIssuer) ---- */
 
-  async sendRegisterOtp(input: { type: 'email' | 'phone'; identifier: string }): Promise<void> {
-    if (input.type === 'email') {
-      const existing = await this.userRepo.findByEmail(input.identifier);
-      if (existing) throw AppError.emailAlreadyExists();
-    } else {
-      const existing = await this.userRepo.findByPhone(input.identifier);
-      if (existing) throw AppError.phoneAlreadyExists();
+  async issueSession(user: User, opts?: IssueSessionOptions): Promise<AuthSession> {
+    const singleSession = opts?.singleSession ?? authConfig.singleSession;
+
+    const accessToken = await signAccessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      phoneVerified: user.phoneVerified,
+      emailVerified: user.emailVerified,
+    });
+
+    const refreshToken = await signRefreshToken(user.id);
+    if (singleSession) {
+      await this.refreshTokenRepo.revokeAllForUser(user.id);
+    }
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await this.refreshTokenRepo.create({
+      user_id: user.id,
+      token_hash: sha256(refreshToken),
+      expires_at: expiresAt,
+    });
+
+    const created = await this.userRepo.findById(user.id);
+    return {
+      token: accessToken,
+      refreshToken,
+      user: sanitizeUser(created ?? user),
+    };
+  }
+
+  /**
+   * Create a user from a normalized provider identity. Used by provider flows
+   * (e.g. Google) for brand-new accounts. Role always defaults to 'user'.
+   */
+  async createUserFromIdentity(
+    identity: AuthIdentity,
+    opts?: { role?: User['role']; phone?: string | null },
+  ): Promise<User> {
+    const email = identity.email || '';
+    const id = crypto.randomUUID();
+    const passwordHash = await import('bcryptjs').then((bcrypt) =>
+      bcrypt.hash(crypto.randomUUID(), 12),
+    );
+
+    const user = User.fromSnapshot({
+      id,
+      email,
+      name: identity.displayName ?? null,
+      phone: opts?.phone ?? identity.phone ?? null,
+      role: opts?.role ?? 'user',
+      status: 'active',
+      avatar: identity.avatarUrl ?? null,
+      publicId: null,
+      passwordHash,
+      city: null,
+      emailVerified: identity.emailVerified,
+      phoneVerified: false,
+      hasPassword: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+    });
+
+    try {
+      await this.userRepo.save(user);
+    } catch (err) {
+      if (err && (err as { code?: string }).code === '23505') {
+        throw AppError.emailAlreadyExists();
+      }
+      throw err;
     }
 
+    return user;
+  }
+
+  /* ---- Password provider delegation (public API unchanged) ---- */
+
+  sendRegisterOtp(input: { type: RegisterMethod; identifier: string }): Promise<void> {
+    return this.passwordProvider.sendRegisterOtp(input);
+  }
+
+  registerWithOtp(input: {
+    name: string;
+    password: string;
+    type: RegisterMethod;
+    identifier: string;
+    code: string;
+    role?: 'user' | 'dealer' | 'agency' | 'store' | 'workshop';
+  }): Promise<AuthSession> {
+    return this.passwordProvider.registerWithOtp(input);
+  }
+
+  register(input: { email: string; password: string; name: string }): Promise<AuthSession> {
+    return this.passwordProvider.register(input);
+  }
+
+  async login(input: { email: string; password: string }): Promise<AuthSession> {
+    const result = await this.passwordProvider.authenticate(input);
+    if (result.kind !== 'session') {
+      throw AppError.invalidCredentials();
+    }
+    return this.issueSession(result.user);
+  }
+
+  forgotPassword(email: string): Promise<void> {
+    return this.passwordProvider.forgotPassword(email);
+  }
+
+  resetPassword(token: string, newPassword: string): Promise<void> {
+    return this.passwordProvider.resetPassword(token, newPassword);
+  }
+
+  /* ---- Google provider delegation ---- */
+
+  googleAuthorize(redirect?: string | null) {
+    return this.googleProvider.authorize({ redirect });
+  }
+
+  googleCallback(input: {
+    code?: string;
+    error?: string;
+    stateJti: string;
+    ip?: string | null;
+    userAgent?: string | null;
+  }) {
+    return this.googleProvider.handleCallback(input);
+  }
+
+  googleFinalize(t: string, meta?: { ip?: string | null; userAgent?: string | null }) {
+    return this.googleProvider.finalize({ t, ...meta });
+  }
+
+  googleVerify(t: string, code: string, meta?: { ip?: string | null; userAgent?: string | null }) {
+    return this.googleProvider.verifyCode({ t, code, ...meta });
+  }
+
+  googleResend(t: string, meta?: { ip?: string | null; userAgent?: string | null }) {
+    return this.googleProvider.resendCode({ t, ...meta });
+  }
+
+  googleLink(t: string, password: string, meta?: { ip?: string | null; userAgent?: string | null }) {
+    return this.googleProvider.linkAccount({ t, password, ...meta });
+  }
+
+  googleStatus(): { enabled: boolean } {
+    return { enabled: this.googleProvider.isConfigured() };
+  }
+
+  /* ---- Email verification fallback (blocked login / email change) ---- */
+
+  /** Send a 6-digit code to a real (non-synthetic) email address. */
+  async sendEmailVerificationCode(email: string): Promise<void> {
+    const user = await this.userRepo.findByEmail(email);
+    if (!user) return; // do not reveal account existence
+    if (user.emailVerified) return;
+    if (user.email.endsWith('@bazaar.local')) return;
+
     const recentCount = await this.verificationRepo.countRecentRegistrationOtps(
-      input.identifier, input.type, OTP_RATE_WINDOW_SEC,
+      user.email, 'email', OTP_RATE_WINDOW_SEC,
     );
     if (recentCount >= OTP_MAX_PER_WINDOW) {
       throw AppError.rateLimited('Too many OTP requests. Try again later.');
     }
 
-    const code = generateOtp();
-    const otpHashed = sha256(code);
-    const expiresAt = new Date(Date.now() + OTP_TTL_MS);
+    const code = generateOtpCode();
     await this.verificationRepo.createRegistrationOtp({
-      identifier: input.identifier,
-      type: input.type,
-      otp_hash: otpHashed,
-      expires_at: expiresAt,
+      identifier: user.email,
+      type: 'email',
+      otp_hash: sha256Hex(code),
+      expires_at: new Date(Date.now() + OTP_TTL_MS),
     });
-
-    if (input.type === 'email') {
-      await this.emailService.sendOtp(input.identifier, code);
-    } else {
-      await this.smsService.sendOtp(input.identifier, code);
-    }
+    await this.emailService.sendOtp(user.email, code);
   }
 
-  async registerWithOtp(input: {
-    name: string;
-    password: string;
-    type: 'email' | 'phone';
-    identifier: string;
-    code: string;
-    role?: 'user' | 'dealer' | 'agency' | 'store' | 'workshop';
-  }) {
-    const stored = await this.verificationRepo.findLatestRegistrationOtp(input.identifier, input.type);
+  /** Verify the emailed code, mark the email verified, and log the user in. */
+  async verifyEmailCodeAndLogin(email: string, code: string): Promise<AuthSession> {
+    const user = await this.userRepo.findByEmail(email);
+    if (!user) throw AppError.invalidCredentials();
+
+    const stored = await this.verificationRepo.findLatestRegistrationOtp(user.email, 'email');
     if (!stored) throw AppError.otpInvalid();
     if (stored.isExpired) throw AppError.otpExpired();
-
-    const valid = sha256(input.code) === stored.otpHash;
-    if (!valid) throw AppError.otpInvalid();
-
-    if (input.type === 'email') {
-      const existing = await this.userRepo.findByEmail(input.identifier);
-      if (existing) throw AppError.emailAlreadyExists();
-    } else {
-      const existing = await this.userRepo.findByPhone(input.identifier);
-      if (existing) throw AppError.phoneAlreadyExists();
-    }
-
-    const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
-    const id = crypto.randomUUID();
-
-    const email = input.type === 'email'
-      ? input.identifier
-      : `phone_${sha256(input.identifier).substring(0, 12)}@bazaar.local`;
-    const phone = input.type === 'phone' ? input.identifier : null;
-
-    const user = User.fromSnapshot({
-      id,
-      email,
-      name: input.name,
-      phone,
-      role: input.role || 'user',
-      status: 'active',
-      avatar: null,
-      publicId: null,
-      passwordHash,
-      city: null,
-      emailVerified: input.type === 'email',
-      phoneVerified: input.type === 'phone',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      deletedAt: null,
-    });
-
-    try {
-      await this.userRepo.save(user);
-    } catch (err) {
-      if (err && (err as { code?: string }).code === '23505') {
-        throw AppError.emailAlreadyExists();
-      }
-      throw err;
-    }
-
+    if (sha256Hex(code) !== stored.otpHash) throw AppError.otpInvalid();
     await this.verificationRepo.markRegistrationOtpVerified(stored.id);
 
-    const accessToken = await signAccessToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      phoneVerified: user.phoneVerified,
-      emailVerified: user.emailVerified,
-    });
-
-    const refreshToken = await signRefreshToken(user.id);
-    await this.refreshTokenRepo.revokeAllForUser(user.id);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await this.refreshTokenRepo.create({
-      user_id: user.id,
-      token_hash: sha256(refreshToken),
-      expires_at: expiresAt,
-    });
-
-    const created = await this.userRepo.findById(user.id);
-    return {
-      token: accessToken,
-      refreshToken,
-      user: sanitizeUser(created ?? user),
-    };
-  }
-
-  /* ---- Legacy email+password register ---- */
-
-  async register(input: { email: string; password: string; name: string }) {
-    const existing = await this.userRepo.findByEmail(input.email);
-    if (existing) {
-      throw AppError.emailAlreadyExists();
-    }
-
-    const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
-    const id = crypto.randomUUID();
-    const user = User.fromSnapshot({
-      id,
-      email: input.email,
-      name: input.name,
-      phone: null,
-      role: 'user',
-      status: 'active',
-      avatar: null,
-      publicId: null,
-      passwordHash,
-      city: null,
-      emailVerified: false,
-      phoneVerified: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      deletedAt: null,
-    });
-
-    try {
+    if (!user.emailVerified) {
+      user.verifyEmail();
       await this.userRepo.save(user);
-    } catch (err) {
-      if (err && (err as { code?: string }).code === '23505') {
-        throw AppError.emailAlreadyExists();
-      }
-      throw err;
     }
 
-    const accessToken = await signAccessToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      phoneVerified: user.phoneVerified,
-      emailVerified: user.emailVerified,
-    });
-
-    const refreshToken = await signRefreshToken(user.id);
-    await this.refreshTokenRepo.revokeAllForUser(user.id);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await this.refreshTokenRepo.create({
-      user_id: user.id,
-      token_hash: sha256(refreshToken),
-      expires_at: expiresAt,
-    });
-
-    const created = await this.userRepo.findById(user.id);
-    return {
-      token: accessToken,
-      refreshToken,
-      user: sanitizeUser(created ?? user),
-    };
+    return this.issueSession(user);
   }
 
-  async login(input: { email: string; password: string }) {
-    const user = await this.userRepo.findByEmail(input.email);
-    if (!user) {
-      throw AppError.invalidCredentials();
-    }
-
-    const valid = await bcrypt.compare(input.password, user.passwordHash ?? '');
-    if (!valid) {
-      throw AppError.invalidCredentials();
-    }
-
-    if (user.status !== 'active') {
-      throw AppError.forbidden('Account is deactivated');
-    }
-
-    const accessToken = await signAccessToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      phoneVerified: user.phoneVerified,
-      emailVerified: user.emailVerified,
-    });
-
-    const refreshToken = await signRefreshToken(user.id);
-    await this.refreshTokenRepo.revokeAllForUser(user.id);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await this.refreshTokenRepo.create({
-      user_id: user.id,
-      token_hash: sha256(refreshToken),
-      expires_at: expiresAt,
-    });
-
-    return {
-      token: accessToken,
-      refreshToken,
-      user: sanitizeUser(user),
-    };
-  }
+  /* ---- Refresh rotation (core) ---- */
 
   async refresh(refreshTokenStr: string) {
     let payload: { sub?: string };
@@ -405,6 +414,9 @@ export class AuthService {
     if (data.email !== undefined && data.email !== existing.email) {
       existing.email = data.email;
       existing.emailVerified = false;
+      if (!data.email.endsWith('@bazaar.local')) {
+        this.sendEmailVerificationCode(data.email).catch(() => { /* non-blocking */ });
+      }
     }
     existing.updatedAt = new Date();
 
@@ -430,42 +442,6 @@ export class AuthService {
     }
 
     return sanitizeUser(existing);
-  }
-
-  async forgotPassword(email: string) {
-    const user = await this.userRepo.findByEmail(email);
-    if (!user) {
-      return;
-    }
-
-    const resetToken = await new SignJWT({ sub: user.id, type: 'password_reset' })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('1h')
-      .sign(authConfig.secret);
-
-    await this.emailService.sendPasswordResetEmail(email, resetToken);
-  }
-
-  async resetPassword(token: string, newPassword: string) {
-    let payload: { sub?: string; type?: string };
-    try {
-      const { payload: p } = await jwtVerify(token, authConfig.secret);
-      payload = p as { sub?: string; type?: string };
-    } catch {
-      throw AppError.invalidToken('Invalid or expired reset token');
-    }
-
-    if (payload.type !== 'password_reset') {
-      throw AppError.invalidToken('Invalid or expired reset token');
-    }
-
-    if (!payload.sub) {
-      throw AppError.invalidToken();
-    }
-
-    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
-    await this.userRepo.updatePassword(payload.sub, passwordHash);
   }
 }
 

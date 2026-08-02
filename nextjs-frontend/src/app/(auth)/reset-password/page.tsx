@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
+  const isSetMode = searchParams.get('mode') === 'set';
   const { resetPassword, loading, error } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -60,9 +61,9 @@ function ResetPasswordForm() {
           <div className="w-16 h-16 rounded-2xl bg-success flex items-center justify-center mx-auto mb-4 shadow-lg shadow-success/20">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tighter text-foreground">رمز عبور تغییر کرد</h1>
+          <h1 className="text-2xl font-bold tracking-tighter text-foreground">{isSetMode ? 'رمز عبور تعیین شد' : 'رمز عبور تغییر کرد'}</h1>
           <p className="text-sm text-muted-foreground mt-2 font-light">
-            رمز عبور شما با موفقیت تغییر یافت.
+            {isSetMode ? 'رمز عبور شما با موفقیت تعیین شد. از این پس می‌توانید با ایمیل و رمز عبور هم وارد شوید.' : 'رمز عبور شما با موفقیت تغییر یافت.'}
           </p>
           <div className="mt-6">
             <Link href="/login" className="text-primary font-medium hover:brightness-110">
@@ -82,9 +83,11 @@ function ResetPasswordForm() {
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold tracking-tighter text-foreground">تنظیم رمز عبور جدید</h1>
+        <h1 className="text-2xl font-bold tracking-tighter text-foreground">{isSetMode ? 'تعیین رمز عبور' : 'تنظیم رمز عبور جدید'}</h1>
         <p className="text-sm text-muted-foreground mt-2 font-light">
-          رمز عبور جدید خود را وارد کنید
+          {isSetMode
+            ? 'حساب شما با گوگل ساخته شده و هنوز رمز عبور ندارد. یک رمز عبور برای ورود با ایمیل تعیین کنید.'
+            : 'رمز عبور جدید خود را وارد کنید'}
         </p>
       </div>
 
@@ -130,7 +133,7 @@ function ResetPasswordForm() {
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
               در حال ذخیره...
             </span>
-          ) : 'ذخیره رمز عبور'}
+          ) : isSetMode ? 'تعیین رمز عبور' : 'ذخیره رمز عبور'}
         </button>
       </form>
     </FadeIn>

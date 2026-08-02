@@ -57,4 +57,15 @@ export class EmailService {
       html: `<p>Reset your password <a href="${url}">here</a>.</p>`,
     });
   }
+
+  /** Google-only accounts (has_password=false): first-time password setup. */
+  async sendSetPasswordEmail(to: string, token: string): Promise<void> {
+    const url = `${config.frontendUrl}/reset-password?token=${token}&mode=set`;
+    await this.send({
+      to,
+      subject: 'Set your password',
+      body: `Your account has no password yet. Set one here: ${url}`,
+      html: `<p>Your account has no password yet. Set one <a href="${url}">here</a>.</p>`,
+    });
+  }
 }

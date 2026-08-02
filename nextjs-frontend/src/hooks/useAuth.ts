@@ -131,8 +131,126 @@ export function useAuth() {
     }
   };
 
+  /* ---- Google OAuth ---- */
+
+  const googleStatus = async (): Promise<{ enabled: boolean }> => {
+    const res = await api.get('/auth/google/status');
+    return res.data.data;
+  };
+
+  const loginWithGoogle = (redirect?: string) => {
+    const base = `${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/auth/google/authorize`;
+    const params = new URLSearchParams();
+    if (redirect) params.set('redirect', redirect);
+    window.location.href = params.size > 0 ? `${base}?${params.toString()}` : base;
+  };
+
+  const googleFinalize = async (t: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post('/auth/google/finalize', { t });
+      const { token, user } = res.data.data;
+      setAuth(token, user);
+      setAuthCookie();
+      return { token, user };
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      setError(data?.error?.message || 'خطا در تکمیل ورود');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleVerify = async (t: string, code: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post('/auth/google/verify', { t, code });
+      const { token, user } = res.data.data;
+      setAuth(token, user);
+      setAuthCookie();
+      return { token, user };
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      setError(data?.error?.message || 'خطا در تایید کد');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleResend = async (t: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.post('/auth/google/resend', { t });
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      setError(data?.error?.message || 'خطا در ارسال مجدد کد');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLink = async (t: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post('/auth/google/link', { t, password });
+      const { token, user } = res.data.data;
+      setAuth(token, user);
+      setAuthCookie();
+      return { token, user };
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      setError(data?.error?.message || 'خطا در اتصال حساب گوگل');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---- Email verification fallback (blocked login / email change) ---- */
+
+  const sendVerifyCode = async (email: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.post('/auth/send-verify-code', { email });
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      setError(data?.error?.message || 'خطا در ارسال کد تایید');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyLoginCode = async (email: string, code: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post('/auth/verify-code', { email, code });
+      const { token, user } = res.data.data;
+      setAuth(token, user);
+      setAuthCookie();
+      return { token, user };
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+      setError(data?.error?.message || 'خطا در تایید ایمیل');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     registerWithEmail, sendRegisterOtp, registerWithOtp,
     loginWithEmail, forgotPassword, resetPassword, logout, loading, error,
+    googleStatus, loginWithGoogle, googleFinalize, googleVerify, googleResend, googleLink,
+    sendVerifyCode, verifyLoginCode,
   };
 }

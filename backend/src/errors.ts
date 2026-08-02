@@ -8,6 +8,7 @@ const httpStatusMap: Record<ErrorCodeType, number> = {
   [ErrorCode.NOT_FOUND]: 404,
   [ErrorCode.RATE_LIMITED]: 429,
   [ErrorCode.PHONE_VERIFICATION_REQUIRED]: 403,
+  [ErrorCode.EMAIL_NOT_VERIFIED]: 403,
   [ErrorCode.EMAIL_ALREADY_EXISTS]: 409,
   [ErrorCode.PHONE_ALREADY_EXISTS]: 409,
   [ErrorCode.INVALID_CREDENTIALS]: 401,
@@ -58,6 +59,10 @@ export class AppError extends Error {
 
   static phoneVerificationRequired(message?: string) {
     return new AppError(ErrorCode.PHONE_VERIFICATION_REQUIRED, message || 'Phone verification required');
+  }
+
+  static emailNotVerified(message?: string) {
+    return new AppError(ErrorCode.EMAIL_NOT_VERIFIED, message || 'Email is not verified');
   }
 
   static emailAlreadyExists(message?: string) {

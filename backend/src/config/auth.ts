@@ -10,4 +10,5 @@ export const authConfig = {
   refreshCookieSecure: config.nodeEnv === 'production',
   refreshCookieHttpOnly: true,
   refreshCookieMaxAge: 7 * 24 * 60 * 60,
+  singleSession: process.env.AUTH_SINGLE_SESSION === 'true',
 };

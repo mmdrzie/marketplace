@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
 import { corsMiddleware } from '../src/middleware/cors.js';
 import { rateLimiter } from '../src/middleware/rateLimiter.js';
-import { errorWrapper } from '../src/middleware/errorWrapper.js';
+import { errorHandler } from '../src/middleware/errorHandler.js';
 import { apiRouter } from '../src/routes/index.js';
 import { docsRouter } from '../src/routes/docs.js';
 import { config } from '../src/config/index.js';
@@ -11,8 +11,11 @@ import { ErrorCode } from '../src/shared/index.js';
 const app = new Hono();
 
 app.use('*', corsMiddleware());
-app.use('*', errorWrapper());
+app.onError(errorHandler);
 app.use('/api/*', rateLimiter('global'));
+
+docsRouter.onError(errorHandler);
+apiRouter.onError(errorHandler);
 
 app.route('/api/v1', docsRouter);
 app.route(config.apiPrefix, apiRouter);

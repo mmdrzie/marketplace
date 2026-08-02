@@ -27,8 +27,8 @@ beforeAll(async () => {
 
   for (const id of [BUYER_ID, SELLER_ID]) {
     await db.query(
-      `INSERT INTO users (id, email, name, password_hash, role, status)
-       VALUES ($1, $2, $3, 'hash', 'user', 'active')
+      `INSERT INTO users (id, email, name, password_hash, role, status, has_password)
+       VALUES ($1, $2, $3, 'hash', 'user', 'active', true)
        ON CONFLICT (id) DO NOTHING`,
       [id, `${id}@test.com`, `User-${id}`],
     );
@@ -38,19 +38,22 @@ beforeAll(async () => {
   const cityRes = await db.query(
     'SELECT c.id as city_id, p.id as province_id FROM cities c JOIN provinces p ON p.id = c.province_id LIMIT 1',
   );
+  const modelRes = await db.query('SELECT id FROM vehicle_models LIMIT 1');
 
   if (!catRes.rows.length) throw new Error('No categories found — run seeds first');
   if (!cityRes.rows.length) throw new Error('No cities found — run seeds first');
+  if (!modelRes.rows.length) throw new Error('No vehicle models found — run seeds first');
 
   const categoryId = (catRes.rows[0] as { id: number }).id;
   const cityRow = cityRes.rows[0] as { city_id: number; province_id: number };
+  const modelId = (modelRes.rows[0] as { id: number }).id;
 
   const listingResult = await db.query(
-    `INSERT INTO listings (user_id, category_id, province_id, city_id, title, slug, description, price, price_type, status, version)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+    `INSERT INTO listings (user_id, category_id, province_id, city_id, title, slug, description, price, price_type, status, version, vehicle_model_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
     [SELLER_ID, categoryId, cityRow.province_id, cityRow.city_id,
      'E2E Test Listing', 'e2e-test-listing-' + Date.now(), 'Description',
-     1000000, 'fixed', 'published', 1],
+     1000000, 'fixed', 'published', 1, modelId],
   );
   listingId = (listingResult.rows[0] as { id: number }).id;
 });

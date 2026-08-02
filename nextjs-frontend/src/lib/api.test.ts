@@ -10,7 +10,7 @@ vi.mock('@/store/authStore', async () => {
   return actual;
 });
 
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -22,12 +22,12 @@ const mockUser = {
 
 interface AxiosErrorShape {
   isAxiosError: boolean;
-  response: { data: Record<string, never>; status: number; statusText: string; headers: Record<string, string>; config: Record<string, unknown> };
-  config: Record<string, unknown>;
+  response: { data: Record<string, never>; status: number; statusText: string; headers: Record<string, string>; config: InternalAxiosRequestConfig };
+  config: InternalAxiosRequestConfig;
   message: string;
 }
 
-function make401(config: Record<string, unknown>): AxiosErrorShape {
+function make401(config: InternalAxiosRequestConfig): AxiosErrorShape {
   const err = new Error('Request failed with status code 401') as unknown as AxiosErrorShape;
   err.isAxiosError = true;
   err.response = { data: {}, status: 401, statusText: 'Unauthorized', headers: {}, config };
@@ -42,7 +42,7 @@ describe('api 401 interceptor', () => {
   beforeEach(() => {
     useAuthStore.getState().logout();
     const callCount: Record<string, number> = {};
-    api.defaults.adapter = async (config: Record<string, unknown>) => {
+    api.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
       const url = String(config.url || '');
       if (url.includes('/auth/me')) {
         throw make401(config);

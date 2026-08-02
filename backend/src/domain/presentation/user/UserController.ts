@@ -1,24 +1,6 @@
 import type { Context } from 'hono';
 import { authService } from '../../services/auth.js';
-import { authConfig } from '../../../config/auth.js';
-
-function setRefreshCookie(c: Context, token: string) {
-  const sameSite = authConfig.refreshCookieSameSite;
-  const secure = authConfig.refreshCookieSecure ? '; Secure' : '';
-  c.header(
-    'Set-Cookie',
-    `${authConfig.refreshCookieName}=${token}; HttpOnly; Path=${authConfig.refreshCookiePath}; SameSite=${sameSite}${secure}; Max-Age=${authConfig.refreshCookieMaxAge}`,
-  );
-}
-
-function clearRefreshCookie(c: Context) {
-  const sameSite = authConfig.refreshCookieSameSite;
-  const secure = authConfig.refreshCookieSecure ? '; Secure' : '';
-  c.header(
-    'Set-Cookie',
-    `${authConfig.refreshCookieName}=; HttpOnly; Path=${authConfig.refreshCookiePath}; SameSite=${sameSite}${secure}; Max-Age=0`,
-  );
-}
+import { setRefreshCookie, clearRefreshCookie, getRefreshTokenFromCookie } from '../auth/authCookies.js';
 
 export class UserController {
   async register(c: Context): Promise<Response> {
@@ -56,9 +38,7 @@ export class UserController {
   }
 
   async refresh(c: Context): Promise<Response> {
-    const cookie = c.req.header('Cookie') || '';
-    const match = cookie.match(new RegExp(`(?:^|;\\s*)${authConfig.refreshCookieName}=([^;]*)`));
-    const refreshToken = match?.[1];
+    const refreshToken = getRefreshTokenFromCookie(c);
     if (!refreshToken) return c.json({ error: 'No refresh token' }, 401);
     const result = await authService.refresh(refreshToken);
     setRefreshCookie(c, result.refreshToken);
@@ -66,9 +46,7 @@ export class UserController {
   }
 
   async logout(c: Context): Promise<Response> {
-    const cookie = c.req.header('Cookie') || '';
-    const match = cookie.match(new RegExp(`(?:^|;\\s*)${authConfig.refreshCookieName}=([^;]*)`));
-    const refreshToken = match?.[1];
+    const refreshToken = getRefreshTokenFromCookie(c);
     if (refreshToken) {
       await authService.logout(refreshToken);
     }
@@ -129,5 +107,18 @@ export class UserController {
     const { token, password } = await c.req.json();
     await authService.resetPassword(token, password);
     return c.json({ success: true, data: null });
+  }
+
+  async sendVerifyCode(c: Context): Promise<Response> {
+    const { email } = await c.req.json();
+    await authService.sendEmailVerificationCode(email);
+    return c.json({ success: true, data: null });
+  }
+
+  async verifyCode(c: Context): Promise<Response> {
+    const { email, code } = await c.req.json();
+    const result = await authService.verifyEmailCodeAndLogin(email, code);
+    setRefreshCookie(c, result.refreshToken);
+    return c.json({ success: true, data: { token: result.token, user: result.user } });
   }
 }

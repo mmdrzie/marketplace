@@ -72,7 +72,7 @@ describe('AuthService.register', () => {
     m.user.findByEmail.mockResolvedValue(undefined);
     m.user.findById.mockResolvedValue(mockUser);
 
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     const res = await svc.register({ email: 'a@b.com', password: 'password123', name: 'Test' });
 
     expect(res.token).toBeTypeOf('string');
@@ -87,7 +87,7 @@ describe('AuthService.register', () => {
     const m = repoMocks();
     m.user.findByEmail.mockResolvedValue(makeUser());
 
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     await expect(
       svc.register({ email: 'a@b.com', password: 'password123', name: 'Test' }),
     ).rejects.toMatchObject({ code: 'EMAIL_ALREADY_EXISTS', httpStatus: 409 });
@@ -102,10 +102,10 @@ describe('AuthService.login', () => {
     const bcrypt = await import('bcryptjs');
     const hash = await bcrypt.hash('password123', 12);
     const m = repoMocks();
-    m.user.findByEmail.mockResolvedValue(makeUser({ passwordHash: hash }));
+    m.user.findByEmail.mockResolvedValue(makeUser({ passwordHash: hash, emailVerified: true }));
     m.refreshToken.create.mockResolvedValue({ id: 'rt1' });
 
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     const res = await svc.login({ email: 'a@b.com', password: 'password123' });
 
     expect(res.token).toBeTypeOf('string');
@@ -118,7 +118,7 @@ describe('AuthService.login', () => {
     const m = repoMocks();
     m.user.findByEmail.mockResolvedValue(makeUser({ passwordHash: hash }));
 
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     await expect(
       svc.login({ email: 'a@b.com', password: 'wrongpass' }),
     ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS', httpStatus: 401 });
@@ -128,7 +128,7 @@ describe('AuthService.login', () => {
     const m = repoMocks();
     m.user.findByEmail.mockResolvedValue(undefined);
 
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     await expect(
       svc.login({ email: 'missing@b.com', password: 'password123' }),
     ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' });
@@ -149,7 +149,7 @@ describe('AuthService.refresh', () => {
     );
     m.user.findById.mockResolvedValue(makeUser());
 
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     const refreshTokenStr = await (await import('../src/services/jwt.js')).signRefreshToken('u1');
     const res = await svc.refresh(refreshTokenStr);
 
@@ -161,7 +161,7 @@ describe('AuthService.refresh', () => {
     const m = repoMocks();
     m.refreshToken.findByTokenHash.mockResolvedValue(undefined);
 
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     const refreshTokenStr = await (await import('../src/services/jwt.js')).signRefreshToken('u1');
     await expect(svc.refresh(refreshTokenStr)).rejects.toMatchObject({ code: 'INVALID_TOKEN' });
   });
@@ -170,7 +170,7 @@ describe('AuthService.refresh', () => {
 describe('sanitizeUser output', () => {
   it('omits role and status from the output (related to 1.11)', async () => {
     const m = repoMocks();
-    const svc = new AuthService(undefined, m.user, m.refreshToken, m.dealer);
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     const userWithRole = User.fromSnapshot({
       id: 'u1', email: 'a@b.com', name: 'Test', phone: null,
       role: 'admin', status: 'banned', avatar: null, publicId: null,

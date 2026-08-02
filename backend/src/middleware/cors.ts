@@ -5,7 +5,7 @@ export function corsMiddleware(): MiddlewareHandler {
   return async (c, next) => {
     const origin = c.req.header('Origin') || '';
     const allowedOrigins = [
-      ...(config.frontendUrl || '').split(',').map((s) => s.trim()),
+      ...config.frontendOrigins,
       'http://localhost:3000',
       'http://localhost:4000',
     ].filter(Boolean);

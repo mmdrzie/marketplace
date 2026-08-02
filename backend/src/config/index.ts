@@ -2,7 +2,8 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '4000', 10),
   apiPrefix: process.env.API_PREFIX || '/api/v1',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  frontendUrl: (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim(),
+  frontendOrigins: (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map((s) => s.trim()).filter(Boolean),
 
   database: {
     url: process.env.DATABASE_URL,
@@ -59,6 +60,16 @@ export const config = {
     },
   },
 
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    redirectUri: process.env.GOOGLE_REDIRECT_URI || '',
+  },
+
+  auth: {
+    singleSession: process.env.AUTH_SINGLE_SESSION === 'true',
+  },
+
   rateLimits: {
     global: { limit: parseInt(process.env.GLOBAL_RATE_LIMIT || '100', 10), window: parseInt(process.env.GLOBAL_RATE_WINDOW || '60', 10) },
     admin: { limit: parseInt(process.env.ADMIN_RATE_LIMIT || '30', 10), window: parseInt(process.env.ADMIN_RATE_WINDOW || '60', 10) },
@@ -68,6 +79,9 @@ export const config = {
     otpVerify: { limit: parseInt(process.env.OTP_VERIFY_RATE_LIMIT || '10', 10), window: parseInt(process.env.OTP_VERIFY_RATE_WINDOW || '900', 10) },
     forgotPassword: { limit: parseInt(process.env.FORGOT_RATE_LIMIT || '3', 10), window: parseInt(process.env.FORGOT_RATE_WINDOW || '3600', 10) },
     verifyEmail: { limit: parseInt(process.env.VERIFY_EMAIL_RATE_LIMIT || '5', 10), window: parseInt(process.env.VERIFY_EMAIL_RATE_WINDOW || '86400', 10) },
+    googleVerify: { limit: parseInt(process.env.GOOGLE_VERIFY_RATE_LIMIT || '10', 10), window: parseInt(process.env.GOOGLE_VERIFY_RATE_WINDOW || '900', 10) },
+    googleResend: { limit: parseInt(process.env.GOOGLE_RESEND_RATE_LIMIT || '3', 10), window: parseInt(process.env.GOOGLE_RESEND_RATE_WINDOW || '3600', 10) },
+    googleLink: { limit: parseInt(process.env.GOOGLE_LINK_RATE_LIMIT || '5', 10), window: parseInt(process.env.GOOGLE_LINK_RATE_WINDOW || '900', 10) },
     publishListing: { limit: parseInt(process.env.PUBLISH_LISTING_RATE_LIMIT || '10', 10), window: parseInt(process.env.PUBLISH_LISTING_RATE_WINDOW || '86400', 10) },
     createConversation: { limit: parseInt(process.env.CONVERSATION_RATE_LIMIT || '30', 10), window: parseInt(process.env.CONVERSATION_RATE_WINDOW || '3600', 10) },
     sendMessage: { limit: parseInt(process.env.MESSAGE_RATE_LIMIT || '60', 10), window: parseInt(process.env.MESSAGE_RATE_WINDOW || '60', 10) },

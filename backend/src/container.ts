@@ -52,6 +52,7 @@ import { FavoriteController } from './domain/presentation/favorite/FavoriteContr
 import { NotificationPreferencesController } from './domain/presentation/notificationPreferences/NotificationPreferencesController.js';
 import { EmailVerificationController } from './domain/presentation/email/EmailVerificationController.js';
 import { PhoneVerificationController } from './domain/presentation/phone/PhoneVerificationController.js';
+import { GoogleAuthController } from './domain/presentation/auth/GoogleAuthController.js';
 import { AdminController } from './domain/presentation/admin/AdminController.js';
 import { DealerController } from './domain/presentation/dealer/DealerController.js';
 import { StoreController } from './domain/presentation/store/StoreController.js';
@@ -131,6 +132,7 @@ export const favoriteController = new FavoriteController(favoriteRepo);
 export const notificationPrefsController = new NotificationPreferencesController(notificationPrefsRepo);
 export const emailVerificationController = new EmailVerificationController();
 export const phoneVerificationController = new PhoneVerificationController();
+export const googleAuthController = new GoogleAuthController();
 export const adminController = new AdminController();
 export const dealerController = new DealerController();
 export const storeController = new StoreController();
