@@ -24,19 +24,22 @@ function FullScreenLoader() {
 export function AuthGuard({ children }: { children: ReactNode }) {
   const isAuthenticated = useIsAuthenticated();
   const _hasHydrated = useAuthStore((s) => s._hasHydrated);
+  const _refreshing = useAuthStore((s) => s._refreshing);
   const router = useRouter();
 
   useEffect(() => {
     // Only redirect once the persisted auth state has rehydrated, otherwise
-    // logged-in users would be bounced to /login on every first paint.
-    if (_hasHydrated && !isAuthenticated) {
+    // logged-in users would be bounced to /login on every first paint. Also
+    // wait while a legacy (token-less) session is being refreshed.
+    if (_hasHydrated && !_refreshing && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, _hasHydrated, router]);
+  }, [isAuthenticated, _hasHydrated, _refreshing, router]);
 
-  // While hydration hasn't completed, or after we know the user is unauthenticated,
-  // show a loader instead of a blank screen. The effect above handles the redirect.
-  if (!_hasHydrated || !isAuthenticated) {
+  // While hydration/refresh hasn't completed, or after we know the user is
+  // unauthenticated, show a loader instead of a blank screen. The effect above
+  // handles the redirect.
+  if (!_hasHydrated || (!_refreshing && !isAuthenticated)) {
     return <FullScreenLoader />;
   }
 

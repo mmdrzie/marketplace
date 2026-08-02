@@ -30,18 +30,20 @@ const STATE_COOKIE_PATH = '/api/v1/auth/google';
 const STATE_COOKIE_MAX_AGE = 10 * 60;
 
 export function setOauthStateCookie(c: Context, jti: string) {
+  const sameSite = authConfig.refreshCookieSameSite;
   const secure = authConfig.refreshCookieSecure ? '; Secure' : '';
   c.header(
     'Set-Cookie',
-    `${STATE_COOKIE_NAME}=${jti}; HttpOnly; Path=${STATE_COOKIE_PATH}; SameSite=Lax${secure}; Max-Age=${STATE_COOKIE_MAX_AGE}`,
+    `${STATE_COOKIE_NAME}=${jti}; HttpOnly; Path=${STATE_COOKIE_PATH}; SameSite=${sameSite}${secure}; Max-Age=${STATE_COOKIE_MAX_AGE}`,
   );
 }
 
 export function clearOauthStateCookie(c: Context) {
+  const sameSite = authConfig.refreshCookieSameSite;
   const secure = authConfig.refreshCookieSecure ? '; Secure' : '';
   c.header(
     'Set-Cookie',
-    `${STATE_COOKIE_NAME}=; HttpOnly; Path=${STATE_COOKIE_PATH}; SameSite=Lax${secure}; Max-Age=0`,
+    `${STATE_COOKIE_NAME}=; HttpOnly; Path=${STATE_COOKIE_PATH}; SameSite=${sameSite}${secure}; Max-Age=0`,
   );
 }
 

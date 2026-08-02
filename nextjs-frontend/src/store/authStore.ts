@@ -14,12 +14,14 @@ interface AuthState {
   emailVerified: boolean;
   pendingAction: string | null;
   _hasHydrated: boolean;
+  _refreshing: boolean;
   setAuth: (token: string, user: User, refreshToken?: string) => void;
   setUser: (user: User) => void;
   setPhoneVerified: (v: boolean) => void;
   setPendingAction: (action: string | null) => void;
   logout: () => void;
   setHasHydrated: (v: boolean) => void;
+  setRefreshing: (v: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
         emailVerified: false,
         pendingAction: null,
         _hasHydrated: false,
+        _refreshing: false,
         setAuth: (token, user, refreshToken) =>
           set({
             token,
@@ -57,11 +60,14 @@ export const useAuthStore = create<AuthState>()(
             pendingAction: null,
           }),
         setHasHydrated: (v) => set({ _hasHydrated: v }),
+        setRefreshing: (v) => set({ _refreshing: v }),
       }),
       {
         name: 'auth-storage',
-        version: 6,
+        version: 7,
         partialize: (state) => ({
+          token: state.token,
+          refreshToken: state.refreshToken,
           user: state.user,
           isAuthenticated: state.isAuthenticated,
           phoneVerified: state.phoneVerified,
@@ -69,35 +75,33 @@ export const useAuthStore = create<AuthState>()(
           pendingAction: state.pendingAction,
         }),
         migrate: (persisted: unknown, version) => {
-          if (version < 6) {
-            const v = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
-            return {
-              token: null,
-              refreshToken: null,
-              user: v.user ?? null,
-              isAuthenticated: v.isAuthenticated ?? false,
-              phoneVerified: v.phoneVerified ?? false,
-              emailVerified: v.emailVerified ?? false,
-              pendingAction: v.pendingAction ?? null,
-              _hasHydrated: true,
-            } as AuthState;
-          }
-          const v = persisted as { user?: User; isAuthenticated?: boolean; phoneVerified?: boolean; emailVerified?: boolean; pendingAction?: string | null };
+          const v = persisted as {
+            token?: string | null;
+            refreshToken?: string | null;
+            user?: User;
+            isAuthenticated?: boolean;
+            phoneVerified?: boolean;
+            emailVerified?: boolean;
+            pendingAction?: string | null;
+          };
           return {
-            token: null,
-            refreshToken: null,
+            token: version >= 7 ? (v.token ?? null) : null,
+            refreshToken: version >= 7 ? (v.refreshToken ?? null) : null,
             user: v.user ?? null,
             isAuthenticated: v.isAuthenticated ?? false,
             phoneVerified: v.phoneVerified ?? false,
             emailVerified: v.emailVerified ?? false,
             pendingAction: v.pendingAction ?? null,
             _hasHydrated: true,
+            _refreshing: false,
           } as AuthState;
         },
         onRehydrateStorage: () => (state) => {
           state?.setHasHydrated(true);
           if (state?.user && !state.token) {
-            api.post('/auth/refresh', {}, { withCredentials: true })
+            state.setRefreshing(true);
+            const body = state.refreshToken ? { refreshToken: state.refreshToken } : {};
+            api.post('/auth/refresh', body, { withCredentials: true })
               .then((res) => {
                 const newToken = res.data.data?.token || res.data.token;
                 const newRefresh = res.data.data?.refreshToken;
@@ -108,6 +112,9 @@ export const useAuthStore = create<AuthState>()(
               })
               .catch(() => {
                 useAuthStore.getState().logout();
+              })
+              .finally(() => {
+                useAuthStore.getState().setRefreshing(false);
               });
           }
         },

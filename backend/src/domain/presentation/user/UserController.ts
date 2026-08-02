@@ -38,7 +38,11 @@ export class UserController {
   }
 
   async refresh(c: Context): Promise<Response> {
-    const refreshToken = getRefreshTokenFromCookie(c);
+    let refreshToken = getRefreshTokenFromCookie(c);
+    if (!refreshToken) {
+      const body = (await c.req.json().catch(() => null)) as { refreshToken?: string } | null;
+      refreshToken = body?.refreshToken ?? null;
+    }
     if (!refreshToken) return c.json({ error: 'No refresh token' }, 401);
     const result = await authService.refresh(refreshToken);
     setRefreshCookie(c, result.refreshToken);
