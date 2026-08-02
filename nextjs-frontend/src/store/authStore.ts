@@ -113,7 +113,7 @@ export const useAuthStore = create<AuthState>()(
         },
       },
     ),
-    { name: 'auth-storage', enabled: process.env.NODE_ENV === 'development' },
+    { name: 'auth-storage' },
   ),
 );
 
