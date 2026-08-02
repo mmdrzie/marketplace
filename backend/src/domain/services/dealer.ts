@@ -80,9 +80,7 @@ export class DealerService {
   async subscription(userId: string) {
     const user = await this.userRepo.findById(userId);
     if (!user) throw AppError.notFound('User not found');
-    if (user.role !== 'dealer' && user.role !== 'agency' && user.role !== 'store') {
-      throw AppError.forbidden('Access denied');
-    }
+    // Any authenticated user may view subscription info (buying is open to all).
     return { plan: 'free', expiresAt: null };
   }
 }

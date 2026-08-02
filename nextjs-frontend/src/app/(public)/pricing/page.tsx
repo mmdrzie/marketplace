@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion, LayoutGroup } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useIsAuthenticated } from '@/store/authStore';
 
 const spring = { type: 'spring' as const, stiffness: 300, damping: 30, mass: 0.8 };
 
@@ -60,9 +61,12 @@ function formatPrice(amount: number) {
 }
 
 export default function PricingPage() {
+  const isAuthenticated = useIsAuthenticated();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState('professional');
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+
+  const buyHref = isAuthenticated ? '/dealer/subscription' : '/login?redirect=/dealer/subscription';
 
   const plan = PLANS.find((p) => p.id === selectedPlan)!;
   const basePrice = billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
@@ -293,10 +297,10 @@ export default function PricingPage() {
                   </p>
                 </div>
                 <Link
-                  href="/login?redirect=/dealer/subscription"
+                  href={buyHref}
                   className="btn btn-primary py-2.5 px-8 rounded-xl text-sm font-medium whitespace-nowrap text-center"
                 >
-                  ورود و خرید اشتراک
+                  {isAuthenticated ? 'خرید اشتراک' : 'ورود و خرید اشتراک'}
                 </Link>
               </div>
             </motion.div>

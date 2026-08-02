@@ -17,7 +17,8 @@ const upgradeSchema = z.object({
 
 router.post('/upgrade', auth(), rateLimiter('dealer:upgrade'), zValidator('json', upgradeSchema), (c) => dealerController.upgrade(c));
 router.get('/stats', auth('dealer', 'agency', 'store'), (c) => dealerController.stats(c));
-router.get('/subscription', auth('dealer', 'agency', 'store'), (c) => dealerController.subscription(c));
+// Open to any authenticated user: everyone may view/buy subscription plans.
+router.get('/subscription', auth(), (c) => dealerController.subscription(c));
 
 export { router as accountRouter };
 

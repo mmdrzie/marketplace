@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useIsAuthenticated } from '@/store/authStore';
 import { EchoProvider } from '@/providers/EchoProvider';
 import { RealtimeNotificationListener } from '@/components/common/RealtimeNotificationListener';
@@ -25,16 +25,25 @@ export default function DealerLayout({ children }: { children: React.ReactNode }
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useIsAuthenticated();
   const router = useRouter();
+  const pathname = usePathname();
   const { isOpen, open, close } = useSidebarState();
+
+  // The subscription/buy page is open to every authenticated user (any user
+  // may purchase a professional plan). The rest of the dealer panel stays
+  // restricted to dealer/agency roles.
+  const isSubscriptionPage = pathname?.startsWith('/dealer/subscription') ?? false;
+  const isAllowed = isSubscriptionPage
+    ? isAuthenticated
+    : isAuthenticated && (user?.role === 'dealer' || user?.role === 'agency');
 
   const isAgency = user?.role === 'agency';
   const accentColor = isAgency ? 'bg-warning' : 'bg-success';
 
   useEffect(() => {
-    if (!isAuthenticated || (user?.role !== 'dealer' && user?.role !== 'agency')) router.push('/login');
-  }, [isAuthenticated, user, router]);
+    if (!isAllowed) router.push('/login');
+  }, [isAllowed, router]);
 
-  if (!isAuthenticated || (user?.role !== 'dealer' && user?.role !== 'agency')) return null;
+  if (!isAllowed) return null;
 
   const NAV_LINKS: NavItem[] = [
     { href: '/dealer/listings', label: 'آگهی‌های من', icon: ListingsIcon },
