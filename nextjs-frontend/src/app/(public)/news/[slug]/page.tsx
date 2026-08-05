@@ -28,9 +28,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   if (!content || content.contentType.slug !== 'news') {
     return (
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden flex items-center justify-center">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="text-center relative z-10">
+      <div className="relative min-h-screen text-foreground overflow-hidden flex items-center justify-center">
+                <div className="text-center relative z-10">
           <div className="w-20 h-20 rounded-3xl bg-surface/40 border border-border flex items-center justify-center mx-auto mb-4 text-primary">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
           </div>
@@ -46,9 +45,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
+      <div className="relative min-h-screen text-foreground overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] z-0 pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto">

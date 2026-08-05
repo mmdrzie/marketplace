@@ -31,9 +31,8 @@ export default function MyListingsPage() {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 space-y-8 motion-safe:animate-pulse">
+      <div className="relative min-h-screen text-foreground overflow-hidden">
+                <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 space-y-8 motion-safe:animate-pulse">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-3">
               <div className="h-8 w-48 bg-surface-2 rounded-xl"></div>
@@ -58,9 +57,8 @@ export default function MyListingsPage() {
 
   if (error) {
     return (
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden flex items-center justify-center">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="text-center relative z-10">
+      <div className="relative min-h-screen text-foreground overflow-hidden flex items-center justify-center">
+                <div className="text-center relative z-10">
           <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4 text-destructive">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
           </div>
@@ -71,10 +69,9 @@ export default function MyListingsPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="relative min-h-screen text-foreground overflow-hidden">
       {/* پس‌زمینه داینامیک معماری */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
+            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] z-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16 space-y-8">

@@ -1,64 +1,91 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import api from '@/lib/api';
-import { FadeIn } from '@/components/common/MotionDiv';
+import { Button } from '@/components/ui/Button';
 
-export default function VerifyEmailPage() {
+type Status = 'loading' | 'success' | 'error';
+
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(token ? 'loading' : 'error');
-  const [message, setMessage] = useState(token ? '' : 'لینک تأیید نامعتبر است');
+  const [status, setStatus] = useState<Status>(token ? 'loading' : 'error');
+  const [message, setMessage] = useState(token ? 'در حال تأیید ایمیل...' : 'لینک تأیید نامعتبر است');
 
   useEffect(() => {
     if (!token) return;
-    api.get(`/email/verify/${token}`)
+    let alive = true;
+    api
+      .get(`/email/verify/${token}`)
       .then(() => {
+        if (!alive) return;
         setStatus('success');
         setMessage('ایمیل شما با موفقیت تأیید شد');
       })
       .catch((err: unknown) => {
+        if (!alive) return;
         setStatus('error');
-        setMessage((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message || 'تأیید ایمیل با خطا مواجه شد');
+        setMessage(
+          (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ||
+            'تأیید ایمیل با خطا مواجه شد',
+        );
       });
+    return () => {
+      alive = false;
+    };
   }, [token]);
 
   const redirect = searchParams.get('redirect') || '/';
 
   return (
-    <FadeIn>
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="glass rounded-3xl p-8 max-w-md w-full text-center border border-border-subtle">
-          {status === 'loading' && (
-            <div>
-              <div className="follow-the-leader mx-auto mb-4"><div></div><div></div><div></div><div></div><div></div></div>
-              <p className="text-foreground">در حال تأیید ایمیل...</p>
-            </div>
-          )}
-          {status === 'success' && (
-            <div>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-              </div>
-              <h2 className="text-xl font-bold text-foreground mb-2">تأیید شد</h2>
-              <p className="text-sm text-muted-foreground mb-6">{message}</p>
-              <button onClick={() => router.push(redirect)} className="btn btn-primary">ورود به سایت</button>
-            </div>
-          )}
-          {status === 'error' && (
-            <div>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
-              </div>
-              <h2 className="text-xl font-bold text-foreground mb-2">خطا</h2>
-              <p className="text-sm text-muted-foreground mb-6">{message}</p>
-              <button onClick={() => router.push('/')} className="btn btn-primary">بازگشت به صفحه اصلی</button>
-            </div>
-          )}
+    <div className="glass-strong rounded-3xl p-8 shadow-card border border-border-subtle text-center">
+      {status === 'loading' && (
+        <div className="flex flex-col items-center gap-4 py-6" role="status">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">{message}</p>
         </div>
-      </div>
-    </FadeIn>
+      )}
+
+      {status === 'success' && (
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center">
+            <CheckCircle2 className="h-8 w-8 text-success" aria-hidden="true" />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">تأیید شد</h1>
+          <p className="text-sm text-muted-foreground" role="status">
+            {message}
+          </p>
+          <Button size="lg" className="w-full mt-2" onClick={() => router.push(redirect)}>
+            ورود به سایت
+          </Button>
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+            <XCircle className="h-8 w-8 text-destructive" aria-hidden="true" />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">خطا</h1>
+          <p className="text-sm text-muted-foreground" role="status">
+            {message}
+          </p>
+          <Button variant="glass" size="lg" className="w-full mt-2" onClick={() => router.push('/')}>
+            بازگشت به صفحه اصلی
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-10 text-sm text-muted-foreground">بارگذاری...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

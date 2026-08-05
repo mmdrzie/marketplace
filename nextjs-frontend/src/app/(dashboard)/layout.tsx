@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthGuard>
       <EchoProvider>
         <div className="relative min-h-screen flex bg-background text-foreground">
-          <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+          <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.14] dark:opacity-[0.09]" style={{ backgroundImage: 'radial-gradient(circle, var(--color-dot-grid) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
           <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] -z-0 pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] -z-0 pointer-events-none" />
 

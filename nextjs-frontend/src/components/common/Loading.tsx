@@ -13,7 +13,7 @@ export function Loading({ text = 'در حال بارگذاری...', size = 'md' 
 
 export function LoadingPage({ text }: { text?: string }) {
   return (
-    <div className="flex items-center justify-center min-h-[60vh] bg-background">
+    <div className="flex items-center justify-center min-h-[60vh]">
       <Loading text={text} />
     </div>
   );

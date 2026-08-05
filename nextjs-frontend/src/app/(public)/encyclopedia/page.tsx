@@ -37,9 +37,8 @@ export default function EncyclopediaPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px] z-0 pointer-events-none" style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 8%, transparent)' }} />
+      <div className="relative min-h-screen text-foreground overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px] z-0 pointer-events-none" style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 8%, transparent)' }} />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[130px] z-0 pointer-events-none" style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 5%, transparent)' }} />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-4 py-12 md:py-16">

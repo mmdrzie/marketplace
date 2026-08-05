@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard } from '@/components/common/Skeleton';
 
 export default function NewsLoading() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
         <div className="text-center mb-14">
           <Skeleton className="h-6 w-40 rounded-full mx-auto mb-4" />

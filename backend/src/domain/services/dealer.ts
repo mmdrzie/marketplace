@@ -4,6 +4,7 @@ import { UserRepositoryImpl } from '../infrastructure/user/UserRepository.impl.j
 import { DealerRepositoryImpl } from '../infrastructure/dealer/DealerRepository.impl.js';
 import { AppError } from '../../errors.js';
 import { permissionService } from '../../services/permission/index.js';
+import { businessProfileService } from './businessProfileService.js';
 import type { AuthUser } from '../../middleware/auth.js';
 
 export class DealerService {
@@ -15,7 +16,14 @@ export class DealerService {
     this.dealerRepo = dealerRepo ?? new DealerRepositoryImpl();
   }
 
-  async upgrade(input: { role: 'dealer' | 'agency' | 'store'; business_name: string; user: AuthUser }) {
+  async upgrade(input: {
+    role: 'dealer' | 'agency' | 'store';
+    business_name: string;
+    user: AuthUser;
+    dealer_code?: string;
+    business_address?: string;
+    business_description?: string;
+  }) {
     const capability = input.role === 'agency'
       ? 'account:upgrade-agency'
       : input.role === 'store'
@@ -35,29 +43,19 @@ export class DealerService {
     const updatedUser = UserEntity.fromSnapshot({ ...snapshot, role: input.role, updatedAt: new Date().toISOString() });
     await this.userRepo.save(updatedUser);
 
-    let existingDealer = await this.dealerRepo.findByUserId(input.user.id);
-    if (existingDealer) {
-      existingDealer.businessName = input.business_name;
-      existingDealer.updatedAt = new Date();
-      await this.dealerRepo.save(existingDealer);
-    } else {
-      const DealerEntity = (await import('../entities/dealer/Dealer.entity.js')).Dealer;
-      const displayName = snapshot.name ?? snapshot.email;
-      existingDealer = DealerEntity.fromSnapshot({
-        id: 0, userId: input.user.id, name: displayName,
-        slug: displayName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-        businessName: input.business_name, logo: null,
-        description: null, phone: existingUser.phone ?? null,
-        address: null, latitude: null, longitude: null,
-        dealerCode: null, subscriptionPlan: null,
-        subscriptionExpiresAt: null, listingsLimit: null,
-        isVerified: false, isActive: true, rating: 0,
-        reviewCount: 0, publicId: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    // dealer/agency → dealer_profiles (status='pending', dealer_code persisted);
+    // store keeps the user-row only (store_profiles is created via
+    // POST /auth/business-profile or the store registration flow).
+    if (input.role !== 'store') {
+      const profile = await businessProfileService.upsertDealer(input.user.id, input.role, {
+        business_name: input.business_name,
+        dealer_code: input.dealer_code,
+        business_address: input.business_address,
+        description: input.business_description,
       });
-      await this.dealerRepo.save(existingDealer);
+      return profile.profile;
     }
+    return { role: input.role, businessName: input.business_name, status: 'pending' };
   }
 
   async myListings(userId: string) {

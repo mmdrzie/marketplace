@@ -5,6 +5,9 @@ export interface RefreshTokenSnapshot {
   expiresAt: string;
   revokedAt: string | null;
   createdAt: string;
+  lastUsedAt: string | null;
+  lastIp: string | null;
+  lastUserAgent: string | null;
 }
 
 export class RefreshToken {
@@ -15,6 +18,9 @@ export class RefreshToken {
     public readonly expiresAt: Date,
     public revokedAt: Date | null,
     public readonly createdAt: Date,
+    public lastUsedAt: Date | null,
+    public lastIp: string | null,
+    public lastUserAgent: string | null,
   ) {}
 
   static create(props: {
@@ -22,6 +28,9 @@ export class RefreshToken {
     userId: string;
     tokenHash: string;
     expiresAt: Date;
+    lastUsedAt?: Date | null;
+    lastIp?: string | null;
+    lastUserAgent?: string | null;
   }): RefreshToken {
     return new RefreshToken(
       props.id,
@@ -30,6 +39,9 @@ export class RefreshToken {
       props.expiresAt,
       null,
       new Date(),
+      props.lastUsedAt ?? new Date(),
+      props.lastIp ?? null,
+      props.lastUserAgent ?? null,
     );
   }
 
@@ -41,6 +53,9 @@ export class RefreshToken {
       new Date(s.expiresAt),
       s.revokedAt ? new Date(s.revokedAt) : null,
       new Date(s.createdAt),
+      s.lastUsedAt ? new Date(s.lastUsedAt) : null,
+      s.lastIp ?? null,
+      s.lastUserAgent ?? null,
     );
   }
 
@@ -52,6 +67,9 @@ export class RefreshToken {
       expiresAt: this.expiresAt.toISOString(),
       revokedAt: this.revokedAt?.toISOString() ?? null,
       createdAt: this.createdAt.toISOString(),
+      lastUsedAt: this.lastUsedAt?.toISOString() ?? null,
+      lastIp: this.lastIp,
+      lastUserAgent: this.lastUserAgent,
     };
   }
 

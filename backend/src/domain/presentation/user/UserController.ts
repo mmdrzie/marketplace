@@ -2,6 +2,13 @@ import type { Context } from 'hono';
 import { authService } from '../../services/auth.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshTokenFromCookie } from '../auth/authCookies.js';
 
+function clientMeta(c: Context) {
+  return {
+    ip: c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? c.req.header('x-real-ip') ?? null,
+    userAgent: c.req.header('user-agent') ?? null,
+  };
+}
+
 export class UserController {
   async register(c: Context): Promise<Response> {
     const { email, password, name } = await c.req.json();
@@ -19,9 +26,32 @@ export class UserController {
       identifier: body.identifier,
       code: body.code,
       role: body.role,
+      business_name: body.business_name,
+      dealer_code: body.dealer_code,
+      business_address: body.business_address,
+      city: body.city,
+      documents: body.documents,
+      workshop_name: body.workshop_name,
+      workshop_type: body.workshop_type,
+      specialty: body.specialty,
+      hours: body.hours,
+      services: body.services,
+      description: body.description,
+      phone: body.phone,
+      ...clientMeta(c),
     });
     setRefreshCookie(c, result.refreshToken);
-    return c.json({ success: true, data: { token: result.token, user: result.user } }, 201);
+    return c.json({
+      success: true,
+      data: { token: result.token, user: result.user, profileStatus: result.profileStatus },
+    }, 201);
+  }
+
+  async businessProfile(c: Context): Promise<Response> {
+    const user = c.get('user');
+    const data = await c.req.json();
+    const result = await authService.createBusinessProfile(user.id, data);
+    return c.json({ success: true, data: result });
   }
 
   async sendRegisterOtp(c: Context): Promise<Response> {
@@ -44,7 +74,7 @@ export class UserController {
       refreshToken = body?.refreshToken ?? null;
     }
     if (!refreshToken) return c.json({ error: 'No refresh token' }, 401);
-    const result = await authService.refresh(refreshToken);
+    const result = await authService.refresh(refreshToken, clientMeta(c));
     setRefreshCookie(c, result.refreshToken);
     return c.json({ success: true, data: { token: result.token } });
   }

@@ -36,8 +36,8 @@ export default function ListingDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 pt-24 pb-12 space-y-8">
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 pt-16 pb-12 space-y-8">
           <Skeleton className="h-10 w-64 rounded-2xl" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
@@ -57,7 +57,7 @@ export default function ListingDetailPage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">خطا در بارگذاری آگهی</p>
           <button onClick={() => refetch()} className="btn btn-primary">
@@ -70,7 +70,7 @@ export default function ListingDetailPage() {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">آگهی یافت نشد</p>
           <button onClick={() => router.push('/listings')} className="btn btn-primary">
@@ -85,12 +85,11 @@ export default function ListingDetailPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground overflow-x-hidden">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
+      <div className="relative min-h-screen text-foreground overflow-x-hidden">
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] z-0 pointer-events-none" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-24 md:pt-28 pb-12 md:pb-16">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-16 md:pt-16 pb-12 md:pb-16">
 
           {/* Breadcrumb */}
           <div className="flex items-center gap-3 mb-6">

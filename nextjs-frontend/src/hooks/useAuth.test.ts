@@ -119,4 +119,67 @@ describe('useAuth', () => {
 
     expect(mockStoreLogout).toHaveBeenCalled();
   });
+
+  it('registers with OTP and returns profileStatus', async () => {
+    mockApiPost.mockResolvedValue({
+      data: { data: { token: 'fake-token', user: mockUser, profileStatus: 'pending' } },
+    });
+    const { result } = renderHook(() => useAuth());
+
+    let out: { profileStatus?: string } | undefined;
+    await act(async () => {
+      out = await result.current.registerWithOtp(
+        '09120000000',
+        'phone',
+        '123456',
+        'password123',
+        'Test',
+        'dealer',
+        { business_name: 'نمایندگی تست' },
+      );
+    });
+
+    expect(mockApiPost).toHaveBeenCalledWith('/auth/register-with-otp', {
+      type: 'phone',
+      identifier: '09120000000',
+      code: '123456',
+      password: 'password123',
+      name: 'Test',
+      role: 'dealer',
+      business_name: 'نمایندگی تست',
+    });
+    expect(out?.profileStatus).toBe('pending');
+    expect(mockSetAuth).toHaveBeenCalledWith('fake-token', mockUser);
+  });
+
+  it('creates business profile', async () => {
+    mockApiPost.mockResolvedValue({
+      data: { data: { profileStatus: 'pending', profile: { business_name: 'نمایندگی تست' } } },
+    });
+    const { result } = renderHook(() => useAuth());
+
+    let out: { profileStatus?: string } | undefined;
+    await act(async () => {
+      out = await result.current.createBusinessProfile({ business_name: 'نمایندگی تست' });
+    });
+
+    expect(mockApiPost).toHaveBeenCalledWith('/auth/business-profile', { business_name: 'نمایندگی تست' });
+    expect(out?.profileStatus).toBe('pending');
+  });
+
+  it('builds google authorize url with role', async () => {
+    const originalLocation = window.location;
+    const stub = { href: '' };
+    Object.defineProperty(window, 'location', { writable: true, value: stub });
+    const { result } = renderHook(() => useAuth());
+
+    act(() => {
+      result.current.loginWithGoogle('/business-profile', 'dealer');
+    });
+
+    expect(stub.href).toContain('/api/v1/auth/google/authorize');
+    expect(stub.href).toContain('redirect=%2Fbusiness-profile');
+    expect(stub.href).toContain('role=dealer');
+    Object.defineProperty(window, 'location', { writable: true, value: originalLocation });
+  });
 });

@@ -1,70 +1,49 @@
 # Session Summary
 
 ## Objective
-- **Active task (current session):** Real email registration (SMTP + verification code + login lock) AND Google sign-in (OAuth 2.1 Authorization Code + PKCE), per locked plan v4 (`docs/auth-providers-plan.md`) + `docs/adr/ADR-012-auth-providers.md`. Backend done, frontend done, **DB applied + tests green + E2E verified**; remaining: Google/SMTP credentials (user).
-- Maintained context: catalog domain (catalog_types + categories + parts + compatibility), workshops section (تعمیرکاران و تیونرها), all complete.
+- **Active task (current session):** بازطراحی مدرن صفحات auth بدون چیدمان اسپلیت — کاربر طرح اسپلیت پلن v7 (BrandPanel) را رد کرد («اسپلیت نذاری، طراحی مدرن بهتره») و خواستار رفع صفحه سفید دارکمود شد. **کامل شد**: تکستونه مرکزی + هدر یکدست `AuthHeader` + کارت `glass-strong` واحد در همه صفحات. Verifications: tsc ✓ eslint ✓ SSR 200 ✓.
+- **این جلسه پس از redesign**: لوگو «TD Team Decision» و `AuthLiveStats` از صفحات auth حذف شدند؛ گرید خطی همه صفحات به **گرید نقطهای (dotted grid)** تبدیل شد.
+- Maintained context: فاز صفر بکاند (نقشهای کسبوکار + profileStatus + stats) از جلسه قبل کامل؛ catalog + workshops کامل.
 
 ## Important Details
-- پروژه: Next.js 16 (App Router) + Hono backend + PostgreSQL (Supabase); Farsi RTL; کاربر فارسیزبان — پاسخها و UI فارسی، کد/کامنت انگلیسی.
-- **Auth architecture**: `AuthService` (core) + `PasswordAuthProvider` + `GoogleAuthProvider` — shared interfaces `AuthProvider`/`AuthIdentity`/`AuthCore`/`SessionIssuer` in `backend/src/domain/providers/AuthProvider.ts`.
-- **Key decisions (ADR-012)**: PKCE even for confidential client; `state`/`nonce`/`code_verifier`/`redirect` stored in `one_time_tokens` (metadata JSONB) with only `jti` in httpOnly cookie; single-use tokens (atomic consume); trust Google email only if `provider==google && email_verified==true && email` else OTP fallback; secure account linking only after password re-auth (`has_password=true`); `role='user'` default; direct session issuance (no refresh dance); multi-device (`AUTH_SINGLE_SESSION=false`); never store Google refresh token; soft-delete `oauth_accounts`; audit log.
-- Login lock: 403 `EMAIL_NOT_VERIFIED` only for real emails (not `@bazaar.local` synthetic).
-- **Supabase reachable** (`aws-0-ap-southeast-1.pooler.supabase.com:6543`); `npm run migrate` applied 050/051/052; schema verified (`oauth_accounts`, `oauth_login_logs`, `one_time_tokens`, `users.has_password` EXISTS). Checksum-mismatch warnings for old migrations (022–031) are benign.
-- **FOUND & FIXED (this session): error handling was broken** — Hono's built-in default `errorHandler` swallows thrown errors inside compose (`next()` never rejects), so the old `errorWrapper` try/catch middleware NEVER ran: every AppError (401/403/422/429…) returned 500 text. Fix: `backend/src/middleware/errorWrapper.ts` → renamed `errorHandler.ts` exporting Hono `ErrorHandler`; registered via `app.onError(errorHandler)` on root + `docsRouter` + `apiRouter` (sub-apps need it too — their own compose catches first) in `backend/src/app.ts` AND `backend/api/index.ts` (Vercel entry). E2E now returns proper 401/403/422 JSON.
-- `backend/.env`: `FRONTEND_URL` fixed (was comma-joined) + `config/index.ts` defensive `split(',')[0].trim()`; `EMAIL_PROVIDER=console` (OTP codes printed to server stdout).
-- Frontend typecheck **clean** + build passes; backend TSC_OK; **vitest 137/137 (23 files)**.
-- **E2E auth flow fully verified** against running server (port 4000): legacy register → login **403 EMAIL_NOT_VERIFIED** → wrong-password **401** → send-verify-code → verify-code → session (`emailVerified:true`) → replay code **422 OTP_INVALID** (single-use works) → login 200 → wrong code 422.
-- No Google OAuth or SMTP credentials exist yet — Google sign-in cannot be E2E-tested until user provides them (step 10).
-- Catalog facts (context): slug-based `/catalog/{slug}` → 308 → `/catalog/{slug}/parts`; `brands.id` BIGINT; catalogs tuning + accessory; `useCatalogCategories` staleTime 30s; «نوع موتور» filter static UI-only.
-- Deployment to Vercel skipped (no credentials in env; user handles `vercel login`).
+- **انحراف عمدی از پلن v7**: مدل اسپلیت (BrandPanel/AuthLayout قدیمی) با دستور جدید کاربر لغو شد — چیدمان تکستونه مرکزی جایگزین شد. پلن v7 دیگر مبنای طراحی نیست (فقط API/فلوها معتبرند).
+- **توکنهای این دور** (`globals.css`): `--color-amber` (#b45309 لایت / #fcd34d دارک)، `--color-amber-bright` (#f0b35f لایت / **#f5b971** دارک)، `--color-vignette`، `--color-brand-panel` (#3d3024 لایت / #1c1510 دارک)، `--color-brand-panel-foreground` (#f5e3c5). دور قبل: `--duration-fast/base/slow/slower` → `--duration-150/250/400` (700ms حذف شد).
+- **الگوی طراحی جدید**: لوگوی TD بالا + `max-w-md mx-auto` + `AuthHeader` (icon/title/subtitle) + کارت `glass-strong rounded-3xl p-6 sm:p-8 shadow-card border border-border-subtle` برای همه مراحل + پسزمینه محیطی در layout (هالههای blur کهربایی/primary + گرید نقطهای `radial-gradient(var(--color-border))` inline + کلاس `bg-noise`) + `AuthLiveStats` پایین + لینک بازگشت. دکمهها `w-full py-4 rounded-xl`.
+- **گرید نقطهای (dotted grid)**: الگوی جدید همه صفحات — `radial-gradient(circle, var(--color-dot-grid) 1px, transparent 1px)` با `backgroundSize: 28px 28px`. توکن `--color-dot-grid`: لایت `#4a382a` / دارک `#b3b3b3`. یوتیلیتی `bg-grid-pattern` به نقطه تبدیل شد؛ ۳۰ فایل inline (داشبورد/عمومی) + not-found/error/dealers با اسکریپت جایگزین شدند. اوپسیتی صفحه اصلی: لایت 0.14 / دارک 0.09. Homepage: `src/app/(public)/page.tsx:166`.
+- کامپوننتهای جدید: `src/components/auth/AuthHeader.tsx` (آیکون در کادر `bg-primary/10`)، `src/components/auth/AuthLiveStats.tsx` (۴ آمار زنده از `useBrandStats` + نقطه ping سبز + جداکننده خطچین + `toPersianNumber`). **حذف شد**: `AuthLiveStats.tsx` (طبق دستور کاربر) و لوگوی TD/اسم Team Decision از layout صفحات auth.
+- `verify-email` از قبل با الگوی جدید هماهنگ بود (صفحه وضعیت تککارت — AuthHeader لازم ندارد).
+- گیت تأیید (چون lint کل پروژه خطاهای قبلی دارد): `tsc --noEmit` + `npx eslint --max-warnings 0 "src/app/(auth)" src/components/auth src/components/ui src/components/upload/DocumentUploader.tsx` + SSR زنده (پس از **هر** ادیت جدید).
+- فرانت در `nextjs-frontend/` است (ریشه tsconfig ندارد). سرور dev فرانت روی 3000 بالاست.
+- ⚠️ **RHF 7.84**: `useWatch` بدون prop صریح `control` کرش میکند — همیشه `useWatch({ control, name })` (register + BusinessForm). React Compiler lint: `watch()` ممنوع.
+- قراردادها: `POST /auth/business-profile` → `{ profileStatus, profile }`؛ `register-with-otp` → `{ token, user, profileStatus }`؛ `GET /stats/public`؛ `POST /upload/presigned` فقط تصویر؛ Google: `link_required` → `/link-account?t&email&redirect`.
+- `npm run lint` در کل پروژه ۱۰۶ خطای **از قبل موجود** دارد (فایلهای auth صفر) — گیتها: tsc + eslint فایلهای auth + vitest + build.
 
 ## Work State
-### Completed (auth-providers session)
-- **Plan/ADR**: `docs/auth-providers-plan.md` (v4 LOCKED), `docs/adr/ADR-012-auth-providers.md`.
-- **Migration**: `backend/migrations/052_auth_providers.sql` — oauth_accounts + one_time_tokens + oauth_login_logs + users.has_password (ADD→backfill→DROP DEFAULT); **APPLIED** to Supabase (with 050/051).
-- **Backend** (TSC_OK):
-  - `backend/src/domain/providers/{AuthProvider.ts,password.ts,google.ts}` — core interfaces, password provider (register/login/OTP/forgot/reset; exports `OTP_TTL_MS`, `OTP_RATE_WINDOW_SEC`, `OTP_MAX_PER_WINDOW`, `sha256Hex`, `generateOtpCode`), Google provider (JWKS+n nonce, PKCE, modes session/verify/link_required, `sanitizeRedirect` on the internal `redirect` param, callback now forwards `redirect` into `/google-complete?mode&t&email&redirect`).
-  - `backend/src/domain/services/auth.ts` rewritten (issueSession + `authConfig.singleSession`, createUserFromIdentity, refresh rotation w/ lock, updateProfile auto-sends verify code on email change, googleAuthorize/Callback/Finalize/Verify/Resend/Link, sendEmailVerificationCode, verifyEmailCodeAndLogin). `providers/password.ts` forgotPassword branches on `has_password===false` → `sendSetPasswordEmail`.
-  - Entities/repos/impls: `entities/oauth/{OauthAccount,OneTimeToken,OauthLoginLog}` + `infrastructure/oauth/*`; User entity `hasPassword`/`setPassword`; `UserRepository.impl.ts` `has_password` in save/updatePassword/toSnapshot (fallback `true` if column missing).
-  - `config/{index,auth,rateLimits}.ts` (google block + `google:*` limits + `auth.singleSession`); `shared/errors.ts` + `errors.ts` (`EMAIL_NOT_VERIFIED`); `validation/auth.ts`; `routes/auth.ts`; `container.ts`; `presentation/auth/GoogleAuthController.ts` (uses `config.frontendUrl`, not `process.env`); `presentation/auth/authCookies.ts`; `.env.example`.
-  - `backend/src/services/email/index.ts` — `sendSetPasswordEmail` («تعیین رمز» for `has_password=false`, URL `&mode=set`).
-  - **Error handling fixed**: `middleware/errorHandler.ts` (Hono `ErrorHandler`) replaces dead `errorWrapper.ts` middleware; wired as `app.onError` on root + sub-apps in `app.ts` and `api/index.ts`.
-  - Tests fixed: `tests/auth.test.ts` (constructor `new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer)` ×8; login test `emailVerified: true`); integration tests add `has_password` + `vehicle_model_id` columns. **137/137 pass.**
-- **Frontend** (build ✓, tsc ✓):
-  - `src/hooks/useAuth.ts` — googleStatus/loginWithGoogle/googleFinalize/googleVerify/googleResend/googleLink/sendVerifyCode/verifyLoginCode (error shape read: `response.data.error.code`).
-  - `src/components/auth/GoogleButton.tsx` — status-checked button, builds authorize URL with optional `redirect`; `src/components/auth/OtpInput.tsx` — shared 6-digit input.
-  - `src/app/(auth)/google-complete/page.tsx` — modes session/verify/link_required/error; **StrictMode-safe** `finalizedRef` guard; reads `redirect` from URL.
-  - `src/app/(auth)/login/page.tsx` — GoogleButton + divider + password form + **EMAIL_NOT_VERIFIED flow** (auto `sendVerifyCode` → OtpInput with resend/back).
-  - `src/app/(auth)/register/page.tsx` — GoogleButton + divider + account-type tabs + shared OtpInput.
-  - `reset-password/page.tsx` — **«تعیین رمز»** mode (`mode=set`): set-first-password copy for Google-only users; `resetPassword` sets `has_password=true`. `src/lib/api.test.ts` mock typing fixed (tsc clean).
-- **E2E verified** (running server): full email flow above; anti-replay OTP confirmed (repo lookup filters `verified_at IS NULL`).
+### Completed (this session — redesign v2 تکستونه)
+- رفع صفحه سفید دارکمود: `BrandPanel` `bg-foreground` (کرم در دارک) → `bg-brand-panel`؛ `text-background/border-background` داخل پنل → `brand-panel-foreground`؛ `amber-300/400/500` و `black/25` → توکنها (tsc ✓ لینت ✓ SSR ✓).
+- `AuthHeader` + `AuthLiveStats` ساخته شدند؛ `src/app/(auth)/layout.tsx` بازنویسی کامل: تکستونه + پسزمینه محیطی + AuthLiveStats + لینک بازگشت (حذف BrandPanel/ستونها).
+- **مهاجرت همه صفحات به الگوی جدید** (AuthHeader + کارت glass-strong واحد):
+  - `login` (هر دو حالت فرم/verify OTP)؛ `register` (role/method داخل کارت؛ فرم `space-y-5`؛ حذف کارت تکراری؛ Stepper بالای کارت)؛ `forgot-password`؛ `reset-password` (فرم + حالتهای invalid/done با کادر رنگی + آیکون lucide)؛ `google-complete` (verify در کارت + error mode با AuthHeader)؛ `link-account`؛ `business-profile`؛ `verify-phone` (هر دو استپ).
+  - `verify-email` بدون تغییر (از قبل هماهنگ بود).
+- **گیت نهایی این دور**: tsc ✓ (یک باگ براکت اضافی در verify-phone رفع شد)؛ eslint فایلهای auth ✓؛ SSR زنده همه صفحات 200 ✓؛ محتوای glass-strong + آمار زنده در HTML SSR تایید شد.
+- **گرید نقطهای سراسری**: `bg-grid-pattern` → نقطه (28px)؛ ۳۰ فایل با الگوی inline `linear-gradient(currentColor 1px...)` 64px با اسکریپت به `radial-gradient(circle, var(--color-dot-grid) 1px, transparent 1px)` 28px تبدیل شدند؛ not-found/error → `bg-grid-pattern`؛ بنر dealers رنگ ثابت #1e293b نقطه شد. تایید: tsc ✓ + SSR 200 (خانه/داشبورد/لیستینگ/خبر/قیمت/کارگاه/مقایسه/قطعات/دانشنامه).
+- دور قبل (پس از گزارش انطباق): DocumentUploader جنریک جدید (Progress+Retry+Delete+5MB+presigned) جایگزین ImageUploader در BusinessForm؛ بازطراحی verify-email/verify-phone (RHF+zod + OtpField + تایمر)؛ GoogleButton حالت error + تلاش مجدد؛ چیپهای register → `aria-pressed`؛ StatusCard → توکن amber.
 
 ### Active
-- (none — feature code complete; server left running on port 4000 for user testing, PID in `C:\Users\MR\AppData\Local\Temp\opencode\server.pid`, logs `server-{out,err}.log`)
+- (none)
 
 ### Blocked
-- **No credentials yet**: Google OAuth Client ID/Secret + SMTP — step 10 (user guide) pending; Google console redirect URI must be `http://localhost:4000/api/v1/auth/google/callback` (match `GOOGLE_REDIRECT_URI`; backend default port is 4000, FRONTEND_URL is http://localhost:3000). Google flows can only be E2E-tested after this.
-- Optional: seed demo workshop profiles.
+- **Google/SMTP credentials نداریم** — فلوی کامل گوگل (authorize → google-complete → link-account/business-profile) فقط با اعتبارنامه کاربر قابل تست E2E است؛ state machine و URLها آماده.
 
 ## Next Move
-1. User: obtain Google OAuth credentials + SMTP → set `backend/.env` (`GOOGLE_CLIENT_ID/SECRET/GOOGLE_REDIRECT_URI`, `SMTP_*`, `EMAIL_PROVIDER=smtp` or keep `console`) → restart server.
-2. User: browser-test Google sign-in (new user / link_required / verify fallback), forgot/reset password (incl. Google-only user «تعیین رمز»).
-3. Optional: SEO metadata for workshop pages (old optional item).
+1. کاربر: اعتبارنامه Google (Redirect URI: `http://localhost:4000/api/v1/auth/google/callback`) + SMTP در `backend/.env` → ریاستارت → تست مرورگر: گوگل (کاربر جدید / link_required / verify)، ثبتنام ۳ مرحلهای کسبوکار، فرم پروفایل کسبوکار + StatusCard، ورود قفلشده EMAIL_NOT_VERIFIED.
+2. تست دستی فرمها (validation فارسی، OTP paste، PasswordField toggle، AuthLiveStats در لایت/دارک، چیدمان موبایل).
+3. اختیاری: فیکس خطاهای lint از قبل موجود کل پروژه (۱۰۶ مورد، خارج از scope auth)؛ بهروزرسانی `docs/auth-redesign-plan.md` با طرح جدید تکستونه (حذف مرجع BrandPanel).
 
 ## Relevant Files
-- `docs/auth-providers-plan.md` (v4 LOCKED), `docs/adr/ADR-012-auth-providers.md`
-- `backend/migrations/052_auth_providers.sql` — **APPLIED** (with 050/051)
-- `backend/src/middleware/errorHandler.ts` — **NEW (this session)**: Hono ErrorHandler; `app.ts` + `api/index.ts` register it via `app.onError` on root + `docsRouter` + `apiRouter`
-- `backend/src/domain/providers/{AuthProvider.ts,password.ts,google.ts}` — core + providers
-- `backend/src/domain/services/auth.ts` — AuthService (core + delegation)
-- `backend/src/domain/entities/oauth/*`, `backend/src/domain/infrastructure/oauth/*` — OauthAccount/OneTimeToken/OauthLoginLog
-- `backend/src/domain/entities/user/{User.entity.ts,User.repository.ts}`, `backend/src/domain/infrastructure/user/UserRepository.impl.ts` — hasPassword
-- `backend/src/domain/presentation/auth/{authCookies.ts,GoogleAuthController.ts}`, `backend/src/domain/presentation/user/UserController.ts`
-- `backend/src/routes/auth.ts`, `backend/src/validation/auth.ts`, `backend/src/config/{index,auth,rateLimits}.ts`, `backend/src/errors.ts`, `backend/src/shared/errors.ts`, `backend/src/container.ts`, `backend/.env.example`
-- `backend/src/services/email/index.ts` — `sendSetPasswordEmail` («تعیین رمز» for `has_password=false`, URL `&mode=set`)
-- `backend/tests/auth.test.ts`, `backend/tests/integration/{conversation-repository,messaging-end-to-end}.test.ts` — fixed; 137/137
-- `nextjs-frontend/src/hooks/useAuth.ts` — google/verify methods
-- `nextjs-frontend/src/components/auth/{GoogleButton.tsx,OtpInput.tsx}`
-- `nextjs-frontend/src/app/(auth)/google-complete/page.tsx` (3 modes + StrictMode guard), `login/page.tsx` (GoogleButton + EMAIL_NOT_VERIFIED OTP step), `register/page.tsx` (GoogleButton + divider + shared OtpInput), `reset-password/page.tsx` («تعیین رمز» mode=set copy), `src/lib/api.test.ts` (fixed mock typing)
-- E2E artifacts: `C:\Users\MR\AppData\Local\Temp\opencode\{server.pid,server-out.log,server-err.log,e2e-email.txt,e2e-auth.ps1}` — server on port 4000 + OTP codes
-- Workshop/catalog files (completed context): see git history — `backend/src/domain/services/workshopService.ts`, `src/app/(public)/workshops/*`, `src/components/workshops/*`, `src/hooks/useWorkshops.ts`, catalog facade `partsService.ts`/`CatalogController.ts`/`v2-catalogs.ts`, generic routes `catalog/[slug]/*`
+- **الگوی جدید**: `src/app/(auth)/layout.tsx`، `src/components/auth/AuthHeader.tsx` + `AuthLiveStats.tsx`، `src/app/globals.css` (توکنهای amber/brand-panel/vignette + durations)
+- صفحات مهاجرتکرده: `src/app/(auth)/login`، `register`، `forgot-password`، `reset-password`، `google-complete`، `link-account`، `business-profile`، `verify-phone`، `verify-email`
+- دور قبل: `src/components/auth/BrandPanel.tsx` (دارکمود فیکس)، `src/components/upload/DocumentUploader.tsx`، `src/components/auth/GoogleButton.tsx`، `src/hooks/useBrandPanel.ts` + `useAuth.ts`، `src/types/user.ts`
+- بکاند (مرجع قراردادها): `backend/src/routes/auth.ts`، `domain/services/auth.ts` + `businessProfileService.ts`، `validation/auth.ts`، `shared/auth.ts`، `routes/stats.ts`، `routes/uploads.ts`
+- مستندات: `docs/auth-redesign-plan.md` (v7 — فقط فلوها معتبر)، `docs/architecture/AUTH_API.md` + `AUTH_STATE_MACHINE.md` + `AUTH_ARCHITECTURE.md` + `docs/adr/ADR-013-auth-system.md`
+- E2E: `Temp\opencode\e2e-business.ps1` (بکاند)، لاگ فرانت `Temp\opencode\frontend-out.log`

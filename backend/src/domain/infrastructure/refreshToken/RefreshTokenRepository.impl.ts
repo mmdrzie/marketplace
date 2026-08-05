@@ -2,24 +2,36 @@ import { getDb } from '../../../config/database.js';
 import { RefreshToken } from '../../entities/refreshToken/RefreshToken.entity.js';
 import type { RefreshTokenRepository } from '../../entities/refreshToken/RefreshToken.repository.js';
 
+function toEntity(r: Record<string, unknown>): RefreshToken {
+  return RefreshToken.fromSnapshot({
+    id: r.id as string,
+    userId: r.user_id as string,
+    tokenHash: r.token_hash as string,
+    expiresAt: r.expires_at as string,
+    revokedAt: r.revoked_at as string | null,
+    createdAt: r.created_at as string,
+    lastUsedAt: (r.last_used_at as string | null) ?? null,
+    lastIp: (r.last_ip as string | null) ?? null,
+    lastUserAgent: (r.last_user_agent as string | null) ?? null,
+  });
+}
+
 export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
-  async create(data: { user_id: string; token_hash: string; expires_at: Date }): Promise<RefreshToken> {
+  async create(data: {
+    user_id: string;
+    token_hash: string;
+    expires_at: Date;
+    last_ip?: string | null;
+    last_user_agent?: string | null;
+  }): Promise<RefreshToken> {
     const db = await getDb();
     const { rows } = await db.query(
-      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
-       VALUES ($1, $2, $3)
+      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at, last_used_at, last_ip, last_user_agent)
+       VALUES ($1, $2, $3, NOW(), $4, $5)
        RETURNING *`,
-      [data.user_id, data.token_hash, data.expires_at],
+      [data.user_id, data.token_hash, data.expires_at, data.last_ip ?? null, data.last_user_agent ?? null],
     );
-    const r = rows[0] as Record<string, unknown>;
-    return RefreshToken.fromSnapshot({
-      id: r.id as string,
-      userId: r.user_id as string,
-      tokenHash: r.token_hash as string,
-      expiresAt: r.expires_at as string,
-      revokedAt: r.revoked_at as string | null,
-      createdAt: r.created_at as string,
-    });
+    return toEntity(rows[0] as Record<string, unknown>);
   }
 
   async findByTokenHash(hash: string): Promise<RefreshToken | null> {
@@ -29,15 +41,7 @@ export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
       [hash],
     );
     if (!rows.length) return null;
-    const r = rows[0] as Record<string, unknown>;
-    return RefreshToken.fromSnapshot({
-      id: r.id as string,
-      userId: r.user_id as string,
-      tokenHash: r.token_hash as string,
-      expiresAt: r.expires_at as string,
-      revokedAt: r.revoked_at as string | null,
-      createdAt: r.created_at as string,
-    });
+    return toEntity(rows[0] as Record<string, unknown>);
   }
 
   async revoke(id: string): Promise<void> {

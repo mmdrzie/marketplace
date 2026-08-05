@@ -33,7 +33,7 @@ export default function StorePage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <EmptyState
           icon="search"
           title="خطا در دریافت اطلاعات"
@@ -45,7 +45,7 @@ export default function StorePage() {
 
   if (!store) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <EmptyState
           icon="search"
           title="فروشگاه یافت نشد"

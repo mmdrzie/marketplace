@@ -16,6 +16,8 @@ import { EmailService } from '../../services/email/index.js';
 import { SmsService } from '../../services/sms/index.js';
 import { PasswordAuthProvider, type RegisterMethod, generateOtpCode, sha256Hex, OTP_TTL_MS, OTP_RATE_WINDOW_SEC, OTP_MAX_PER_WINDOW } from '../providers/password.js';
 import { GoogleAuthProvider } from '../providers/google.js';
+import { businessProfileService } from './businessProfileService.js';
+import type { BusinessProfileData, BusinessProfileResult, BusinessRole, ProfileStatus } from '../../shared/auth.js';
 import { OauthAccountRepositoryImpl } from '../infrastructure/oauth/OauthAccountRepository.impl.js';
 import { OneTimeTokenRepositoryImpl } from '../infrastructure/oauth/OneTimeTokenRepository.impl.js';
 import { OauthLoginLogRepositoryImpl } from '../infrastructure/oauth/OauthLoginLogRepository.impl.js';
@@ -39,6 +41,7 @@ function sanitizeUser(user: User): SanitizedUser {
     phone: user.phone,
     avatar: user.avatar,
     city: user.city,
+    role: user.role,
     emailVerified: user.emailVerified,
     phoneVerified: user.phoneVerified,
     hasPassword: user.hasPassword,
@@ -142,6 +145,8 @@ export class AuthService implements AuthCore {
       user_id: user.id,
       token_hash: sha256(refreshToken),
       expires_at: expiresAt,
+      last_ip: opts?.ip ?? null,
+      last_user_agent: opts?.userAgent ?? null,
     });
 
     const created = await this.userRepo.findById(user.id);
@@ -203,15 +208,69 @@ export class AuthService implements AuthCore {
     return this.passwordProvider.sendRegisterOtp(input);
   }
 
-  registerWithOtp(input: {
+  /**
+   * Register with OTP + optional business profile (ADR-013 §7).
+   *
+   * Order: user → session (always issued) → profile (best-effort).
+   * - role 'user' → profileStatus 'complete'
+   * - business role + profile created → 'pending'
+   * - business role + profile failed/missing → 'incomplete' (session stays valid;
+   *   profile completed later via POST /auth/business-profile)
+   */
+  async registerWithOtp(input: {
     name: string;
     password: string;
     type: RegisterMethod;
     identifier: string;
     code: string;
     role?: 'user' | 'dealer' | 'agency' | 'store' | 'workshop';
-  }): Promise<AuthSession> {
-    return this.passwordProvider.registerWithOtp(input);
+    business_name?: string;
+    dealer_code?: string;
+    business_address?: string;
+    city?: string;
+    documents?: string[];
+    workshop_name?: string;
+    workshop_type?: 'mechanic' | 'tuner' | 'both';
+    specialty?: string;
+    hours?: string;
+    services?: string[];
+    description?: string;
+    phone?: string;
+    ip?: string | null;
+    userAgent?: string | null;
+  }): Promise<AuthSession & { profileStatus: ProfileStatus }> {
+    const session = await this.passwordProvider.registerWithOtp(input);
+
+    const role = input.role ?? 'user';
+    if (role === 'user') {
+      return { ...session, profileStatus: 'complete' };
+    }
+
+    let profileStatus: ProfileStatus = 'pending';
+    try {
+      const result = await businessProfileService.create(session.user.id, role as BusinessRole, input);
+      profileStatus = result.profileStatus;
+    } catch (err) {
+      console.error('[auth] business profile creation failed (session kept):', err);
+      profileStatus = 'incomplete';
+    }
+    return { ...session, profileStatus };
+  }
+
+  /**
+   * Create/refresh the business profile of the authenticated user
+   * (POST /auth/business-profile — Google signups, retry after 'incomplete').
+   */
+  async createBusinessProfile(userId: string, data: BusinessProfileData): Promise<{
+    profileStatus: ProfileStatus;
+    profile: BusinessProfileResult['profile'];
+  }> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw AppError.notFound('User not found');
+    if (user.role === 'user' || user.role === 'admin') {
+      throw AppError.forbidden('برای این نقش پروفایل کسبوکار تعریف نشده است');
+    }
+    return businessProfileService.create(userId, user.role as BusinessRole, data);
   }
 
   register(input: { email: string; password: string; name: string }): Promise<AuthSession> {
@@ -236,8 +295,8 @@ export class AuthService implements AuthCore {
 
   /* ---- Google provider delegation ---- */
 
-  googleAuthorize(redirect?: string | null) {
-    return this.googleProvider.authorize({ redirect });
+  googleAuthorize(redirect?: string | null, role?: string | null) {
+    return this.googleProvider.authorize({ redirect, role });
   }
 
   googleCallback(input: {
@@ -317,7 +376,7 @@ export class AuthService implements AuthCore {
 
   /* ---- Refresh rotation (core) ---- */
 
-  async refresh(refreshTokenStr: string) {
+  async refresh(refreshTokenStr: string, meta?: { ip?: string | null; userAgent?: string | null }) {
     let payload: { sub?: string };
     try {
       const { payload: p } = await jwtVerify(refreshTokenStr, authConfig.secret);
@@ -369,6 +428,8 @@ export class AuthService implements AuthCore {
         user_id: user.id,
         token_hash: sha256(newRefreshToken),
         expires_at: expiresAt,
+        last_ip: meta?.ip ?? null,
+        last_user_agent: meta?.userAgent ?? null,
       });
 
       return { token: accessToken, refreshToken: newRefreshToken };
@@ -422,23 +483,20 @@ export class AuthService implements AuthCore {
 
     await this.userRepo.save(existing);
 
-    const isDealer = existing.role === 'dealer' || existing.role === 'agency' || existing.role === 'store';
+    const isDealerLike = existing.role === 'dealer' || existing.role === 'agency';
     const hasDealerFields =
       data.business_name !== undefined ||
       data.dealer_code !== undefined ||
       data.business_address !== undefined ||
       data.business_description !== undefined;
 
-    if (isDealer && hasDealerFields) {
-      const dealer = await this.dealerRepo.findByUserId(userId);
-      if (dealer) {
-        if (data.business_name !== undefined) dealer.businessName = data.business_name;
-        if (data.dealer_code !== undefined) dealer.dealerCode = data.dealer_code;
-        if (data.business_address !== undefined) dealer.address = data.business_address;
-        if (data.business_description !== undefined) dealer.description = data.business_description;
-        dealer.updatedAt = new Date();
-        await this.dealerRepo.save(dealer);
-      }
+    if (isDealerLike && hasDealerFields && (existing.role === 'dealer' || existing.role === 'agency')) {
+      await businessProfileService.upsertDealer(existing.id, existing.role, {
+        business_name: data.business_name,
+        dealer_code: data.dealer_code,
+        business_address: data.business_address,
+        description: data.business_description,
+      });
     }
 
     return sanitizeUser(existing);

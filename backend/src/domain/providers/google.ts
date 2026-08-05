@@ -135,7 +135,7 @@ export class GoogleAuthProvider implements AuthProvider {
 
   /* ---- Authorization URL ---- */
 
-  async authorize(input?: { redirect?: string | null }): Promise<{ url: string; tokenJti: string }> {
+  async authorize(input?: { redirect?: string | null; role?: string | null }): Promise<{ url: string; tokenJti: string }> {
     if (!this.isConfigured()) {
       throw AppError.badRequest('Google OAuth is not configured');
     }
@@ -153,6 +153,8 @@ export class GoogleAuthProvider implements AuthProvider {
         nonce,
         code_verifier: codeVerifier,
         redirect: sanitizeRedirect(input?.redirect),
+        // Applied ONLY to brand-new account creation (AUTH_API.md §6).
+        role: input?.role ?? null,
       },
       expiresAt: new Date(Date.now() + STATE_TTL_MS),
     });
@@ -204,6 +206,10 @@ export class GoogleAuthProvider implements AuthProvider {
     }
 
     const redirectTarget = sanitizeRedirect(String(state.metadata.redirect ?? ''));
+    const requestedRole = state.metadata.role as string | null | undefined;
+    const roleForNewAccount = requestedRole && ['dealer', 'agency', 'store', 'workshop'].includes(requestedRole)
+      ? (requestedRole as 'dealer' | 'agency' | 'store' | 'workshop')
+      : undefined;
 
     // Exchange authorization code (PKCE).
     let tokenResponse: Record<string, unknown>;
@@ -316,7 +322,7 @@ export class GoogleAuthProvider implements AuthProvider {
 
     // 3) Brand-new account.
     if (this.canTrustEmail(identity)) {
-      const user = await this.core.createUserFromIdentity(identity);
+      const user = await this.core.createUserFromIdentity(identity, roleForNewAccount ? { role: roleForNewAccount } : undefined);
       await this.linkIdentity(user, identity);
       const account = await this.oauthRepo.findByUserAndProvider(user.id, 'google');
       if (account) {
@@ -332,7 +338,10 @@ export class GoogleAuthProvider implements AuthProvider {
       await log({ success: false, reason: 'email_missing' });
       return this.errorRedirect('email_missing');
     }
-    const user = await this.core.createUserFromIdentity({ ...identity, emailVerified: false });
+    const user = await this.core.createUserFromIdentity(
+      { ...identity, emailVerified: false },
+      roleForNewAccount ? { role: roleForNewAccount } : undefined,
+    );
     await this.linkIdentity(user, identity);
     const pendingJti = await this.createToken('oauth_verify', user.id, {
       provider: 'google',
@@ -542,6 +551,11 @@ export class GoogleAuthProvider implements AuthProvider {
     const params = new URLSearchParams({ mode, t: tokenJti });
     if (email) params.set('email', email);
     if (redirect) params.set('redirect', redirect);
+    // link_required lives on its own page (AUTH_API.md §7) — it needs a
+    // password form; google-complete handles session/verify/error only.
+    if (mode === 'link_required') {
+      return { redirectUrl: `${config.frontendUrl}/link-account?${params.toString()}` };
+    }
     return { redirectUrl: `${config.frontendUrl}/google-complete?${params.toString()}` };
   }
 

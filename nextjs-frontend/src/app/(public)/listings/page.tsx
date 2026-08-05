@@ -139,14 +139,13 @@ export default function AllListingsPage() {
   return (
     <FadeIn>
       {/* افزودن overflow-x-hidden برای جلوگیری از اسکرول افقی در موبایل */}
-      <div className="relative min-h-screen bg-background text-foreground overflow-x-hidden">
+      <div className="relative min-h-screen text-foreground overflow-x-hidden">
         {/* بک‌گراند داینامیک معماری */}
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] z-0 pointer-events-none" />
         
         {/* افزودن pt-24 برای فاصله از هدر ثابت سایت */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-24 md:pt-28 pb-12 md:pb-16 space-y-6 md:space-y-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-16 md:pt-16 pb-12 md:pb-16 space-y-6 md:space-y-8">
           
           {/* هدر صفحه */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">

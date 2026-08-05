@@ -44,7 +44,7 @@ export default function DealerStorefrontPage() {
 
   if (!dealer && !apiUser) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-20 h-20 rounded-3xl bg-surface-2 border border-border-subtle flex items-center justify-center mx-auto mb-4"><svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l1.5-4.5A1 1 0 015.45 4h13.1a1 1 0 01.95.5L21 9m-18 0h18m-18 0v10a1 1 0 001 1h16a1 1 0 001-1V9M9 20v-6h6v6" /></svg></div>
           <h1 className="text-2xl font-black text-foreground mb-2">فروشنده یافت نشد</h1>
@@ -60,7 +60,7 @@ export default function DealerStorefrontPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+      <div className="relative min-h-screen text-foreground overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[700px] h-[700px] rounded-full blur-[150px] -z-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-blue) 8%, transparent)' }} />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full blur-[130px] -z-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-indigo) 8%, transparent)' }} />
         <div className="relative z-10">
@@ -69,7 +69,7 @@ export default function DealerStorefrontPage() {
           {/* Cover banner */}
           <div className="relative h-48 md:h-64 border-b border-border overflow-hidden" style={{ background: 'linear-gradient(to bottom right, color-mix(in srgb, var(--color-accent-blue) 40%, transparent), color-mix(in srgb, var(--color-accent-indigo) 30%, transparent), var(--color-background))' }}>
             <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at top right, color-mix(in srgb, var(--color-accent-blue) 12%, transparent), transparent 60%)` }} />
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-10" />
+            <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, #1e293b 1px, transparent 1px)', backgroundSize: '28px 28px', opacity: 0.1 }} />
           </div>
 
           <div className="max-w-7xl mx-auto px-4 pb-12 -mt-20 md:-mt-28 relative">

@@ -16,7 +16,7 @@ export default function DealerTendersPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground">
+      <div className="relative min-h-screen text-foreground">
         <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
           <Breadcrumbs />
 

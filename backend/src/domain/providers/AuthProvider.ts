@@ -27,6 +27,8 @@ export type AuthenticateResult =
 
 export interface IssueSessionOptions {
   singleSession?: boolean;
+  ip?: string | null;
+  userAgent?: string | null;
 }
 
 /** Safe, serializable user projection (never contains passwordHash). */
@@ -37,6 +39,7 @@ export interface SanitizedUser {
   phone: string | null;
   avatar: string | null;
   city: string | null;
+  role: User['role'];
   emailVerified: boolean;
   phoneVerified: boolean;
   hasPassword: boolean;

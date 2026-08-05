@@ -38,7 +38,7 @@ export default function ListingHealthPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground">
+      <div className="relative min-h-screen text-foreground">
         <div className="absolute top-0 left-1/4 w-[300px] h-[300px] bg-primary/8 rounded-full blur-[100px] -z-0 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[250px] h-[250px] bg-primary/8 rounded-full blur-[80px] -z-0 pointer-events-none" />
         <div className="relative z-10 max-w-3xl mx-auto px-4 py-8">

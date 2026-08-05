@@ -24,3 +24,7 @@
 | 009 | dealers | dealer_profiles | Phase 9 |
 | 010 | notifications | notifications | Phase 10 |
 | 011 | seed | Seed data | Phase 10 |
+| 050 | workshop_profiles | workshop_profiles | Auth |
+| 051 | workshop_role | users.role + 'workshop' | Auth |
+| 052 | auth_providers | oauth_accounts, one_time_tokens, oauth_login_logs, users.has_password | Auth |
+| 053 | business_roles | dealer_profiles.status, refresh_tokens.{last_used_at,last_ip,last_user_agent} | Auth |

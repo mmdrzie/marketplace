@@ -4,6 +4,12 @@ import { useState } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { setAuthCookie, clearAuthCookie } from '@/lib/cookies';
+import type { AuthRole, BusinessProfileInput, BusinessProfileResult, ProfileStatus } from '@/types';
+
+function readApiError(err: unknown, fallback: string): string {
+  const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
+  return data?.error?.message || fallback;
+}
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
@@ -21,9 +27,7 @@ export function useAuth() {
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      const msg = data?.error?.message || 'خطا در ثبت‌نام';
-      setError(msg);
+      setError(readApiError(err, 'خطا در ثبت‌نام'));
       throw err;
     } finally {
       setLoading(false);
@@ -36,9 +40,7 @@ export function useAuth() {
     try {
       await api.post('/auth/send-register-otp', { type, identifier });
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      const msg = data?.error?.message || 'خطا در ارسال کد تایید';
-      setError(msg);
+      setError(readApiError(err, 'خطا در ارسال کد تایید'));
       throw err;
     } finally {
       setLoading(false);
@@ -51,20 +53,34 @@ export function useAuth() {
     code: string,
     password: string,
     name: string,
-    role: 'user' | 'dealer' | 'agency' | 'store' | 'workshop' = 'user',
+    role: AuthRole = 'user',
+    business?: BusinessProfileInput,
   ) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post('/auth/register-with-otp', { type, identifier, code, password, name, role });
+      const res = await api.post('/auth/register-with-otp', { type, identifier, code, password, name, role, ...business });
       const { token, user } = res.data.data;
+      const profileStatus = res.data.data?.profileStatus as ProfileStatus | undefined;
       setAuth(token, user);
       setAuthCookie();
-      return { token, user };
+      return { token, user, profileStatus };
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      const msg = data?.error?.message || 'خطا در ثبت‌نام';
-      setError(msg);
+      setError(readApiError(err, 'خطا در ثبت‌نام'));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createBusinessProfile = async (data: BusinessProfileInput): Promise<BusinessProfileResult> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post('/auth/business-profile', data);
+      return res.data.data as BusinessProfileResult;
+    } catch (err: unknown) {
+      setError(readApiError(err, 'خطا در ثبت پروفایل کسب‌وکار'));
       throw err;
     } finally {
       setLoading(false);
@@ -81,9 +97,7 @@ export function useAuth() {
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      const msg = data?.error?.message || 'خطا در ورود';
-      setError(msg);
+      setError(readApiError(err, 'خطا در ورود'));
       throw err;
     } finally {
       setLoading(false);
@@ -96,9 +110,7 @@ export function useAuth() {
     try {
       await api.post('/auth/forgot', { email });
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      const msg = data?.error?.message || 'خطا در ارسال ایمیل بازیابی';
-      setError(msg);
+      setError(readApiError(err, 'خطا در ارسال ایمیل بازیابی'));
       throw err;
     } finally {
       setLoading(false);
@@ -111,9 +123,7 @@ export function useAuth() {
     try {
       await api.post('/auth/reset', { token, password });
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      const msg = data?.error?.message || 'خطا در تغییر رمز عبور';
-      setError(msg);
+      setError(readApiError(err, 'خطا در تغییر رمز عبور'));
       throw err;
     } finally {
       setLoading(false);
@@ -138,10 +148,11 @@ export function useAuth() {
     return res.data.data;
   };
 
-  const loginWithGoogle = (redirect?: string) => {
+  const loginWithGoogle = (redirect?: string, role?: AuthRole) => {
     const base = `${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/auth/google/authorize`;
     const params = new URLSearchParams();
     if (redirect) params.set('redirect', redirect);
+    if (role) params.set('role', role);
     window.location.href = params.size > 0 ? `${base}?${params.toString()}` : base;
   };
 
@@ -155,8 +166,7 @@ export function useAuth() {
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      setError(data?.error?.message || 'خطا در تکمیل ورود');
+      setError(readApiError(err, 'خطا در تکمیل ورود'));
       throw err;
     } finally {
       setLoading(false);
@@ -173,8 +183,7 @@ export function useAuth() {
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      setError(data?.error?.message || 'خطا در تایید کد');
+      setError(readApiError(err, 'خطا در تایید کد'));
       throw err;
     } finally {
       setLoading(false);
@@ -187,8 +196,7 @@ export function useAuth() {
     try {
       await api.post('/auth/google/resend', { t });
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      setError(data?.error?.message || 'خطا در ارسال مجدد کد');
+      setError(readApiError(err, 'خطا در ارسال مجدد کد'));
       throw err;
     } finally {
       setLoading(false);
@@ -205,8 +213,7 @@ export function useAuth() {
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      setError(data?.error?.message || 'خطا در اتصال حساب گوگل');
+      setError(readApiError(err, 'خطا در اتصال حساب گوگل'));
       throw err;
     } finally {
       setLoading(false);
@@ -221,8 +228,7 @@ export function useAuth() {
     try {
       await api.post('/auth/send-verify-code', { email });
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      setError(data?.error?.message || 'خطا در ارسال کد تایید');
+      setError(readApiError(err, 'خطا در ارسال کد تایید'));
       throw err;
     } finally {
       setLoading(false);
@@ -239,8 +245,7 @@ export function useAuth() {
       setAuthCookie();
       return { token, user };
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data;
-      setError(data?.error?.message || 'خطا در تایید ایمیل');
+      setError(readApiError(err, 'خطا در تایید ایمیل'));
       throw err;
     } finally {
       setLoading(false);
@@ -248,7 +253,7 @@ export function useAuth() {
   };
 
   return {
-    registerWithEmail, sendRegisterOtp, registerWithOtp,
+    registerWithEmail, sendRegisterOtp, registerWithOtp, createBusinessProfile,
     loginWithEmail, forgotPassword, resetPassword, logout, loading, error,
     googleStatus, loginWithGoogle, googleFinalize, googleVerify, googleResend, googleLink,
     sendVerifyCode, verifyLoginCode,

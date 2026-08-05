@@ -20,7 +20,7 @@ export default function DealDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+      <div className="relative min-h-screen text-foreground overflow-hidden">
         <div className="max-w-3xl mx-auto px-4 py-12">
           <Skeleton className="h-8 w-48 mb-6" />
         </div>
@@ -30,9 +30,8 @@ export default function DealDetailPage() {
 
   if (!deal) {
     return (
-      <div className="relative min-h-screen bg-background text-foreground flex items-center justify-center overflow-hidden">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="glass rounded-3xl p-12 text-center border border-border-subtle">
+      <div className="relative min-h-screen text-foreground flex items-center justify-center overflow-hidden">
+                <div className="glass rounded-3xl p-12 text-center border border-border-subtle">
           <p className="text-muted-foreground">معامله یافت نشد</p>
         </div>
       </div>
@@ -83,10 +82,9 @@ export default function DealDetailPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+      <div className="relative min-h-screen text-foreground overflow-hidden">
         {/* پس‌زمینه داینامیک معماری */}
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] text-foreground" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
+                <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[130px] z-0 pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl mx-auto w-full px-4 py-12 md:py-16 space-y-8">

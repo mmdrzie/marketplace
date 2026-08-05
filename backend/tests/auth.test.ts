@@ -14,7 +14,23 @@ vi.mock('../src/domain/events/index.js', () => ({
   EmailVerified: 'EmailVerified',
 }));
 
+vi.mock('../src/domain/services/businessProfileService.js', () => ({
+  BusinessProfileService: class {
+    create = vi.fn().mockResolvedValue({
+      profileStatus: 'pending',
+      profile: { role: 'dealer', businessName: 'فروشگاه نمونه', status: 'pending' },
+    });
+  },
+  businessProfileService: {
+    create: vi.fn().mockResolvedValue({
+      profileStatus: 'pending',
+      profile: { role: 'dealer', businessName: 'فروشگاه نمونه', status: 'pending' },
+    }),
+  },
+}));
+
 import { AuthService } from '../src/domain/services/auth.js';
+import { businessProfileService } from '../src/domain/services/businessProfileService.js';
 import { AppError } from '../src/errors.js';
 
 function makeUser(overrides: Partial<Record<string, unknown>> = {}) {
@@ -52,6 +68,12 @@ function repoMocks() {
       revoke: vi.fn(),
       revokeAllForUser: vi.fn(),
     },
+    verification: {
+      findLatestRegistrationOtp: vi.fn(),
+      markRegistrationOtpVerified: vi.fn(),
+      createRegistrationOtp: vi.fn(),
+      countRecentRegistrationOtps: vi.fn(),
+    },
     dealer: {
       findById: vi.fn(),
       findByUserId: vi.fn(),
@@ -78,7 +100,7 @@ describe('AuthService.register', () => {
     expect(res.token).toBeTypeOf('string');
     expect(res.refreshToken).toBeTypeOf('string');
     expect(res.user.email).toBe('a@b.com');
-    expect(res.user.role).toBeUndefined();
+    expect(res.user.role).toBe('user');
     expect(res.user.status).toBeUndefined();
     expect(m.user.save).toHaveBeenCalledTimes(1);
   });
@@ -168,7 +190,7 @@ describe('AuthService.refresh', () => {
 });
 
 describe('sanitizeUser output', () => {
-  it('omits role and status from the output (related to 1.11)', async () => {
+  it('includes role and omits status from the output', async () => {
     const m = repoMocks();
     const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
     const userWithRole = User.fromSnapshot({
@@ -180,10 +202,93 @@ describe('sanitizeUser output', () => {
     });
     m.user.findById.mockResolvedValue(userWithRole);
     const out = await svc.getMe('u1');
-    expect(out).not.toHaveProperty('role');
+    expect(out.role).toBe('admin');
     expect(out).not.toHaveProperty('status');
     expect(out.id).toBe('u1');
     expect(out.email).toBe('a@b.com');
+  });
+});
+
+describe('AuthService.registerWithOtp (role + profileStatus)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function otpSessionMocks() {
+    const m = repoMocks();
+    const { sha256Hex } = await import('../src/domain/providers/password.js');
+    const { RegistrationOtp } = await import('../src/domain/entities/verification/RegistrationOtp.entity.js');
+    m.verification.findLatestRegistrationOtp.mockResolvedValue(
+      RegistrationOtp.fromSnapshot({
+        id: 'v1', identifier: 'a@b.com', type: 'email', otpHash: sha256Hex('123456'),
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+        verifiedAt: null, createdAt: '2024-01-01T00:00:00Z',
+      }),
+    );
+    m.user.findByEmail.mockResolvedValue(undefined);
+    m.user.findById.mockResolvedValue(makeUser());
+    m.refreshToken.create.mockResolvedValue({ id: 'rt1' });
+    return m;
+  }
+
+  it("returns profileStatus 'complete' for role 'user' without touching the business profile", async () => {
+    const m = await otpSessionMocks();
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer, m.verification);
+    const res = await svc.registerWithOtp({
+      name: 'Test', password: 'password123', type: 'email',
+      identifier: 'a@b.com', code: '123456', role: 'user',
+    });
+    expect(res.profileStatus).toBe('complete');
+    expect(res.user.role).toBe('user');
+    expect(businessProfileService.create).not.toHaveBeenCalled();
+  });
+
+  it("returns profileStatus 'pending' for a business role when the profile is created", async () => {
+    const m = await otpSessionMocks();
+    (businessProfileService.create as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      profileStatus: 'pending',
+      profile: { role: 'dealer', businessName: 'نمایندگی نمونه', status: 'pending' },
+    });
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer, m.verification);
+    const res = await svc.registerWithOtp({
+      name: 'Test', password: 'password123', type: 'email',
+      identifier: 'a@b.com', code: '123456', role: 'dealer', business_name: 'نمایندگی نمونه',
+    });
+    expect(res.profileStatus).toBe('pending');
+    expect(businessProfileService.create).toHaveBeenCalledWith('u1', 'dealer', expect.objectContaining({ business_name: 'نمایندگی نمونه' }));
+  });
+
+  it("returns profileStatus 'incomplete' when profile creation fails but the session is kept", async () => {
+    const m = await otpSessionMocks();
+    (businessProfileService.create as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('db down'));
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer, m.verification);
+    const res = await svc.registerWithOtp({
+      name: 'Test', password: 'password123', type: 'email',
+      identifier: 'a@b.com', code: '123456', role: 'workshop', workshop_name: 'تعمیرگاه نمونه',
+    });
+    expect(res.profileStatus).toBe('incomplete');
+    expect(res.token).toBeTypeOf('string');
+    expect(res.refreshToken).toBeTypeOf('string');
+  });
+});
+
+describe('AuthService.createBusinessProfile', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('throws 403 for role user', async () => {
+    const m = repoMocks();
+    m.user.findById.mockResolvedValue(makeUser());
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
+    await expect(svc.createBusinessProfile('u1', { business_name: 'X' }))
+      .rejects.toMatchObject({ code: 'FORBIDDEN', httpStatus: 403 });
+    expect(businessProfileService.create).not.toHaveBeenCalled();
+  });
+
+  it('delegates to the business profile service for business roles', async () => {
+    const m = repoMocks();
+    m.user.findById.mockResolvedValue(makeUser({ role: 'store' }));
+    const svc = new AuthService(undefined, undefined, m.user, m.refreshToken, m.dealer);
+    const out = await svc.createBusinessProfile('u1', { business_name: 'فروشگاه نمونه' });
+    expect(out.profileStatus).toBe('pending');
+    expect(businessProfileService.create).toHaveBeenCalledWith('u1', 'store', { business_name: 'فروشگاه نمونه' });
   });
 });
 

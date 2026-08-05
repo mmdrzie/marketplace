@@ -27,7 +27,7 @@ export default function TendersPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground">
+      <div className="relative min-h-screen text-foreground">
         <div className="absolute top-0 left-1/4 w-[300px] h-[300px] rounded-full blur-[100px] -z-0 pointer-events-none" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-blue) 8%, transparent)' }} />
         <div className="absolute bottom-0 right-1/4 w-[250px] h-[250px] rounded-full blur-[80px] -z-0 pointer-events-none" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-indigo) 8%, transparent)' }} />
         <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">

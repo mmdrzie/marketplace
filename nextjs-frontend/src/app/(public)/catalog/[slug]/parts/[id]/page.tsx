@@ -22,7 +22,7 @@ export default function CatalogPartDetailPage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <EmptyState
           title="خطا در دریافت اطلاعات"
           description="مشکلی پیش آمده، لطفاً دوباره تلاش کنید."
@@ -39,7 +39,7 @@ export default function CatalogPartDetailPage() {
 
   if (!part) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <EmptyState
           title="قطعه یافت نشد"
           description="قطعه مورد نظر وجود ندارد یا حذف شده است."

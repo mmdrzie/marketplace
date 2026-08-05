@@ -56,9 +56,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <div className="relative min-h-screen flex flex-col bg-background text-foreground">
       
-      {/* شبکه پیکسلی ظریف */}
+      {/* شبکه نقطه‌ای یکدست */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-grid-pattern opacity-20 [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.14] dark:opacity-[0.09]" />
       </div>
 
       {/* ایلند نویگیشن موبایل (جایگزین هدر + باتوم) */}
@@ -111,7 +111,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
       <Dock />
       <Sidebar />
-      <main id="main-content" className="flex-1 relative z-10 pt-20 pb-28 md:pt-16 md:pb-0">
+      <main id="main-content" className="flex-1 relative z-10 pt-16 pb-28 md:pt-16 md:pb-0">
         {children}
       </main>
       <Footer />

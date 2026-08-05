@@ -26,7 +26,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-20 h-20 rounded-3xl bg-surface-2 border border-border-subtle flex items-center justify-center mx-auto mb-4"><svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></div>
           <h1 className="text-2xl font-black text-foreground mb-2">کاربر یافت نشد</h1>
@@ -39,7 +39,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+      <div className="relative min-h-screen text-foreground overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-[150px] -z-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-indigo) 8%, transparent)' }} />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[130px] -z-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-blue) 8%, transparent)' }} />
         <div className="relative z-10">

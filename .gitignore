@@ -13,4 +13,6 @@ uploads/
 uploads_data/
 *.tsbuildinfo
 nextjs-frontend/src/components/dev/
+__pycache__/
+*.pyc
 

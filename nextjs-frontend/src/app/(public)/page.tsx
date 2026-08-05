@@ -154,24 +154,13 @@ export default function HomePage() {
     <>
       {!disableEffects && <CustomCursor />}
 
-      <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-foreground overflow-x-hidden relative flex flex-col">
+      <div className="min-h-screen text-foreground selection:bg-primary/20 selection:text-foreground overflow-x-hidden relative flex flex-col">
 
       {/* scroll progress */}
       <motion.div style={{ scaleX }} className="fixed top-0 inset-x-0 h-[3px] bg-gradient-to-l from-primary via-primary/80 to-primary origin-right z-50 shadow-[0_0_12px_var(--color-primary)]" />
 
       {/* cursor glow — only on desktop */}
       {!disableEffects && <motion.div className="fixed inset-0 z-0 pointer-events-none" style={{ background: glowBg }} />}
-
-      {/* grid pattern with radial mask */}
-      <div
-        className="fixed inset-0 z-0 pointer-events-none opacity-[0.04] text-foreground"
-        style={{
-          backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(to right, currentColor 1px, transparent 1px)',
-          backgroundSize: '64px 64px',
-          maskImage: 'radial-gradient(ellipse 90% 60% at 50% 0%, black 60%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 90% 60% at 50% 0%, black 60%, transparent 100%)',
-        }}
-      />
 
       {/* شوتینگ استار - فقط موبایل */}
       <div className="md:hidden fixed inset-0 z-[15] pointer-events-none overflow-hidden" style={{ '--star-color': 'var(--color-primary)' } as React.CSSProperties}>
@@ -184,7 +173,7 @@ export default function HomePage() {
       {!disableEffects && <ParticleBackground className="fixed inset-0 z-[1] w-full h-full" />}
 
       {/* ===== 1. HERO ===== */}
-      <section ref={heroRef} className="relative z-10 min-h-[88vh] flex flex-col items-center justify-center pt-24 pb-24 px-4">
+      <section ref={heroRef} className="relative z-10 min-h-[88vh] flex flex-col items-center justify-center pt-10 pb-24 px-4">
 
         <div className="relative max-w-5xl mx-auto text-center">
           <div className="animate-fade-in-up">

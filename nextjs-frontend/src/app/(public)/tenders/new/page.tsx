@@ -6,7 +6,7 @@ import { FadeIn } from '@/components/common/MotionDiv';
 export default function NewTenderPage() {
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground">
+      <div className="relative min-h-screen text-foreground">
         <div className="absolute top-0 left-1/4 w-[300px] h-[300px] rounded-full blur-[100px] -z-0 pointer-events-none" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent-blue) 8%, transparent)' }} />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
           <Breadcrumbs />

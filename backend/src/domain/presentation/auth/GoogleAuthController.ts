@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 import { authService } from '../../services/auth.js';
 import { config } from '../../../config/index.js';
+import { authRoleSchema } from '../../../validation/auth.js';
 import { setRefreshCookie, setOauthStateCookie, clearOauthStateCookie, getOauthStateCookie } from './authCookies.js';
 
 const FRONTEND_URL = config.frontendUrl;
@@ -20,7 +21,11 @@ export class GoogleAuthController {
   async authorize(c: Context): Promise<Response> {
     try {
       const redirect = c.req.query('redirect');
-      const { url, tokenJti } = await authService.googleAuthorize(redirect);
+      // Optional role hint for brand-new accounts (AUTH_API.md §6);
+      // invalid values are ignored.
+      const roleParam = c.req.query('role') ?? null;
+      const role = roleParam && authRoleSchema.safeParse(roleParam).success ? roleParam : null;
+      const { url, tokenJti } = await authService.googleAuthorize(redirect, role);
       setOauthStateCookie(c, tokenJti);
       return c.redirect(url, 302);
     } catch (err) {

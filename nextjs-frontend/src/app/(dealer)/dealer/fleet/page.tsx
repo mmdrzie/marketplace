@@ -41,7 +41,7 @@ export default function FleetPage() {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen bg-background text-foreground">
+      <div className="relative min-h-screen text-foreground">
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
           <SkeletonListings count={8} />
         </div>
@@ -51,7 +51,7 @@ export default function FleetPage() {
 
   return (
     <FadeIn>
-      <div className="relative min-h-screen bg-background text-foreground">
+      <div className="relative min-h-screen text-foreground">
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
           <Breadcrumbs />
 

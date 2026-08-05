@@ -4,8 +4,8 @@ import { dealerService } from '../../services/dealer.js';
 export class DealerController {
   async upgrade(c: Context): Promise<Response> {
     const user = c.get('user');
-    const { role, business_name } = await c.req.json();
-    const profile = await dealerService.upgrade({ role, business_name, user });
+    const { role, business_name, dealer_code, business_address, business_description } = await c.req.json();
+    const profile = await dealerService.upgrade({ role, business_name, user, dealer_code, business_address, business_description });
     return c.json({ success: true, data: profile }, 201);
   }
 

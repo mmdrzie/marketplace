@@ -337,7 +337,7 @@ export function Dock() {
 
       if (Math.abs(currentScrollY - lastScrollY.current) > SCROLL_THRESHOLD) {
         if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-          dockY.set(-120);
+          dockY.set(-200);
         } else if (currentScrollY < lastScrollY.current) {
           dockY.set(0);
         }

@@ -82,6 +82,7 @@ export const config = {
     googleVerify: { limit: parseInt(process.env.GOOGLE_VERIFY_RATE_LIMIT || '10', 10), window: parseInt(process.env.GOOGLE_VERIFY_RATE_WINDOW || '900', 10) },
     googleResend: { limit: parseInt(process.env.GOOGLE_RESEND_RATE_LIMIT || '3', 10), window: parseInt(process.env.GOOGLE_RESEND_RATE_WINDOW || '3600', 10) },
     googleLink: { limit: parseInt(process.env.GOOGLE_LINK_RATE_LIMIT || '5', 10), window: parseInt(process.env.GOOGLE_LINK_RATE_WINDOW || '900', 10) },
+    businessProfile: { limit: parseInt(process.env.BUSINESS_PROFILE_RATE_LIMIT || '5', 10), window: parseInt(process.env.BUSINESS_PROFILE_RATE_WINDOW || '900', 10) },
     publishListing: { limit: parseInt(process.env.PUBLISH_LISTING_RATE_LIMIT || '10', 10), window: parseInt(process.env.PUBLISH_LISTING_RATE_WINDOW || '86400', 10) },
     createConversation: { limit: parseInt(process.env.CONVERSATION_RATE_LIMIT || '30', 10), window: parseInt(process.env.CONVERSATION_RATE_WINDOW || '3600', 10) },
     sendMessage: { limit: parseInt(process.env.MESSAGE_RATE_LIMIT || '60', 10), window: parseInt(process.env.MESSAGE_RATE_WINDOW || '60', 10) },
