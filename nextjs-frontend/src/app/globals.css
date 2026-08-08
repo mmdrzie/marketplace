@@ -609,27 +609,38 @@ kbd {
   position: absolute;
   inset: 0;
   border-radius: 20px;
-  background:
-    linear-gradient(145deg,
-      color-mix(in srgb, var(--color-foreground) 5%, transparent) 0%,
-      color-mix(in srgb, var(--color-foreground) 2%, transparent) 30%,
-      transparent 50%,
-      color-mix(in srgb, var(--color-foreground) 3%, transparent) 70%,
-      color-mix(in srgb, var(--color-foreground) 6%, transparent) 100%
-    );
-  backdrop-filter: blur(30px) saturate(1.5) brightness(1.1);
-  -webkit-backdrop-filter: blur(30px) saturate(1.5) brightness(1.1);
+  /* Fallback for mobile browsers without backdrop-filter */
+  background: color-mix(in srgb, var(--color-background) 92%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-foreground) 8%, transparent);
   box-shadow:
-    0 8px 32px color-mix(in srgb, black 15%, transparent),
-    0 2px 8px color-mix(in srgb, black 8%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 6%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, black 8%, transparent),
-    inset 1px 0 0 color-mix(in srgb, var(--color-foreground) 3%, transparent),
-    inset -1px 0 0 color-mix(in srgb, var(--color-foreground) 3%, transparent);
+    0 4px 16px color-mix(in srgb, black 10%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 4%, transparent);
   z-index: 0;
   pointer-events: none;
   transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Glass effect only on browsers that support it properly */
+@supports (backdrop-filter: blur(20px)) and (-webkit-backdrop-filter: blur(20px)) {
+  .glass-3d__inner::before {
+    background:
+      linear-gradient(145deg,
+        color-mix(in srgb, var(--color-foreground) 5%, transparent) 0%,
+        color-mix(in srgb, var(--color-foreground) 2%, transparent) 30%,
+        transparent 50%,
+        color-mix(in srgb, var(--color-foreground) 3%, transparent) 70%,
+        color-mix(in srgb, var(--color-foreground) 6%, transparent) 100%
+      );
+    backdrop-filter: blur(30px) saturate(1.5) brightness(1.1);
+    -webkit-backdrop-filter: blur(30px) saturate(1.5) brightness(1.1);
+    box-shadow:
+      0 8px 32px color-mix(in srgb, black 15%, transparent),
+      0 2px 8px color-mix(in srgb, black 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 6%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, black 8%, transparent),
+      inset 1px 0 0 color-mix(in srgb, var(--color-foreground) 3%, transparent),
+      inset -1px 0 0 color-mix(in srgb, var(--color-foreground) 3%, transparent);
+  }
 }
 
 .glass-3d__spotlight {
@@ -657,25 +668,35 @@ kbd {
 }
 
 .glass-3d:hover .glass-3d__inner::before {
-  background:
-    linear-gradient(145deg,
-      color-mix(in srgb, var(--color-foreground) 12%, transparent) 0%,
-      color-mix(in srgb, var(--color-foreground) 5%, transparent) 30%,
-      color-mix(in srgb, var(--color-primary) 8%, transparent) 50%,
-      color-mix(in srgb, var(--color-foreground) 8%, transparent) 70%,
-      color-mix(in srgb, var(--color-foreground) 15%, transparent) 100%
-    );
-  backdrop-filter: blur(40px) saturate(2) brightness(1.2);
-  -webkit-backdrop-filter: blur(40px) saturate(2) brightness(1.2);
-  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  background: color-mix(in srgb, var(--color-background) 95%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
   box-shadow:
-    0 36px 80px color-mix(in srgb, black 20%, transparent),
-    0 16px 32px color-mix(in srgb, black 12%, transparent),
-    0 0 80px -10px color-mix(in srgb, var(--color-primary) 40%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 15%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, black 5%, transparent),
-    inset 1px 0 0 color-mix(in srgb, var(--color-foreground) 10%, transparent),
-    inset -1px 0 0 color-mix(in srgb, var(--color-foreground) 10%, transparent);
+    0 8px 24px color-mix(in srgb, black 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 6%, transparent);
+}
+
+@supports (backdrop-filter: blur(20px)) and (-webkit-backdrop-filter: blur(20px)) {
+  .glass-3d:hover .glass-3d__inner::before {
+    background:
+      linear-gradient(145deg,
+        color-mix(in srgb, var(--color-foreground) 12%, transparent) 0%,
+        color-mix(in srgb, var(--color-foreground) 5%, transparent) 30%,
+        color-mix(in srgb, var(--color-primary) 8%, transparent) 50%,
+        color-mix(in srgb, var(--color-foreground) 8%, transparent) 70%,
+        color-mix(in srgb, var(--color-foreground) 15%, transparent) 100%
+      );
+    backdrop-filter: blur(40px) saturate(2) brightness(1.2);
+    -webkit-backdrop-filter: blur(40px) saturate(2) brightness(1.2);
+    border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+    box-shadow:
+      0 36px 80px color-mix(in srgb, black 20%, transparent),
+      0 16px 32px color-mix(in srgb, black 12%, transparent),
+      0 0 80px -10px color-mix(in srgb, var(--color-primary) 40%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 15%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, black 5%, transparent),
+      inset 1px 0 0 color-mix(in srgb, var(--color-foreground) 10%, transparent),
+      inset -1px 0 0 color-mix(in srgb, var(--color-foreground) 10%, transparent);
+  }
 }
 
 /* Make card content transparent to show glass effect */

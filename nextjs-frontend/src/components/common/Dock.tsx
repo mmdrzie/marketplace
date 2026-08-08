@@ -21,10 +21,9 @@ function SvgIcon({ children, className }: { children: React.ReactNode; className
 
 const NAV_LINKS = [
   { href: '/', label: '\u0635\u0641\u062d\u0647 \u0627\u0635\u0644\u06cc', icon: <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /> },
-  { href: '/listings', label: '\u0622\u06af\u0647\u06cc\u200c\u0647\u0627', icon: <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /> },
   { href: '/news', label: '\u0627\u062e\u0628\u0627\u0631', icon: <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /> },
   { href: '/encyclopedia', label: '\u062f\u0627\u0646\u0634\u0646\u0627\u0645\u0647', icon: <path d="M4 19.5A2.5 2.5 0 016.5 17H20" /> },
-  { href: '/categories', label: '\u062f\u0633\u062a\u0647\u200c\u0628\u0646\u062f\u06cc\u200c\u0647\u0627', icon: <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z M3 7a2 2 0 012-2h3l2 2h7a2 2 0 012 2" /> },
+  { href: '/search', label: '\u062c\u0633\u062a\u062c\u0648', icon: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /> },
   { isDashboard: true, label: '\u062f\u0627\u0634\u0628\u0648\u0631\u062f' },
   { isQuickAccess: true, label: '\u062f\u0633\u062a\u0631\u0633\u06cc \u0633\u0631\u06cc\u0639' },
   { isToggle: true, label: '\u062a\u063a\u06cc\u06cc\u0631 \u062a\u0645' },
