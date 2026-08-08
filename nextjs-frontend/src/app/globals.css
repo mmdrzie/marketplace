@@ -599,9 +599,22 @@ kbd {
     transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   transform-style: preserve-3d;
-  will-change: transform;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+}
+
+/* ⚠️ Promotion hints are desktop-only. `will-change: transform` +
+   `transform: translateZ(0)` on the subtree that OWNS the
+   backdrop-filter layer force the engine to promote the card into
+   an independent composited layer shortly after first paint; from
+   then on the backdrop is snapshotted (stale/missing) and the
+   frosted glass collapses to a solid matte panel — the classic
+   “glass first, opaque after ~1s” mobile artifact. Keeping the
+   hints off (or on fine pointers only) keeps blur live. */
+@media (hover: hover) and (pointer: fine) {
+  .glass-3d__inner {
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
 }
 
 .glass-3d__inner::before {
@@ -701,16 +714,30 @@ kbd {
 
 /* ─────────────────────────────────────────────────────────────
    Mobile / touch:
-   - Layer 2 (spotlight, mix-blend-mode: screen) is the mobile
-     glitch: on low-end compositors it fails to blend and paints
-     as a solid opaque sheet ON TOP of the card, hiding the
-     frosted glass. It is a mouse-hover-only effect, so on touch
-     we drop the layer entirely instead of fighting it.
-   - The glass layer (`::before`) stays untouched.
-   - The tilt transform is left free (no forced-transform kill) so
-     tilt still follows input where the browser delivers it.
+   - No forced compositing around the blur layer: on coarse
+     pointers the promotion hints are off (see above) and the 3D
+     stage is flattened so the engine never layers the card on
+     its own; the frosted `::before` keeps sampling the live
+     backdrop instead of a stale snapshot (the “becomes matte
+     after ~1s” artifact).
+   - Layer 2 (spotlight, mix-blend-mode: screen) fails to blend
+     on mobile compositors and can paint as a solid sheet over
+     the card; it is a mouse-hover-only effect, so it is dropped
+     entirely on touch.
+   - The glass layer (`::before`) itself stays untouched.
    ───────────────────────────────────────────────────────────── */
 @media (hover: none) and (pointer: coarse) {
+  .glass-3d {
+    perspective: none;
+  }
+
+  .glass-3d__inner {
+    will-change: auto !important;
+    transform-style: flat !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+
   .glass-3d__spotlight {
     display: none !important;
   }
