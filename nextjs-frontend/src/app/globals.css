@@ -194,26 +194,15 @@ body {
   Mobile glass debugging - all uncommented for testing
 */
 @media (hover: none) and (pointer: coarse) {
-  /* Step 1: Test without backdrop-filter */
+  /* Disable backdrop-filter on mobile - causes rendering issues */
   .glass-3d__inner::before {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
 
-  /* Step 2: Test without spotlight */
+  /* Disable spotlight blend on mobile */
   .glass-3d__spotlight {
     display: none !important;
-  }
-
-  /* Step 3: Test without 3D transforms */
-  .glass-3d__inner {
-    will-change: auto !important;
-    transform-style: flat !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-  }
-  .glass-3d {
-    perspective: none;
   }
 }
 
@@ -942,26 +931,15 @@ kbd {
   Mobile glass debugging - all uncommented for testing
 */
 @media (hover: none) and (pointer: coarse) {
-  /* Step 1: Test without backdrop-filter */
+  /* Disable backdrop-filter on mobile - causes rendering issues */
   .glass-3d__inner::before {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
 
-  /* Step 2: Test without spotlight */
+  /* Disable spotlight blend on mobile */
   .glass-3d__spotlight {
     display: none !important;
-  }
-
-  /* Step 3: Test without 3D transforms */
-  .glass-3d__inner {
-    will-change: auto !important;
-    transform-style: flat !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-  }
-  .glass-3d {
-    perspective: none;
   }
 }
 
