@@ -189,6 +189,34 @@ body {
   border-radius: var(--radius-sm);
 }
 
+
+/* 
+  Mobile glass debugging - all uncommented for testing
+*/
+@media (hover: none) and (pointer: coarse) {
+  /* Step 1: Test without backdrop-filter */
+  .glass-3d__inner::before {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Step 2: Test without spotlight */
+  .glass-3d__spotlight {
+    display: none !important;
+  }
+
+  /* Step 3: Test without 3D transforms */
+  .glass-3d__inner {
+    will-change: auto !important;
+    transform-style: flat !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+  .glass-3d {
+    perspective: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
@@ -522,13 +550,6 @@ kbd {
   animation: none;
 }
 
-.touch-device .btn-glass,
-.touch-device .glass,
-.touch-device .glass-input {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
 /* Slower marquee on touch to reduce motion sickness */
 .touch-device .animate-marquee-rtl {
   animation-duration: 60s;
@@ -537,12 +558,6 @@ kbd {
 /* Stop decorative blur blob animations on touch — still visible but static */
 .touch-device .animate-pulse[class*="blur-"] {
   animation: none;
-}
-
-/* Reduce heavy backdrop filters on touch devices to relieve GPU paint pressure */
-.touch-device [class*="backdrop-blur-"] {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
 
 /* On touch, disable the scroll hint bounce animation if animated via CSS */
@@ -712,36 +727,7 @@ kbd {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Mobile / touch:
-   - No forced compositing around the blur layer: on coarse
-     pointers the promotion hints are off (see above) and the 3D
-     stage is flattened so the engine never layers the card on
-     its own; the frosted `::before` keeps sampling the live
-     backdrop instead of a stale snapshot (the “becomes matte
-     after ~1s” artifact).
-   - Layer 2 (spotlight, mix-blend-mode: screen) fails to blend
-     on mobile compositors and can paint as a solid sheet over
-     the card; it is a mouse-hover-only effect, so it is dropped
-     entirely on touch.
-   - The glass layer (`::before`) itself stays untouched.
-   ───────────────────────────────────────────────────────────── */
-@media (hover: none) and (pointer: coarse) {
-  .glass-3d {
-    perspective: none;
-  }
 
-  .glass-3d__inner {
-    will-change: auto !important;
-    transform-style: flat !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-  }
-
-  .glass-3d__spotlight {
-    display: none !important;
-  }
-}
 .glass-3d .glass-3d__content {
   background: transparent !important;
   border: none !important;
@@ -951,6 +937,34 @@ kbd {
 }
 
 /* Reduced motion */
+
+/* 
+  Mobile glass debugging - all uncommented for testing
+*/
+@media (hover: none) and (pointer: coarse) {
+  /* Step 1: Test without backdrop-filter */
+  .glass-3d__inner::before {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Step 2: Test without spotlight */
+  .glass-3d__spotlight {
+    display: none !important;
+  }
+
+  /* Step 3: Test without 3D transforms */
+  .glass-3d__inner {
+    will-change: auto !important;
+    transform-style: flat !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+  .glass-3d {
+    perspective: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glass-3d,
   .glass-3d__inner,
