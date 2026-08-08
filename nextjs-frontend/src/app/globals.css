@@ -1098,10 +1098,10 @@ kbd {
   width: 46px;
   height: 46px;
   border-radius: 16px;
-  background: rgba(18, 18, 22, 0.6);
+  background: color-mix(in srgb, var(--color-background) 70%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1112,7 +1112,7 @@ kbd {
 }
 
 .mobile-hamburger:hover {
-  background: rgba(18, 18, 22, 0.8);
+  background: color-mix(in srgb, var(--color-background) 85%, transparent);
   transform: scale(1.05);
 }
 
@@ -1250,13 +1250,13 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(18, 18, 22, 0.7);
+  background: color-mix(in srgb, var(--color-background) 80%, transparent);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid var(--color-border);
   color: var(--color-muted-foreground);
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow: 0 4px 16px color-mix(in srgb, black 25%, transparent), inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 5%, transparent);
 }
 
 .floating-nav__label {
@@ -1269,9 +1269,9 @@ kbd {
 
 .floating-nav__btn:hover .floating-nav__icon {
   color: var(--color-foreground);
-  background: rgba(18, 18, 22, 0.9);
+  background: color-mix(in srgb, var(--color-background) 90%, transparent);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow: 0 8px 24px color-mix(in srgb, black 30%, transparent), inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 8%, transparent);
 }
 
 .floating-nav__btn:hover .floating-nav__label {
@@ -1285,8 +1285,8 @@ kbd {
 
 .floating-nav__btn.active .floating-nav__icon {
   color: var(--color-primary);
-  border-color: rgba(200, 149, 110, 0.2);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 20px -6px var(--color-primary), inset 0 1px 0 rgba(255,255,255,0.06);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, black 25%, transparent), 0 0 20px -6px var(--color-primary), inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 8%, transparent);
 }
 
 .floating-nav__btn.active .floating-nav__label {

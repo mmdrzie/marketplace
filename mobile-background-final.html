@@ -1,0 +1,530 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Background — Final Premium</title>
+<style>
+:root{
+  --c-bg:#f5e3c5;--c-fg:#3d3024;--c-muted:#7a6048;
+  --c-border:rgba(61,48,36,.18);--c-primary:#6b3f22;
+  --c-pfg:#fff;--c-amber:#b45309;--c-amber2:#f0b35f;
+  --c-glass:rgba(255,255,255,.5);--c-glass-b:rgba(61,48,36,.12);
+  --c-dot:#4a382a;--c-succ:#15803d;--c-blue:#06b6d4;
+  --c-purp:#8b5cf6;--c-ind:#6366f1;
+  --sh-card:0 4px 20px rgba(61,48,36,.08),0 16px 32px -12px rgba(61,48,36,.12);
+  --sh-glass:0 8px 32px rgba(61,48,36,.1),inset 0 1px 0 rgba(255,255,255,.9);
+  --c-subtle:rgba(61,48,36,.08);
+}
+.dark{
+  --c-bg:#08080A;--c-fg:#e6e6e6;--c-muted:#a1a1a1;
+  --c-border:rgba(255,255,255,.08);--c-primary:#c8956e;
+  --c-pfg:#08080A;--c-amber:#fcd34d;--c-amber2:#f5b971;
+  --c-glass:rgba(20,20,23,.7);--c-glass-b:rgba(255,255,255,.05);
+  --c-dot:#b3b3b3;--c-succ:#10b981;--c-blue:#22d3ee;
+  --c-purp:#a78bfa;--c-ind:#818cf8;
+  --sh-card:0 4px 24px rgba(0,0,0,.5),0 16px 40px -12px rgba(0,0,0,.6);
+  --sh-glass:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.03);
+  --c-subtle:rgba(255,255,255,.03);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:var(--c-bg);color:var(--c-fg);
+  min-height:100vh;overflow-x:hidden;
+  transition:background .5s ease,color .5s ease;
+}
+
+/* === KEYFRAMES ===*/
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes float1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-15px,12px) scale(1.1)}}
+@keyframes float2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(12px,-10px) scale(1.08)}}
+@keyframes float3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-10px,-15px) scale(1.12)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 20px -8px var(--c-primary)}50%{box-shadow:0 0 35px -4px var(--c-primary)}}
+@keyframes scrollHint{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* === LAYOUT ===*/
+.preview{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:36px;
+  padding:28px 16px;
+  justify-items:center;
+  min-height:100vh;
+}
+@media(min-width:1500px){
+  .preview{grid-template-columns:repeat(3,1fr);align-items:start;gap:44px;padding:44px 32px}
+}
+.device-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.device-label{
+  font-size:12px;font-weight:600;color:var(--c-muted);
+  text-transform:uppercase;letter-spacing:1px;
+}
+.frame{
+  position:relative;background:var(--c-bg);
+  border-radius:48px;overflow:hidden;
+  box-shadow:
+    0 0 0 14px #111,0 0 0 16px #2a2a2a,
+    0 30px 80px rgba(0,0,0,.5),
+    0 0 60px -20px color-mix(in srgb,var(--c-primary) 30%,transparent);
+  transition:box-shadow .4s;
+}
+.frame-mobile{width:320px;height:660px}
+@media(min-width:440px){.frame-mobile{width:375px;height:780px}}
+.frame-tablet{width:600px;height:680px;border-radius:32px}
+@media(min-width:720px){.frame-tablet{width:700px;height:800px}}
+.frame-desktop{width:860px;height:580px;border-radius:20px}
+@media(min-width:1040px){.frame-desktop{width:1060px;height:640px}}
+@media(min-width:1500px){.frame-desktop{width:1100px;height:660px}}
+
+.notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:120px;height:28px;background:#111;border-radius:0 0 18px 18px;z-index:100;
+}
+.screen{
+  width:100%;height:100%;overflow-y:auto;overflow-x:hidden;
+  position:relative;scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{display:none}
+
+/* === BACKGROUND LAYERS ===*/
+.bg-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-orb{
+  position:absolute;border-radius:50%;
+  will-change:transform;filter:blur(60px);
+}
+.bg-orb-1{
+  width:220px;height:220px;top:-60px;right:-40px;
+  background:radial-gradient(circle,var(--c-primary) 0%,transparent 70%);
+  opacity:.25;animation:float1 8s ease-in-out infinite;
+}
+.bg-orb-2{
+  width:190px;height:190px;top:36%;left:-50px;
+  background:radial-gradient(circle,var(--c-amber) 0%,transparent 70%);
+  opacity:.2;animation:float2 10s ease-in-out 2s infinite;
+}
+.bg-orb-3{
+  width:160px;height:160px;bottom:14%;right:-30px;
+  background:radial-gradient(circle,var(--c-purp) 0%,transparent 70%);
+  opacity:.15;animation:float3 12s ease-in-out 4s infinite;
+}
+.pcanvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+
+/* === CONTENT ===*/
+.content{position:relative;z-index:10;padding:54px 18px 40px}
+@media(min-width:700px){.content{padding:68px 36px 50px}}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:999px;
+  background:color-mix(in srgb,var(--c-succ) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--c-succ) 25%,transparent);
+  font-size:11px;color:var(--c-succ);margin-bottom:16px;
+  animation:fadeInUp .6s both;
+}
+.badge .dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--c-succ);animation:pulse 2s infinite;
+}
+.title{
+  font-size:28px;font-weight:800;line-height:1.25;
+  margin-bottom:12px;letter-spacing:-.5px;
+  animation:fadeInUp .6s .1s both;
+}
+@media(min-width:700px){.title{font-size:36px}}
+.title .grad{
+  background:linear-gradient(135deg,var(--c-primary) 0%,var(--c-amber2) 60%,var(--c-purp) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.subtitle{
+  font-size:13px;line-height:1.8;opacity:.6;
+  margin-bottom:24px;animation:fadeInUp .6s .2s both;
+}
+@media(min-width:700px){.subtitle{font-size:15px;max-width:440px}}
+.cta-row{display:flex;gap:10px;margin-bottom:30px;animation:fadeInUp .6s .3s both}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:12px 20px;border-radius:13px;font-size:12px;
+  font-weight:600;text-decoration:none;border:none;cursor:pointer;
+  transition:all .25s ease;
+}
+.btn-p{
+  background:var(--c-primary);color:var(--c-pfg);
+  box-shadow:0 4px 16px -4px var(--c-primary);
+}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 24px -4px var(--c-primary)}
+.btn-g{
+  background:var(--c-glass);backdrop-filter:blur(14px);
+  border:1px solid var(--c-glass-b);color:var(--c-fg);
+}
+.btn-g:hover{background:color-mix(in srgb,var(--c-glass) 90%,var(--c-fg) 5%)}
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  padding:18px 0;border-top:1px solid var(--c-subtle);
+  border-bottom:1px solid var(--c-subtle);
+  animation:fadeInUp .6s .4s both;
+}
+.stat{text-align:center}
+.stat .val{font-size:19px;font-weight:700;color:var(--c-primary)}
+.stat .lbl{font-size:10px;opacity:.5;margin-top:3px}
+.sec-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:28px 0 14px;animation:fadeInUp .6s .5s both;
+}
+.sec-head h3{font-size:16px;font-weight:700}
+.sec-head a{font-size:11px;color:var(--c-primary);text-decoration:none}
+.cards{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  animation:fadeInUp .6s .6s both;
+}
+@media(min-width:700px){.cards{grid-template-columns:repeat(4,1fr)}}
+.card{
+  background:var(--c-glass);backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);border:1px solid var(--c-glass-b);
+  border-radius:16px;padding:16px;text-align:center;
+  transition:transform .25s,box-shadow .25s;
+}
+.card:hover{transform:translateY(-3px);box-shadow:var(--sh-card)}
+.card .c-emoji{font-size:22px;margin-bottom:6px}
+.card .c-title{font-size:12px;font-weight:600;margin-bottom:3px}
+.card .c-desc{font-size:10px;opacity:.5;line-height:1.5}
+
+/* === CONTROLS ===*/
+.controls{text-align:center;padding:24px 16px 50px}
+.controls h2{font-size:15px;margin-bottom:16px;opacity:.6}
+.toggle{
+  padding:12px 28px;border-radius:14px;
+  border:1.5px solid var(--c-primary);background:transparent;
+  color:var(--c-primary);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .25s;
+}
+.toggle:hover{background:var(--c-primary);color:#fff;transform:translateY(-1px)}
+.info{
+  max-width:520px;margin:24px auto;padding:22px;
+  border-radius:18px;background:color-mix(in srgb,var(--c-fg) 3%,transparent);
+  border:1px solid var(--c-subtle);text-align:right;
+}
+.info h3{font-size:14px;margin-bottom:10px;color:var(--c-primary)}
+.info ul{list-style:none;font-size:12px;line-height:2.2;opacity:.65}
+.info li::before{content:'• ';color:var(--c-primary)}
+
+@media(prefers-reduced-motion:reduce){
+  .bg-orb,.badge .dot,.card,.btn{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="preview">
+
+  <!-- ============ MOBILE ============ -->
+  <div class="device-wrap">
+    <span class="device-label">موبایل — 375px</span>
+    <div class="frame frame-mobile">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="bg-layer">
+          <div class="bg-orb bg-orb-1"></div>
+          <div class="bg-orb bg-orb-2"></div>
+          <div class="bg-orb bg-orb-3"></div>
+          <canvas class="pcanvas" id="cv-m"></canvas>
+        </div>
+        <div class="content">
+          <div class="badge"><span class="dot"></span>نسل جدید پلتفرم‌های معامله</div>
+          <h1 class="title"><span class="grad">بازارگاه مدرن</span><br>خرید و فروش امن</h1>
+          <p class="subtitle">خرید، فروش و اجاره انواع خودرو سواری، ماشین‌آلات سنگین و راهسازی با بالاترین استانداردهای امنیتی.</p>
+          <div class="cta-row">
+            <a class="btn btn-p">+ ثبت آگهی رایگان</a>
+            <a class="btn btn-g">کاوش</a>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="val">۱,۲۰۰+</div><div class="lbl">فروشنده فعال</div></div>
+            <div class="stat"><div class="val">۴۵,۰۰۰</div><div class="lbl">قطعه موجود</div></div>
+            <div class="stat"><div class="val">۹۸٪</div><div class="lbl">رضایت مشتری</div></div>
+          </div>
+          <div class="sec-head"><h3>دسته‌بندی‌های محبوب</h3><a href="#">همه ←</a></div>
+          <div class="cards">
+            <div class="card"><div class="c-emoji">⚙️</div><div class="c-title">موتوری</div><div class="c-desc">۱۲,۰۰۰ قطعه اصلی</div></div>
+            <div class="card"><div class="c-emoji">🚗</div><div class="c-title">بدنه</div><div class="c-desc">اورجینال گارانتی</div></div>
+            <div class="card"><div class="c-emoji">🔧</div><div class="c-title">گیربکس</div><div class="c-desc">سرعیو و اتومات</div></div>
+            <div class="card"><div class="c-emoji">💡</div><div class="c-title">لوازم جانبی</div><div class="c-desc">اکسسوری متنوع</div></div>
+          </div>
+          <div class="sec-head"><h3>آخرین اخبار</h3><a href="#">همه ←</a></div>
+          <div class="cards">
+            <div class="card"><div class="c-emoji">📰</div><div class="c-title">راهنمای خرید</div><div class="c-desc">۱۰ نکته مهم</div></div>
+            <div class="card"><div class="c-emoji">📊</div><div class="c-title">مقایسه قیمت</div><div class="c-desc">بهترین پیشنهاد</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TABLET ============ -->
+  <div class="device-wrap">
+    <span class="device-label">تبلت — 700px</span>
+    <div class="frame frame-tablet">
+      <div class="screen">
+        <div class="bg-layer">
+          <div class="bg-orb bg-orb-1" style="width:280px;height:280px"></div>
+          <div class="bg-orb bg-orb-2" style="width:240px;height:240px"></div>
+          <div class="bg-orb bg-orb-3" style="width:210px;height:210px"></div>
+          <canvas class="pcanvas" id="cv-t"></canvas>
+        </div>
+        <div class="content">
+          <div class="badge"><span class="dot"></span>نسل جدید پلتفرم‌های معامله</div>
+          <h1 class="title"><span class="grad">بازارگاه مدرن</span><br>خرید و فروش امن</h1>
+          <p class="subtitle">خرید، فروش و اجاره انواع خودرو سواری، ماشین‌آلات سنگین و راهسازی با بالاترین استانداردهای امنیتی و کاربری.</p>
+          <div class="cta-row">
+            <a class="btn btn-p">+ ثبت آگهی رایگان</a>
+            <a class="btn btn-g">کاوش در بازار</a>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="val">۱,۲۰۰+</div><div class="lbl">فروشنده فعال</div></div>
+            <div class="stat"><div class="val">۴۵,۰۰۰</div><div class="lbl">قطعه موجود</div></div>
+            <div class="stat"><div class="val">۹۸٪</div><div class="lbl">رضایت مشتری</div></div>
+          </div>
+          <div class="sec-head"><h3>دسته‌بندی‌های محبوب</h3><a href="#">همه ←</a></div>
+          <div class="cards">
+            <div class="card"><div class="c-emoji">⚙️</div><div class="c-title">موتوری</div><div class="c-desc">۱۲,۰۰۰ قطعه اصلی</div></div>
+            <div class="card"><div class="c-emoji">🚗</div><div class="c-title">بدنه</div><div class="c-desc">اورجینال گارانتی</div></div>
+            <div class="card"><div class="c-emoji">🔧</div><div class="c-title">گیربکس</div><div class="c-desc">سرعیو و اتومات</div></div>
+            <div class="card"><div class="c-emoji">💡</div><div class="c-title">لوازم جانبی</div><div class="c-desc">اکسسوری متنوع</div></div>
+          </div>
+          <div class="sec-head"><h3>آخرین اخبار</h3><a href="#">همه ←</a></div>
+          <div class="cards">
+            <div class="card"><div class="c-emoji">📰</div><div class="c-title">راهنمای خرید</div><div class="c-desc">۱۰ نکته مهم</div></div>
+            <div class="card"><div class="c-emoji">📊</div><div class="c-title">مقایسه قیمت</div><div class="c-desc">بهترین پیشنهاد</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DESKTOP ============ -->
+  <div class="device-wrap">
+    <span class="device-label">دسکتاپ — 1100px</span>
+    <div class="frame frame-desktop">
+      <div class="screen">
+        <div class="bg-layer">
+          <div class="bg-orb bg-orb-1" style="width:340px;height:340px"></div>
+          <div class="bg-orb bg-orb-2" style="width:290px;height:290px"></div>
+          <div class="bg-orb bg-orb-3" style="width:250px;height:250px"></div>
+          <canvas class="pcanvas" id="cv-d"></canvas>
+        </div>
+        <div class="content">
+          <div class="badge"><span class="dot"></span>نسل جدید پلتفرم‌های معامله</div>
+          <h1 class="title" style="font-size:40px"><span class="grad">بازارگاه مدرن</span><br>خرید و فروش امن</h1>
+          <p class="subtitle" style="font-size:15px;max-width:500px">خرید، فروش و اجاره انواع خودرو سواری، ماشین‌آلات سنگین و راهسازی با بالاترین استانداردهای امنیتی و کاربری.</p>
+          <div class="cta-row">
+            <a class="btn btn-p">+ ثبت آگهی رایگان</a>
+            <a class="btn btn-g">کاوش در بازار</a>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="val">۱,۲۰۰+</div><div class="lbl">فروشنده فعال</div></div>
+            <div class="stat"><div class="val">۴۵,۰۰۰</div><div class="lbl">قطعه موجود</div></div>
+            <div class="stat"><div class="val">۹۸٪</div><div class="lbl">رضایت مشتری</div></div>
+          </div>
+          <div class="sec-head"><h3>دسته‌بندی‌های محبوب</h3><a href="#">همه ←</a></div>
+          <div class="cards">
+            <div class="card"><div class="c-emoji">⚙️</div><div class="c-title">موتوری</div><div class="c-desc">۱۲,۰۰۰ قطعه اصلی</div></div>
+            <div class="card"><div class="c-emoji">🚗</div><div class="c-title">بدنه</div><div class="c-desc">اورجینال گارانتی</div></div>
+            <div class="card"><div class="c-emoji">🔧</div><div class="c-title">گیربکس</div><div class="c-desc">سرعیو و اتومات</div></div>
+            <div class="card"><div class="c-emoji">💡</div><div class="c-title">لوازم جانبی</div><div class="c-desc">اکسسوری متنوع</div></div>
+          </div>
+          <div class="sec-head"><h3>آخرین اخبار</h3><a href="#">همه ←</a></div>
+          <div class="cards">
+            <div class="card"><div class="c-emoji">📰</div><div class="c-title">راهنمای خرید</div><div class="c-desc">۱۰ نکته مهم</div></div>
+            <div class="card"><div class="c-emoji">📊</div><div class="c-title">مقایسه قیمت</div><div class="c-desc">بهترین پیشنهاد</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="controls">
+  <h2>تغییر تم برای مشاهده تأثیر رنگ‌ها</h2>
+  <button class="toggle" onclick="toggleTheme()">تغییر دارک / لایت</button>
+  <div class="info">
+    <h3>ویژگی‌های این نسخه نهایی</h3>
+    <ul>
+      <li>تم‌کنی کامل با توکن‌های اصلی سایت (globals.css)</li>
+      <li>ریسپانسیو: موبایل، تبلت، دسکتاپ — نمایش همزمان</li>
+      <li>۳ اورب گرادیانت با حرکت ارگانیک (primary/amber/purple)</li>
+      <li>پارتیکل‌های Canvas — سبک، درخشان، بدون فیزیک سنگین</li>
+      <li>افکت Glass حرفه‌ای روی کارت‌ها</li>
+      <li>گرادیانت سه‌رنگ در تیتر (primary → amber → purple)</li>
+      <li>hover effect روی دکمه‌ها و کارت‌ها</li>
+      <li>بدون O(n²) — فقط حرکت آرام + درخشش نرم</li>
+      <li>prefers-reduced-motion پشتیبانی می‌شود</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function toggleTheme(){document.documentElement.classList.toggle('dark')}
+
+/* === LIGHTWEIGHT PARTICLE SYSTEM ===
+   - Mobile: 28 particles
+   - Tablet: 55 particles
+   - Desktop: 100 particles
+   No physics, no O(n^2), just gentle drift + soft twinkle
+*/
+function initParticles(canvasId, count){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const parent = canvas.parentElement;
+  let w, h, dpr;
+  let parts = [];
+  let animId = null;
+  let running = false;
+  let lastTime = 0;
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio||1, 2);
+    w = parent.clientWidth;
+    h = parent.clientHeight;
+    canvas.width = Math.round(w*dpr);
+    canvas.height = Math.round(h*dpr);
+    canvas.style.width = w+'px';
+    canvas.style.height = h+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function init(){
+    resize();
+    parts = [];
+    for(let i=0;i<count;i++){
+      const isStar = Math.random()<0.12;
+      const isSparkle = !isStar && Math.random()<0.15;
+      parts.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        size: isSparkle ? 0.4+Math.random()*0.6 : (0.6+Math.random()*1.4)*(isStar?1.4:1),
+        speedX: (Math.random()-0.5)*0.25,
+        speedY: -0.08-Math.random()*0.2,
+        opacity: isSparkle ? 0.3+Math.random()*0.4 : 0.15+Math.random()*0.45,
+        twinkle: Math.random()*Math.PI*2,
+        twinkleSpd: 0.01+Math.random()*0.025,
+        isStar: isStar,
+        isSparkle: isSparkle,
+        colorIdx: Math.random()<0.55?0:Math.random()<0.8?1:2
+      });
+    }
+  }
+
+  function isDark(){return document.documentElement.classList.contains('dark')}
+  function palette(){
+    return isDark()
+      ? ['rgba(200,149,110,','rgba(252,211,77,','rgba(167,139,250,']
+      : ['rgba(107,63,34,','rgba(180,83,9,','rgba(139,92,256,']
+  }
+
+  function draw(){
+    if(!running) return;
+    if(document.hidden){animId=requestAnimationFrame(draw);return}
+    const now = performance.now();
+    if(lastTime===0) lastTime=now;
+    const dt = Math.min((now-lastTime)/16.67, 3);
+    lastTime = now;
+
+    ctx.clearRect(0,0,w,h);
+    const cols = palette();
+
+    for(let i=0;i<parts.length;i++){
+      const p = parts[i];
+      p.x += p.speedX*dt;
+      p.y += p.speedY*dt;
+      p.twinkle += p.twinkleSpd*dt;
+
+      if(p.y < -20){p.y=h+20;p.x=Math.random()*w}
+      if(p.x < -20){p.x=w+20}
+      if(p.x > w+20){p.x=-20}
+
+      const tw = 0.5+0.5*Math.sin(p.twinkle);
+      const alpha = p.opacity*tw;
+      const col = cols[p.colorIdx];
+
+      if(p.isStar && tw>0.65){
+        // Star burst
+        const beam = p.size*(1.8+0.8*tw);
+        const glowR = p.size*5;
+        const grd = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,glowR);
+        grd.addColorStop(0,col+'0.3)');
+        grd.addColorStop(1,col+'0)');
+        ctx.fillStyle=grd;
+        ctx.fillRect(p.x-glowR,p.y-glowR,glowR*2,glowR*2);
+
+        ctx.save();
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.twinkle*0.4);
+        ctx.globalAlpha=alpha*0.7;
+        ctx.fillStyle=col+'1)';
+        ctx.fillRect(-beam,-0.35,beam*2,0.7);
+        ctx.fillRect(-0.35,-beam,0.7,beam*2);
+        ctx.restore();
+      } else if(p.isSparkle){
+        // Tiny sparkle dot
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.size*(0.6+0.4*tw),0,Math.PI*2);
+        ctx.globalAlpha=alpha;
+        ctx.fillStyle=col+'1)';
+        ctx.fill();
+      } else {
+        // Regular particle with soft glow
+        const glowR = p.size*3.5*(0.7+0.3*tw);
+        const grd = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,glowR);
+        grd.addColorStop(0,col+'(alpha*0.25)');
+        grd.addColorStop(1,col+'0)');
+        ctx.fillStyle=grd;
+        ctx.globalAlpha=1;
+        ctx.fillRect(p.x-glowR,p.y-glowR,glowR*2,glowR*2);
+
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.globalAlpha=alpha;
+        ctx.fillStyle=col+'1)';
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha=1;
+    animId=requestAnimationFrame(draw);
+  }
+
+  function start(){
+    if(running) return;
+    running=true;
+    lastTime=0;
+    animId=requestAnimationFrame(draw);
+  }
+  function stop(){
+    running=false;
+    if(animId) cancelAnimationFrame(animId);
+  }
+
+  init();
+  start();
+
+  let resizeTimer;
+  window.addEventListener('resize',()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(()=>{init()},200);
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden) stop();
+    else start();
+  });
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  initParticles('cv-m', 28);
+  initParticles('cv-t', 55);
+  initParticles('cv-d', 100);
+});
+</script>
+</body>
+</html>

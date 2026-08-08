@@ -35,6 +35,7 @@ import { FEATURES, STEPS, QUICK_LINKS, usePublicStats } from '@/components/home/
 
 const CustomCursor = dynamic(() => import('@/components/common/CustomCursor').then(mod => mod.CustomCursor), { ssr: false });
 const ParticleBackground = dynamic(() => import('@/components/common/ParticleBackground').then(mod => mod.ParticleBackground), { ssr: false });
+const MobileParticleBackground = dynamic(() => import('@/components/common/MobileParticleBackground').then(mod => ({ default: mod.MobileParticleBackground })), { ssr: false });
 
 const Icon = ({ d, className = 'w-5 h-5' }: { d: string; className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -166,6 +167,9 @@ export default function HomePage() {
 
       {/* interactive particles — فقط دسکتاپ */}
       {!disableEffects && <ParticleBackground className="fixed inset-0 z-[1] w-full h-full" />}
+
+      {/* mobile particles — فقط موبایل */}
+      <MobileParticleBackground />
 
       {/* ===== 1. HERO ===== */}
       <section ref={heroRef} className="relative z-10 min-h-[88vh] flex flex-col items-center justify-center pt-10 pb-24 px-4">
