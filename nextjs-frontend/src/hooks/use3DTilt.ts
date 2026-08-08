@@ -63,11 +63,9 @@ export function use3DTilt(options: TiltOptions = {}) {
     const el = elementRef.current;
     if (!el) return;
 
-    // Tilt/spotlight is a mouse-hover mechanic. On touch (no hover) the
-    // rotate/spotlight rAF adds cost and — combined with backdrop-filter
-    // in the glass card — can trigger the blank-render bug on mobile
-    // WebKit/Blink. Same for prefers-reduced-motion.
-    if (window.matchMedia('(pointer: coarse)').matches) return;
+    // Tilt follows input (mouse or synthetic touch) — only skip it for
+    // users who asked for reduced motion. The spotlight layer itself is
+    // dropped on touch in CSS, so the rAF here only ever moves the card.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const handleMouseEnter = () => {

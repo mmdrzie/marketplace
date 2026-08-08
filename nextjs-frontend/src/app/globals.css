@@ -700,49 +700,19 @@ kbd {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Mobile / touch: KEEP the frosted-glass visuals but break the
-   3D compositing that triggers the backdrop-filter blank-render
-   bug in WebKit/Blink (this element).
-
-   The card surface (`::before` with backdrop-filter) must never
-   live inside a subtree that gets `will-change: transform` +
-   `translateZ(0)` + `preserve-3d` + runtime mouse transforms.
-   Tilt/spotlight are mouse-hover-only mechanics (there is no
-   hover on touch), so removing just the compositing hints costs
-   nothing visually — and `use3dTilt` skips its rAF work here too.
+   Mobile / touch:
+   - Layer 2 (spotlight, mix-blend-mode: screen) is the mobile
+     glitch: on low-end compositors it fails to blend and paints
+     as a solid opaque sheet ON TOP of the card, hiding the
+     frosted glass. It is a mouse-hover-only effect, so on touch
+     we drop the layer entirely instead of fighting it.
+   - The glass layer (`::before`) stays untouched.
+   - The tilt transform is left free (no forced-transform kill) so
+     tilt still follows input where the browser delivers it.
    ───────────────────────────────────────────────────────────── */
 @media (hover: none) and (pointer: coarse) {
-  /* No 3D depth context on touch — kills the layering that
-     mis-buffers backdrop-filter on mobile GPU */
-  .glass-3d {
-    perspective: none;
-  }
-
-  /* Flatten the mover to a plain painted box; guard style with
-     `!important` so any synthetic mouse events (iOS Safari fires
-     them after tap) can never re-transform the subtree. */
-  .glass-3d__inner {
-    will-change: auto !important;
-    transform-style: flat !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-  }
-
-  /* Sweep the spotlight blend mode: mix-blend-mode + a backdrop
-     group mis-repaint on mobile compositors. A normal low-opacity
-     sheen keeps the glossy card without the blend-group bug. */
   .glass-3d__spotlight {
-    mix-blend-mode: normal !important;
-    background-image: linear-gradient(145deg,
-      color-mix(in srgb, var(--color-foreground) 7%, transparent) 0%,
-      transparent 45%,
-      color-mix(in srgb, var(--color-primary) 5%, transparent) 100%) !important;
-    opacity: 0.18;
-    display: block !important;
-  }
-
-  .glass-3d:hover .glass-3d__spotlight {
-    opacity: 0.18;
+    display: none !important;
   }
 }
 .glass-3d .glass-3d__content {

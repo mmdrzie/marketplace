@@ -97,17 +97,18 @@ export function MobileParticleBackground() {
 
       for (let i = 0; i < parts.length; i++) {
         const p = parts[i];
-        const driftX = Math.sin(now * 0.0005 + p.tw) * 25 * p.layer;
-        const driftY = Math.cos(now * 0.0004 + p.tw * 1.3) * 20 * p.layer;
-        p.vx += (p.ox + driftX - p.x) * 0.006 * dt;
-        p.vy += (p.oy + driftY - p.y) * 0.006 * dt;
-        p.vx *= 0.9; p.vy *= 0.9;
+        // Multi-frequency organic drift (no touch/scroll input)
+        const driftX = (Math.sin(now * 0.0004 + p.tw) + Math.sin(now * 0.00017 + p.tw * 2.1) * 0.5) * 22 * p.layer;
+        const driftY = (Math.cos(now * 0.00035 + p.tw * 1.3) + Math.cos(now * 0.00013 + p.tw * 0.7) * 0.5) * 18 * p.layer;
+        p.vx += (p.ox + driftX - p.x) * 0.005 * dt;
+        p.vy += (p.oy + driftY - p.y) * 0.005 * dt;
+        p.vx *= 0.91; p.vy *= 0.91;
         p.x += p.vx * dt; p.y += p.vy * dt;
         p.tw += p.twSpd * dt;
-        if (p.x < -20) p.x = w + 20;
-        if (p.x > w + 20) p.x = -20;
-        if (p.y < -20) p.y = h + 20;
-        if (p.y > h + 20) p.y = -20;
+        if (p.x < -30) { p.x = w + 30; p.ox = p.x; }
+        if (p.x > w + 30) { p.x = -30; p.ox = p.x; }
+        if (p.y < -30) { p.y = h + 30; p.oy = p.y; }
+        if (p.y > h + 30) { p.y = -30; p.oy = p.y; }
       }
 
       ctx.clearRect(0, 0, w, h);
