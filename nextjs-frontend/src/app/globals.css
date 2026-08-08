@@ -699,7 +699,32 @@ kbd {
   }
 }
 
-/* Make card content transparent to show glass effect */
+/* Disable glass effect on mobile/touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .glass-3d__inner::before {
+    background: color-mix(in srgb, var(--color-background) 95%, transparent) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid color-mix(in srgb, var(--color-foreground) 10%, transparent) !important;
+    box-shadow:
+      0 2px 8px color-mix(in srgb, black 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 5%, transparent) !important;
+  }
+
+  .glass-3d:hover .glass-3d__inner::before {
+    background: color-mix(in srgb, var(--color-background) 97%, transparent) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+    box-shadow:
+      0 4px 16px color-mix(in srgb, black 10%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 6%, transparent) !important;
+  }
+
+  .glass-3d__spotlight {
+    display: none !important;
+  }
+}
 .glass-3d .glass-3d__content {
   background: transparent !important;
   border: none !important;
