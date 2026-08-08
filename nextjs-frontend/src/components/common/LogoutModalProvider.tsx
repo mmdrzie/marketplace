@@ -3,6 +3,7 @@
 import { useLogoutModal } from '@/store/logoutModalStore';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function LogoutModalProvider() {
   const isOpen = useLogoutModal((s) => s.isOpen);
@@ -54,8 +55,6 @@ export function LogoutModalProvider() {
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const handleConfirm = () => {
     logout();
     close();
@@ -63,39 +62,56 @@ export function LogoutModalProvider() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-overlay backdrop-blur-md animate-fade-in" onClick={close} />
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="logout-dialog-title"
-        className="relative w-full max-w-sm animate-scale-in"
-      >
-        <div className="bg-surface-2/95 backdrop-blur-2xl rounded-3xl p-8 border border-border shadow-2xl shadow-black/50 text-center">
-          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </div>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-overlay/80 backdrop-blur-md"
+            onClick={close}
+          />
+          <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-dialog-title"
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="relative w-full max-w-sm"
+          >
+            {/* Glow border */}
+            <div className="absolute -inset-px rounded-3xl bg-gradient-to-b from-destructive/20 via-transparent to-destructive/10 blur-sm pointer-events-none" />
 
-          <h3 id="logout-dialog-title" className="text-xl font-bold text-foreground mb-2">خروج از حساب</h3>
-          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-            آیا از خروج خود اطمینان دارید؟ برای استفاده مجدد نیاز به ورود خواهید داشت.
-          </p>
+            <div className="relative rounded-3xl p-8 text-center" style={{ background: 'var(--color-glass-bg)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-glass)' }}>
+              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </div>
 
-          <div className="flex gap-3">
-            <button onClick={close} className="flex-1 btn btn-ghost btn-lg">
-              انصراف
-            </button>
-            <button onClick={handleConfirm} className="flex-1 btn btn-danger btn-lg">
-              خروج از حساب
-            </button>
-          </div>
+              <h3 id="logout-dialog-title" className="text-xl font-bold text-foreground mb-2">خروج از حساب</h3>
+              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                آیا از خروج خود اطمینان دارید؟ برای استفاده مجدد نیاز به ورود خواهید داشت.
+              </p>
+
+              <div className="flex gap-3">
+                <button onClick={close} className="flex-1 btn btn-ghost btn-lg">
+                  انصراف
+                </button>
+                <button onClick={handleConfirm} className="flex-1 btn btn-danger btn-lg">
+                  خروج از حساب
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

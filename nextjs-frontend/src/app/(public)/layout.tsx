@@ -56,10 +56,19 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <div className="relative min-h-screen flex flex-col bg-background text-foreground">
       
-      {/* شبکه نقطه‌ای یکدست */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.14] dark:opacity-[0.09]" />
-      </div>
+      {/* شبکه نقطه‌ای یکدست — فقط موبایل (دسکتاپ مخفی) */}
+      {pathname === '/' && (
+        <div className="fixed inset-0 z-0 pointer-events-none md:hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.14] dark:opacity-[0.09]" />
+        </div>
+      )}
+
+      {/* شبکه نقطه‌ای — بقیه صفحات (همه دستگاه‌ها) */}
+      {pathname !== '/' && (
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.14] dark:opacity-[0.09]" />
+        </div>
+      )}
 
       {/* ایلند نویگیشن موبایل (جایگزین هدر + باتوم) */}
       <MobileIslandNav menuOpen={menuOpen} setMenuOpen={setMenuOpen} />

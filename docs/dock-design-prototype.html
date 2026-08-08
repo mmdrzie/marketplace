@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dock — Redesign Concept</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #08080A;
+    --fg: #e6e6e6;
+    --muted: #a1a1a1;
+    --primary: #c8956e;
+    --primary-glow: rgba(200, 149, 110, 0.4);
+    --amber: #fcd34d;
+    --surface: rgba(20, 20, 23, 0.85);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --card-bg: rgba(18, 18, 20, 0.92);
+    --success: #10b981;
+    --error: #f43f5e;
+    --warning: #f59e0b;
+    --font: 'Vazirmatn', system-ui, sans-serif;
+    --dock-bg: rgba(16, 16, 18, 0.88);
+    --dock-border: rgba(255, 255, 255, 0.07);
+    --dock-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03), 0 2px 8px rgba(0,0,0,0.3);
+    --item-bg: rgba(30, 30, 35, 0.7);
+    --item-border: rgba(255, 255, 255, 0.06);
+    --radius: 60px;
+    --radius-item: 1rem;
+    --transition: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === Background === */
+  .bg-halo {
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(200,149,110,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-dots {
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(179,179,179,0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* === DOCK CONTAINER === */
+  .dock-wrapper {
+    position: relative;
+    z-index: 10;
+    margin-top: 2rem;
+    animation: dockEnter 0.7s var(--transition) both;
+  }
+
+  @keyframes dockEnter {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dock {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background: var(--dock-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border: 1px solid var(--dock-border);
+    border-radius: var(--radius);
+    box-shadow: var(--dock-shadow);
+    position: relative;
+  }
+
+  /* Top highlight line */
+  .dock::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
+
+  /* === DOCK SEPARATOR === */
+  .dock-sep {
+    width: 1px;
+    height: 36px;
+    background: linear-gradient(to bottom, transparent, var(--border), transparent);
+    margin: 0 0.25rem;
+    align-self: center;
+  }
+
+  /* === DOCK ITEM === */
+  .dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .dock-item__icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-item);
+    background: var(--item-bg);
+    border: 1px solid var(--item-border);
+    color: var(--muted);
+    transition: all 0.3s var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dock-item__icon svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s var(--transition);
+  }
+
+  /* Hover state */
+  .dock-item:hover .dock-item__icon {
+    background: rgba(200, 149, 110, 0.1);
+    border-color: rgba(200, 149, 110, 0.2);
+    color: var(--fg);
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 8px 20px -8px var(--primary-glow);
+  }
+
+  .dock-item:hover .dock-item__icon svg {
+    transform: scale(1.12);
+  }
+
+  /* Active state */
+  .dock-item.active .dock-item__icon {
+    background: rgba(200, 149, 110, 0.12);
+    border-color: rgba(200, 149, 110, 0.25);
+    color: var(--primary);
+    box-shadow: 0 0 20px -6px var(--primary-glow);
+  }
+
+  .dock-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 8px var(--primary-glow);
+  }
+
+  /* === LABEL === */
+  .dock-item__label {
+    font-size: 10px;
+    color: rgba(161, 161, 161, 0.6);
+    font-weight: 400;
+    text-align: center;
+    width: 56px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.2s;
+    line-height: 1.2;
+  }
+
+  .dock-item:hover .dock-item__label,
+  .dock-item.active .dock-item__label {
+    color: var(--fg);
+  }
+
+  /* === SPECIAL: THEME TOGGLE === */
+  .dock-item--theme .dock-item__icon {
+    background: rgba(252, 211, 77, 0.06);
+    border-color: rgba(252, 211, 77, 0.1);
+  }
+
+  .dock-item--theme:hover .dock-item__icon {
+    background: rgba(252, 211, 77, 0.12);
+    border-color: rgba(252, 211, 77, 0.2);
+  }
+
+  /* === SPECIAL: QUICK ACCESS === */
+  .dock-item--quick .dock-item__icon {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.12);
+  }
+
+  .dock-item--quick:hover .dock-item__icon {
+    background: rgba(139, 92, 246, 0.14);
+    border-color: rgba(139, 92, 246, 0.25);
+  }
+
+  /* === BADGE === */
+  .dock-item__badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: var(--error);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.4);
+    animation: badgePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  /* === USER AVATAR === */
+  .dock-item__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-item);
+    background: linear-gradient(135deg, var(--primary), #b07850);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    border: 2px solid rgba(200, 149, 110, 0.3);
+    transition: all 0.3s var(--transition);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .dock-item__avatar:hover {
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 8px 20px -6px var(--primary-glow);
+    border-color: rgba(200, 149, 110, 0.5);
+  }
+
+  /* === TOOLTIP (on hover, shows below dock) === */
+  .dock-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    padding: 5px 10px;
+    background: rgba(30, 30, 35, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--fg);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s var(--transition);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    z-index: 20;
+  }
+
+  .dock-item:hover .dock-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* === MOBILE DOCK === */
+  .dock-mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--dock-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border: 1px solid var(--dock-border);
+    border-radius: 2rem;
+    box-shadow: var(--dock-shadow);
+    overflow-x: auto;
+    max-width: calc(100vw - 2rem);
+    scrollbar-width: none;
+  }
+  .dock-mobile::-webkit-scrollbar { display: none; }
+
+  .dock-mobile .dock-item__icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .dock-mobile .dock-item__icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dock-mobile .dock-item__label {
+    display: none;
+  }
+
+  /* === Command Palette Preview === */
+  .command-palette {
+    margin-top: 3rem;
+    width: 100%;
+    max-width: 520px;
+    background: rgba(16, 16, 18, 0.95);
+    backdrop-filter: blur(40px);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 20px 60px -16px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+    position: relative;
+    z-index: 10;
+  }
+
+  .command-palette::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200,149,110,0.3), transparent);
+  }
+
+  .command-input {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .command-input svg { width: 20px; height: 20px; color: var(--muted); }
+
+  .command-input input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 0.875rem;
+    outline: none;
+  }
+
+  .command-input input::placeholder { color: var(--muted); opacity: 0.6; }
+
+  .command-kbd {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .command-kbd kbd {
+    background: var(--item-bg);
+    border: 1px solid var(--item-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: var(--font);
+    font-size: 10px;
+  }
+
+  .command-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .command-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.625rem;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .command-item:hover {
+    background: rgba(200, 149, 110, 0.06);
+    border-color: rgba(200, 149, 110, 0.15);
+  }
+
+  .command-item__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 0.5rem;
+    background: var(--item-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .command-item__icon svg { width: 16px; height: 16px; }
+
+  .command-item:hover .command-item__icon {
+    background: rgba(200, 149, 110, 0.12);
+    color: var(--primary);
+  }
+
+  .command-item__label {
+    font-size: 0.78125rem;
+    font-weight: 500;
+    color: var(--fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .command-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* === Section Label === */
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+    text-align: center;
+    font-weight: 500;
+    opacity: 0.6;
+  }
+
+  .demo-section {
+    margin-top: 3rem;
+    width: 100%;
+    max-width: 640px;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-halo"></div>
+<div class="bg-dots"></div>
+
+<!-- DESKTOP DOCK -->
+<div class="section-label">Desktop Dock — Improved</div>
+<div class="dock-wrapper">
+  <div class="dock" role="toolbar" aria-label="Application dock">
+
+    <!-- Home -->
+    <div class="dock-item">
+      <div class="dock-tooltip">صفحه اصلی</div>
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </div>
+      <span class="dock-item__label">صفحه اصلی</span>
+    </div>
+
+    <!-- Listings -->
+    <div class="dock-item active">
+      <div class="dock-tooltip">آگهی‌ها</div>
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <span class="dock-item__label">آگهی‌ها</span>
+    </div>
+
+    <!-- News -->
+    <div class="dock-item">
+      <div class="dock-tooltip">اخبار بازار</div>
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+      </div>
+      <span class="dock-item__label">اخبار</span>
+    </div>
+
+    <!-- Encyclopedia -->
+    <div class="dock-item">
+      <div class="dock-tooltip">دانشنامه</div>
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M20 13.5V6a2 2 0 00-2-2H6a2 2 0 00-2 2v13"/></svg>
+      </div>
+      <span class="dock-item__label">دانشنامه</span>
+    </div>
+
+    <!-- Categories -->
+    <div class="dock-item">
+      <div class="dock-tooltip">دسته‌بندی‌ها</div>
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z M3 7a2 2 0 012-2h3l2 2h7a2 2 0 012 2"/></svg>
+      </div>
+      <span class="dock-item__label">دسته‌بندی‌ها</span>
+    </div>
+
+    <!-- Separator -->
+    <div class="dock-sep" aria-hidden="true"></div>
+
+    <!-- Dashboard -->
+    <div class="dock-item">
+      <div class="dock-tooltip">داشبورد</div>
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <span class="dock-item__label">داشبورد</span>
+    </div>
+
+    <!-- Quick Access -->
+    <div class="dock-item dock-item--quick">
+      <div class="dock-tooltip">دسترسی سریع (Ctrl+K)</div>
+      <div class="dock-item__icon" style="color: #a78bfa;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <span class="dock-item__label">سریع</span>
+    </div>
+
+    <!-- Separator -->
+    <div class="dock-sep" aria-hidden="true"></div>
+
+    <!-- Theme Toggle -->
+    <div class="dock-item dock-item--theme">
+      <div class="dock-tooltip">تغییر تم</div>
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </div>
+      <span class="dock-item__label">تم</span>
+    </div>
+
+    <!-- User -->
+    <div class="dock-item">
+      <div class="dock-tooltip">علی رضایی</div>
+      <div class="dock-item__avatar">
+        ع
+        <div class="dock-item__badge">۳</div>
+      </div>
+      <span class="dock-item__label">کاربر</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- MOBILE DOCK -->
+<div class="demo-section">
+  <div class="section-label">Mobile Dock — Scrollable</div>
+  <div class="dock-mobile" role="toolbar" aria-label="Mobile dock">
+
+    <div class="dock-item active">
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </div>
+    </div>
+
+    <div class="dock-item">
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+      </div>
+    </div>
+
+    <div class="dock-item">
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1"/></svg>
+      </div>
+    </div>
+
+    <div class="dock-item">
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg>
+      </div>
+    </div>
+
+    <div class="dock-item">
+      <div class="dock-item__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5"/></svg>
+      </div>
+    </div>
+
+    <div class="dock-item dock-item--quick">
+      <div class="dock-item__icon" style="color: #a78bfa;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+    </div>
+
+    <div class="dock-item">
+      <div class="dock-item__avatar" style="width:42px;height:42px;font-size:13px;">
+        ع
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- COMMAND PALETTE -->
+<div class="demo-section">
+  <div class="section-label">Command Palette — ⌘K</div>
+  <div class="command-palette" role="dialog" aria-modal="true" aria-label="دسترسی سریع">
+    <div class="command-input">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="جستجو در ابزارها و صفحات..." value="" style="direction:rtl;text-align:right;">
+      <div class="command-kbd">
+        <kbd>ESC</kbd>
+      </div>
+    </div>
+
+    <div class="command-grid">
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1"/></svg>
+        </div>
+        <span class="command-item__label">اخبار بازار</span>
+      </div>
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 5-9"/></svg>
+        </div>
+        <span class="command-item__label">نبض بازار</span>
+      </div>
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <span class="command-item__label">برآورد قیمت</span>
+      </div>
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15l3.5-3.5M20.3 18a10 10 0 10-16.6 0"/></svg>
+        </div>
+        <span class="command-item__label">تعمیرکاران</span>
+      </div>
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+        <span class="command-item__label">ثبت آگهی</span>
+      </div>
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </div>
+        <span class="command-item__label">جستجوی پیشرفته</span>
+      </div>
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <span class="command-item__label">قطعات تیونینگ</span>
+      </div>
+      <div class="command-item">
+        <div class="command-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span class="command-item__label">بیمه خودرو</span>
+      </div>
+    </div>
+
+    <div class="command-footer">
+      <span>پلتفرم تخصصی بازارگاه</span>
+      <span>۱۲ مورد</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

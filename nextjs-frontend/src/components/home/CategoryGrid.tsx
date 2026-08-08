@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import type { Category } from '@/types';
 import { ICON_PATHS } from '@/lib/icons';
-import { TiltSpotlightCard } from './TiltSpotlightCard';
+import { CategoryCard } from './CategoryCard';
 import { CardSkeleton } from './CardSkeleton';
 import { SlideUp } from '@/components/common/MotionDiv.client';
 
@@ -202,17 +203,32 @@ function CategoryModal({ cat, onClose }: { cat: Category; onClose: () => void })
   };
 
   return (
-    <div className="fixed inset-0 bg-overlay z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-md border border-border shadow-2xl overflow-hidden animate-dropdown flex flex-col"
-        style={{ maxHeight: '520px' }}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-overlay/80 backdrop-blur-md"
+          onClick={onClose}
+        />
+        <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+          initial={{ opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 8 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-md flex flex-col"
+          style={{ maxHeight: '520px' }}
+        >
+          {/* Glow border */}
+          <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/20 via-transparent to-primary/10 blur-sm pointer-events-none" />
+          <div className="relative rounded-2xl overflow-hidden flex flex-col" style={{ background: 'var(--color-glass-bg)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-glass)' }}>
+        <div className="flex items-center justify-between p-4 border-b border-border/40 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-primary shrink-0">
               <Icon d={ICON_PATHS[cat.slug as keyof typeof ICON_PATHS] || ICON_PATHS.default} className="w-5 h-5" />
@@ -268,8 +284,10 @@ function CategoryModal({ cat, onClose }: { cat: Category; onClose: () => void })
             {selectedSlugs.size > 0 ? `مشاهده (${selectedSlugs.size})` : `همه ${cat.name}`}
           </button>
         </div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }
 
@@ -332,17 +350,32 @@ function AllCategoriesModal({ categories, onClose }: { categories: Category[]; o
   };
 
   return (
-    <div className="fixed inset-0 bg-overlay z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-        className="glass rounded-2xl w-full max-w-lg border border-border shadow-2xl overflow-hidden animate-dropdown flex flex-col"
-        style={{ maxHeight: '560px' }}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-overlay/80 backdrop-blur-md"
+          onClick={onClose}
+        />
+        <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+          initial={{ opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 8 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-lg flex flex-col"
+          style={{ maxHeight: '560px' }}
+        >
+          {/* Glow border */}
+          <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/20 via-transparent to-primary/10 blur-sm pointer-events-none" />
+          <div className="relative rounded-2xl overflow-hidden flex flex-col" style={{ background: 'var(--color-glass-bg)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-glass)' }}>
+        <div className="flex items-center justify-between p-4 border-b border-border/40 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-primary shrink-0">
               <Icon d="M4 6h16M4 12h16M4 18h16" className="w-5 h-5" />
@@ -384,11 +417,13 @@ function AllCategoriesModal({ categories, onClose }: { categories: Category[]; o
             onClick={handleView}
             className="flex-1 py-2.5 btn btn-primary rounded-xl text-sm"
           >
-            {selectedSlugs.size > 0 ? `مشاهده (${selectedSlugs.size})` : 'کاوش هوشمند'}
-          </button>
-        </div>
+             {selectedSlugs.size > 0 ? `مشاهده (${selectedSlugs.size})` : 'کاوش هوشمند'}
+           </button>
+         </div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }
 
@@ -432,33 +467,27 @@ export function CategoryGrid({ categories, catLoading, catError, showAllTrigger 
       <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {visibleCats.map((cat, i) => (
           <SlideUp key={cat.id} delay={i * 0.05} rootMargin="-40px" className="h-full">
-            <TiltSpotlightCard onClick={() => setSelectedCat(cat)}>
-              <div className="relative z-10 w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-primary mb-4 group-hover:scale-110 group-hover:border-primary/50 group-hover:shadow-[0_0_20px_-6px_var(--color-primary)] transition-all duration-300">
-                <Icon d={ICON_PATHS[cat.slug as keyof typeof ICON_PATHS] || ICON_PATHS.default} className="w-6 h-6" />
-              </div>
-              <h3 className="relative z-10 font-medium text-foreground group-hover:text-primary transition-colors mb-2">{cat.name}</h3>
-              <div className="relative z-10 flex items-center text-xs text-muted-foreground bg-surface-2 px-2 py-1 rounded-full border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
-                {cat.children && cat.children.length > 0 ? `${cat.children.length} زیردسته` : 'مشاهده آگهی‌ها'}
-              </div>
-            </TiltSpotlightCard>
+            <CategoryCard
+              onClick={() => setSelectedCat(cat)}
+              icon={<Icon d={ICON_PATHS[cat.slug as keyof typeof ICON_PATHS] || ICON_PATHS.default} className="w-6 h-6" />}
+              title={cat.name}
+            />
           </SlideUp>
         ))}
 
         <SlideUp delay={visibleCats.length * 0.05} rootMargin="-40px" className="h-full">
-          <TiltSpotlightCard onClick={() => setShowAll(true)}>
-            <div className="relative z-10 w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center text-primary mb-4 group-hover:scale-110 group-hover:border-primary/50 transition-all duration-300">
+          <CategoryCard
+            onClick={() => setShowAll(true)}
+            icon={
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                 <rect x="3" y="3" width="7" height="7" rx="1" />
                 <rect x="14" y="3" width="7" height="7" rx="1" />
                 <rect x="3" y="14" width="7" height="7" rx="1" />
                 <rect x="14" y="14" width="7" height="7" rx="1" />
               </svg>
-            </div>
-            <h3 className="relative z-10 font-medium text-foreground group-hover:text-primary transition-colors mb-2">همه دسته‌بندی‌ها</h3>
-            <div className="relative z-10 flex items-center text-xs text-muted-foreground bg-surface-2 px-2 py-1 rounded-full border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
-              {categories?.length || 0} دسته اصلی
-            </div>
-          </TiltSpotlightCard>
+            }
+            title="همه دسته‌بندی‌ها"
+          />
         </SlideUp>
       </div>
 

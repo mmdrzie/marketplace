@@ -93,7 +93,7 @@ export function UserMenuButton({ className }: { className?: string }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-overlay backdrop-blur-sm"
+              className="fixed inset-0 bg-overlay/80 backdrop-blur-md"
               onClick={() => setUserMenuOpen(false)}
             />
             <motion.div
@@ -101,12 +101,15 @@ export function UserMenuButton({ className }: { className?: string }) {
               initial={{ opacity: 0, y: -16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-              className="relative z-10 w-full max-w-sm bg-surface-1/95 border border-border/50 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden"
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative z-10 w-full max-w-sm"
               role="dialog"
               aria-modal="true"
               aria-label="منوی کاربر"
             >
+              {/* Glow border */}
+              <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/20 via-transparent to-primary/10 blur-sm pointer-events-none" />
+              <div className="relative rounded-2xl overflow-hidden" style={{ background: 'var(--color-glass-bg)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-glass)' }}>
               <div className="p-4 border-b border-border/30 bg-surface-2/40 flex items-center gap-3">
                 <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold shadow-md shrink-0">
                   {user?.name?.charAt(0) || 'U'}
@@ -196,6 +199,7 @@ export function UserMenuButton({ className }: { className?: string }) {
                   </SvgIcon>
                   خروج از حساب
                 </button>
+              </div>
               </div>
             </motion.div>
           </div>

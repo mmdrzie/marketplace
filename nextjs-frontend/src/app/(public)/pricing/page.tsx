@@ -8,18 +8,6 @@ import { useIsAuthenticated } from '@/store/authStore';
 
 const spring = { type: 'spring' as const, stiffness: 300, damping: 30, mass: 0.8 };
 
-const ICONS = {
-  shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-  star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
-  crown: <path d="M2 19h20M4 19V9l7 4 5-4 5 4v10" />,
-  check: <polyline points="20 6 9 17 4 12" />,
-  plus: <><circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" /></>,
-  bolt: <path d="M13 10V3L4 14h7v7l9-11h-7z" />,
-  chart: <path d="M3 3v18h18" />,
-  headset: <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />,
-  gem: <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />,
-};
-
 function Icon({ d, className = 'h-5 w-5' }: { d: React.ReactNode; className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -28,29 +16,80 @@ function Icon({ d, className = 'h-5 w-5' }: { d: React.ReactNode; className?: st
   );
 }
 
+const ICONS = {
+  shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+  star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+  crown: <path d="M2 19h20M4 19V9l7 4 5-4 5 4v10" />,
+  check: <polyline points="20 6 9 17 4 12" />,
+  x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+  bolt: <path d="M13 10V3L4 14h7v7l9-11h-7z" />,
+  chart: <path d="M3 3v18h18" />,
+  headset: <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />,
+  gem: <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />,
+  zap: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
+  users: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></>,
+  infinity: <><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z" /></>,
+};
+
+interface PlanFeature {
+  label: string;
+  basic: boolean | string;
+  professional: boolean | string;
+  enterprise: boolean | string;
+}
+
 const PLANS = [
   {
-    id: 'basic', name: 'پایه', description: 'برای شروع کار',
-    monthlyPrice: 200000, yearlyPrice: 180000,
-    listings: 50, features: ['۵۰ آگهی فعال', 'پشتیبانی پیامکی', 'آمار بازدید'],
-    icon: ICONS.shield, color: 'text-primary',
+    id: 'basic',
+    name: 'پایه',
+    description: 'برای فروشندگان تازه‌کار',
+    monthlyPrice: 200000,
+    yearlyPrice: 180000,
+    icon: ICONS.shield,
+    gradient: 'from-primary/20 to-primary/5',
+    accentColor: 'text-primary',
+    bgAccent: 'bg-primary/10',
   },
   {
-    id: 'professional', name: 'حرفه‌ای', description: 'برای کسب‌وکار فعال',
-    monthlyPrice: 500000, yearlyPrice: 420000,
-    listings: 200, features: ['۲۰۰ آگهی فعال', 'پشتیبانی پیامکی و تلفنی', 'آمار پیشرفته', 'ویترین اختصاصی'],
-    icon: ICONS.star, color: 'text-warning', popular: true,
+    id: 'professional',
+    name: 'حرفه‌ای',
+    description: 'برای کسب‌وکارهای فعال',
+    monthlyPrice: 500000,
+    yearlyPrice: 420000,
+    icon: ICONS.star,
+    gradient: 'from-warning/20 to-warning/5',
+    accentColor: 'text-warning',
+    bgAccent: 'bg-warning/10',
+    popular: true,
   },
   {
-    id: 'enterprise', name: 'سازمانی', description: 'برای شرکت‌های بزرگ',
-    monthlyPrice: 1500000, yearlyPrice: 1200000,
-    listings: 'نامحدود', features: ['آگهی نامحدود', 'پشتیبانی ۲۴ ساعته', 'گزارش‌های تحلیلی', 'اولویت در نتایج', 'API اختصاصی'],
-    icon: ICONS.crown, color: 'text-destructive',
+    id: 'enterprise',
+    name: 'سازمانی',
+    description: 'برای شرکت‌های بزرگ',
+    monthlyPrice: 1500000,
+    yearlyPrice: 1200000,
+    icon: ICONS.crown,
+    gradient: 'from-destructive/20 to-destructive/5',
+    accentColor: 'text-destructive',
+    bgAccent: 'bg-destructive/10',
   },
 ];
 
+const FEATURES: PlanFeature[] = [
+  { label: 'تعداد آگهی فعال', basic: '۵۰', professional: '۲۰۰', enterprise: 'نامحدود' },
+  { label: 'پشتیبانی پیامکی', basic: true, professional: true, enterprise: true },
+  { label: 'پشتیبانی تلفنی', basic: false, professional: true, enterprise: true },
+  { label: 'آمار بازدید', basic: true, professional: false, enterprise: false },
+  { label: 'آمار پیشرفته', basic: false, professional: true, enterprise: true },
+  { label: 'ویترین اختصاصی', basic: false, professional: true, enterprise: true },
+  { label: 'گزارش‌های تحلیلی', basic: false, professional: false, enterprise: true },
+  { label: 'اولویت در نتایج جستجو', basic: false, professional: false, enterprise: true },
+  { label: 'API اختصاصی', basic: false, professional: false, enterprise: true },
+  { label: 'پشتیبانی ۲۴ ساعته', basic: false, professional: false, enterprise: true },
+];
+
 const ADDONS = [
-  { id: 'extra_listings', label: '+۵۰ آگهی اضافه', price: 80000, icon: ICONS.plus },
+  { id: 'extra_listings', label: '+۵۰ آگهی اضافه', price: 80000, icon: ICONS.zap },
   { id: 'priority_support', label: 'پشتیبانی Priority', price: 120000, icon: ICONS.headset },
   { id: 'analytics_pro', label: 'گزارش‌های پرو', price: 150000, icon: ICONS.chart },
   { id: 'featured_showcase', label: 'ویترین ویژه', price: 200000, icon: ICONS.gem },
@@ -58,6 +97,17 @@ const ADDONS = [
 
 function formatPrice(amount: number) {
   return amount.toLocaleString('fa-IR');
+}
+
+function FeatureValue({ value }: { value: boolean | string }) {
+  if (typeof value === 'boolean') {
+    return value ? (
+      <Icon d={ICONS.check} className="h-4 w-4 text-success mx-auto" />
+    ) : (
+      <Icon d={ICONS.x} className="h-4 w-4 text-muted-foreground/40 mx-auto" />
+    );
+  }
+  return <span className="text-sm font-medium text-foreground">{value}</span>;
 }
 
 export default function PricingPage() {
@@ -86,56 +136,69 @@ export default function PricingPage() {
 
   return (
     <div className="relative min-h-screen text-foreground overflow-x-hidden">
-            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] z-0 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[130px] z-0 pointer-events-none" />
+      {/* Background effects */}
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/8 rounded-full blur-[180px] z-0 pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px] z-0 pointer-events-none" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 pt-16 md:pt-16 pb-16">
-        {/* header */}
-        <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-4 backdrop-blur-sm">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-12 md:pt-20 pb-20">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-14"
+        >
+          <span className="inline-flex items-center gap-2 border border-border bg-surface/40 px-4 py-1.5 rounded-full text-xs text-muted-foreground mb-5 backdrop-blur-sm">
             <span className="w-1.5 h-1.5 bg-primary rounded-full motion-safe:animate-pulse" />
-            PRICING
-          </span>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter text-foreground">
             تعرفه‌های اشتراک
+          </span>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter text-foreground mb-4">
+            طرح مناسب کسب‌وکارتان را انتخاب کنید
           </h1>
-          <p className="text-muted-foreground mt-3 text-sm md:text-lg font-light max-w-2xl mx-auto">
-            کسب‌وکار خود را با انتخاب طرح مناسب متحول کنید. دسترسی به ابزارهای حرفه‌ای فروش و بازاریابی.
+          <p className="text-muted-foreground text-sm md:text-base font-light max-w-2xl mx-auto leading-relaxed">
+            با هر طرح، به ابزارهای حرفه‌ای فروش و بازاریابی دسترسی دارید. بدون هزینه پنهان، هر زمان که خواستید تغییر دهید.
           </p>
-        </div>
+        </motion.div>
 
         {/* Billing Toggle */}
-        <div className="flex justify-center mb-10">
-          <div className="bg-surface-2/60 p-1 h-11 w-full max-w-xs rounded-xl ring-1 ring-border flex">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="flex justify-center mb-12"
+        >
+          <div className="glass-strong p-1.5 h-12 w-full max-w-sm rounded-2xl flex gap-1">
             {(['monthly', 'yearly'] as const).map((cycle) => (
               <button
                 key={cycle}
                 onClick={() => setBillingCycle(cycle)}
                 className={cn(
-                  'flex-1 h-full rounded-lg text-sm font-medium relative transition-colors duration-300 flex items-center justify-center gap-2',
+                  'flex-1 h-full rounded-xl text-sm font-medium relative transition-colors duration-300 flex items-center justify-center gap-2',
                   billingCycle === cycle ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {billingCycle === cycle && (
                   <motion.div
                     layoutId="billing-bg"
-                    className="absolute inset-0 bg-surface-1 rounded-lg shadow-sm ring-1 ring-border"
+                    className="absolute inset-0 bg-surface-1 rounded-xl shadow-sm border border-border-subtle"
                     transition={spring}
                   />
                 )}
                 <span className="relative z-10">{cycle === 'monthly' ? 'ماهیانه' : 'سالانه'}</span>
                 {cycle === 'yearly' && (
-                  <span className="relative z-10 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full">۱۰٪ تخفیف</span>
+                  <span className="relative z-10 bg-success/10 text-success text-[10px] font-bold px-2 py-0.5 rounded-full border border-success/20">
+                    ۱۰٪ تخفیف
+                  </span>
                 )}
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Plan Cards */}
         <LayoutGroup>
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            {PLANS.map((p) => {
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
+            {PLANS.map((p, index) => {
               const isSelected = selectedPlan === p.id;
               const price = billingCycle === 'monthly' ? p.monthlyPrice : p.yearlyPrice;
               const period = billingCycle === 'monthly' ? 'ماه' : 'سال';
@@ -143,64 +206,103 @@ export default function PricingPage() {
               return (
                 <motion.div
                   key={p.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + index * 0.08, duration: 0.4 }}
                   layout
                   onClick={() => setSelectedPlan(p.id)}
                   className={cn(
-                    'relative rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden',
+                    'relative rounded-3xl border transition-all duration-300 cursor-pointer overflow-hidden group',
                     isSelected
-                      ? 'z-10 border-primary/50 shadow-[0_0_25px_-10px_var(--color-primary)]'
-                      : 'border-border/60 hover:border-border bg-surface-1/40'
+                      ? 'border-primary/40 shadow-[0_0_30px_-8px_var(--color-primary)] scale-[1.02]'
+                      : 'border-border-subtle hover:border-border bg-surface/30 hover:bg-surface/50'
                   )}
                 >
+                  {/* Gradient overlay */}
                   <div className={cn(
-                    'absolute -inset-[1px] rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none',
-                    isSelected && 'opacity-100'
-                  )} style={{ background: 'radial-gradient(ellipse at top, var(--color-primary)/8, transparent 70%)' }} />
+                    'absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 pointer-events-none bg-gradient-to-b',
+                    p.gradient,
+                    (isSelected || true) && 'opacity-100'
+                  )} />
 
-                  <div className="relative p-5 flex flex-col h-full">
+                  {/* Popular badge */}
+                  {p.popular && (
+                    <div className="absolute -top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-warning to-transparent" />
+                  )}
+
+                  <div className="relative p-6 flex flex-col h-full">
                     {p.popular && (
-                      <div className="absolute -top-2.5 right-4 bg-primary text-primary-foreground text-[9px] font-bold px-3 py-1 rounded-full shadow-md z-10">
-                        محبوب
+                      <div className="absolute top-4 left-4 bg-warning/10 text-warning text-[10px] font-bold px-2.5 py-1 rounded-full border border-warning/20">
+                        محبوب‌ترین
                       </div>
                     )}
 
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', isSelected ? `${p.color} bg-primary/10` : 'bg-surface-2 text-muted-foreground')}>
-                        <Icon d={p.icon} className="h-5 w-5" />
+                    {/* Icon & Title */}
+                    <div className="flex items-center gap-4 mb-5 mt-1">
+                      <div className={cn(
+                        'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300',
+                        isSelected ? `${p.bgAccent} ${p.accentColor}` : 'bg-surface-2 text-muted-foreground group-hover:bg-surface-3'
+                      )}>
+                        <Icon d={p.icon} className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-foreground">{p.name}</h3>
+                        <h3 className="font-bold text-lg text-foreground">{p.name}</h3>
                         <p className="text-xs text-muted-foreground">{p.description}</p>
                       </div>
                     </div>
 
-                    <div className="mb-4">
-                      <span className="text-2xl font-bold text-foreground">{formatPrice(price)}</span>
-                      <span className="text-sm text-muted-foreground mr-1">تومان / {period}</span>
-                    </div>
-
-                    <div className={cn(
-                      'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 mb-4',
-                      isSelected ? 'border-primary' : 'border-border'
-                    )}>
+                    {/* Price */}
+                    <div className="mb-5">
                       <AnimatePresence mode="wait">
-                        {isSelected && (
-                          <motion.div
-                            initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                            className="w-3 h-3 rounded-full bg-primary"
-                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                          />
-                        )}
+                        <motion.div
+                          key={price}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.25 }}
+                          className="flex items-baseline gap-1"
+                        >
+                          <span className="text-3xl font-bold text-foreground tracking-tight">
+                            {formatPrice(price)}
+                          </span>
+                          <span className="text-sm text-muted-foreground">تومان / {period}</span>
+                        </motion.div>
                       </AnimatePresence>
                     </div>
 
-                    <div className="flex flex-col gap-1.5 flex-1">
-                      {p.features.slice(0, 3).map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Icon d={ICONS.check} className="h-3 w-3 text-success shrink-0" />
-                          {f}
-                        </div>
-                      ))}
+                    {/* Divider */}
+                    <div className="h-px bg-border-subtle mb-5" />
+
+                    {/* CTA */}
+                    <button
+                      className={cn(
+                        'w-full py-3 rounded-xl text-sm font-medium transition-all duration-200',
+                        isSelected
+                          ? 'btn-primary shadow-sm'
+                          : 'bg-surface-2 text-muted-foreground hover:bg-surface-3 hover:text-foreground'
+                      )}
+                    >
+                      انتخاب طرح {p.name}
+                    </button>
+
+                    {/* Radio indicator */}
+                    <div className="absolute top-6 left-6">
+                      <div className={cn(
+                        'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                        isSelected ? 'border-primary' : 'border-border'
+                      )}>
+                        <AnimatePresence>
+                          {isSelected && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              exit={{ scale: 0 }}
+                              className="w-2.5 h-2.5 rounded-full bg-primary"
+                              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                            />
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -209,102 +311,183 @@ export default function PricingPage() {
           </motion.div>
         </LayoutGroup>
 
-        {/* Selected plan details */}
+        {/* Feature Comparison Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mb-16"
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">مقایسه امکانات</h2>
+            <p className="text-sm text-muted-foreground">بررسی تفصیلی ویژگی‌های هر طرح</p>
+          </div>
+
+          <div className="glass-strong rounded-3xl overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-4 gap-0 border-b border-border-subtle bg-surface/30">
+              <div className="p-4 text-sm font-medium text-muted-foreground">امکانات</div>
+              {PLANS.map((p) => (
+                <div key={p.id} className={cn(
+                  'p-4 text-center text-sm font-bold',
+                  p.popular ? 'text-warning' : 'text-foreground'
+                )}>
+                  {p.name}
+                </div>
+              ))}
+            </div>
+
+            {/* Table Rows */}
+            {FEATURES.map((feature, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'grid grid-cols-4 gap-0 border-b border-border-subtle/50 transition-colors hover:bg-surface/20',
+                  i === FEATURES.length - 1 && 'border-b-0'
+                )}
+              >
+                <div className="p-4 text-sm text-foreground/80 flex items-center">{feature.label}</div>
+                <div className="p-4 flex items-center justify-center">
+                  <FeatureValue value={feature.basic} />
+                </div>
+                <div className="p-4 flex items-center justify-center bg-primary/[0.02]">
+                  <FeatureValue value={feature.professional} />
+                </div>
+                <div className="p-4 flex items-center justify-center">
+                  <FeatureValue value={feature.enterprise} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Addons Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="mb-16"
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">افزونه‌های اختیاری</h2>
+            <p className="text-sm text-muted-foreground">قابلیت‌های اضافی برای ارتقای طرح شما</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {ADDONS.map((addon, i) => {
+              const active = selectedAddons.includes(addon.id);
+              return (
+                <motion.button
+                  key={addon.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 + i * 0.06, duration: 0.35 }}
+                  onClick={() => toggleAddon(addon.id)}
+                  className={cn(
+                    'relative p-5 rounded-2xl border text-right transition-all duration-200 group',
+                    active
+                      ? 'border-primary/40 bg-primary/5 shadow-[0_0_20px_-8px_var(--color-primary)]'
+                      : 'border-border-subtle bg-surface/30 hover:bg-surface/50 hover:border-border'
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all',
+                      active ? 'bg-primary/10 text-primary' : 'bg-surface-2 text-muted-foreground group-hover:text-foreground'
+                    )}>
+                      <Icon d={addon.icon} className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn('text-sm font-medium transition-colors', active ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground')}>
+                        {addon.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatPrice(addon.price)} تومان / {billingCycle === 'monthly' ? 'ماه' : 'سال'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Checkbox */}
+                  <div className={cn(
+                    'absolute top-4 left-4 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all',
+                    active ? 'border-primary bg-primary' : 'border-border'
+                  )}>
+                    {active && <Icon d={ICONS.check} className="h-3 w-3 text-primary-foreground" />}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Summary & CTA */}
         <AnimatePresence mode="wait">
-          {selectedPlan && (
-            <motion.div
-              key={selectedPlan + billingCycle}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-              className="rounded-2xl border border-border/60 bg-surface-1/40 backdrop-blur-sm p-6 space-y-6"
-            >
+          <motion.div
+            key={selectedPlan + billingCycle + selectedAddons.join(',')}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+            className="glass-strong rounded-3xl p-6 md:p-8"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
-                <h3 className="text-sm font-bold text-foreground mb-4 tracking-tight">ویژگی‌های {plan.name}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {plan.features.map((f, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04, duration: 0.3 }}
-                      className="flex items-center gap-3 text-sm text-foreground/80 p-3 rounded-xl bg-surface-2/30 border border-border/30"
-                    >
-                      <Icon d={ICONS.check} className="h-4 w-4 text-success shrink-0" />
-                      {f}
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Icon d={ICONS.bolt} className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-bold text-foreground tracking-tight">شخصی‌سازی</h3>
-                  <span className="text-[10px] text-muted-foreground bg-surface-2 px-2 py-0.5 rounded-full border border-border">اختیاری</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {ADDONS.map((addon, i) => {
-                    const active = selectedAddons.includes(addon.id);
-                    return (
-                      <motion.button
-                        key={addon.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 + 0.15 }}
-                        onClick={() => toggleAddon(addon.id)}
-                        className={cn(
-                          'flex items-center gap-3 p-3 rounded-xl border text-right transition-all',
-                          active
-                            ? 'border-primary/40 bg-primary/5'
-                            : 'border-border/30 bg-surface-2/20 hover:bg-surface-2/40 hover:border-border'
-                        )}
-                      >
-                        <div className={cn(
-                          'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all',
-                          active ? 'bg-primary/10 text-primary' : 'bg-surface-2 text-muted-foreground'
-                        )}>
-                          <Icon d={addon.icon} className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 text-right">
-                          <p className={cn('text-sm font-medium transition-colors', active ? 'text-foreground' : 'text-muted-foreground')}>{addon.label}</p>
-                          <p className="text-xs text-muted-foreground/60">{formatPrice(addon.price)} تومان / {billingCycle === 'monthly' ? 'ماه' : 'سال'}</p>
-                        </div>
-                        <div className={cn(
-                          'w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0',
-                          active ? 'border-primary bg-primary' : 'border-border'
-                        )}>
-                          {active && <Icon d={ICONS.check} className="h-3 w-3 text-primary-foreground" />}
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-surface-2/40 border border-border/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">مجموع پرداخت</p>
-                  <p className="text-2xl font-bold text-foreground tracking-tight">
+                <p className="text-xs text-muted-foreground mb-1">مجموع پرداخت</p>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={totalPrice}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="text-3xl font-bold text-foreground tracking-tight"
+                  >
                     {formatPrice(totalPrice)}
-                    <span className="text-sm font-normal text-muted-foreground mr-1">تومان</span>
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/60">
-                    {plan.name} — {billingCycle === 'monthly' ? 'ماهیانه' : 'سالانه'}
-                    {selectedAddons.length > 0 && ` + ${selectedAddons.length} افزونه`}
-                  </p>
-                </div>
+                    <span className="text-base font-normal text-muted-foreground mr-1">تومان</span>
+                  </motion.p>
+                </AnimatePresence>
+                <p className="text-xs text-muted-foreground mt-2">
+                  طرح {plan.name} — {billingCycle === 'monthly' ? 'ماهیانه' : 'سالانه'}
+                  {selectedAddons.length > 0 && ` + ${selectedAddons.length} افزونه`}
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href={buyHref}
-                  className="btn btn-primary py-2.5 px-8 rounded-xl text-sm font-medium whitespace-nowrap text-center"
+                  className="btn btn-primary py-3 px-8 rounded-xl text-sm font-medium whitespace-nowrap text-center shadow-sm"
                 >
                   {isAuthenticated ? 'خرید اشتراک' : 'ورود و خرید اشتراک'}
                 </Link>
+                <Link
+                  href="/contact"
+                  className="btn btn-glass py-3 px-6 rounded-xl text-sm font-medium whitespace-nowrap text-center"
+                >
+                  مشاوره رایگان
+                </Link>
               </div>
-            </motion.div>
-          )}
+            </div>
+          </motion.div>
         </AnimatePresence>
+
+        {/* FAQ hint */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="text-center mt-10"
+        >
+          <p className="text-sm text-muted-foreground">
+            سوالی دارید؟{' '}
+            <Link href="/faq" className="text-primary hover:underline font-medium">
+              سوالات متداول
+            </Link>
+            {' '}را مطالعه کنید یا{' '}
+            <Link href="/contact" className="text-primary hover:underline font-medium">
+              با ما تماس
+            </Link>
+            {' '}بگیرید.
+          </p>
+        </motion.div>
       </div>
     </div>
   );

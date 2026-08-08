@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dock — Site Theme Preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-background: #08080A;
+    --color-foreground: #e6e6e6;
+    --color-muted-foreground: #a1a1a1;
+    --color-primary: #c8956e;
+    --color-primary-foreground: #08080A;
+    --color-dot-grid: #b3b3b3;
+    --color-amber: #fcd34d;
+    --color-vignette: rgba(0, 0, 0, 0.12);
+    --color-surface-2: rgba(30, 30, 35, 0.75);
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-border-subtle: rgba(255, 255, 255, 0.04);
+    --color-glass-bg: rgba(20, 20, 23, 0.8);
+    --color-glass-border: rgba(255, 255, 255, 0.06);
+    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === Site Background: Dotted Grid === */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, var(--color-dot-grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.09;
+  }
+
+  /* === Ambient Halos (like site) === */
+  .bg-halo {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(150px);
+  }
+
+  .bg-halo--1 {
+    top: -10%;
+    right: -5%;
+    width: 500px;
+    height: 500px;
+    background: rgba(200, 149, 110, 0.04);
+  }
+
+  .bg-halo--2 {
+    bottom: -10%;
+    left: -5%;
+    width: 550px;
+    height: 550px;
+    background: rgba(200, 149, 110, 0.03);
+  }
+
+  /* === Main Content Area === */
+  .site-content {
+    position: relative;
+    z-index: 1;
+    padding-top: 80px;
+    min-height: 100vh;
+  }
+
+  /* === DOCK — Fixed Top === */
+  .dock-fixed {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .dock {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    position: relative;
+  }
+
+  /* === ITEM === */
+  .dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .dock-item__wrap {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    transition:
+      transform 0.45s var(--spring),
+      margin 0.45s var(--spring);
+    transform-origin: bottom center;
+    will-change: transform;
+  }
+
+  /* === GLASS ICON === */
+  .dock-item__icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    color: var(--color-muted-foreground);
+    transition: all 0.4s var(--spring);
+
+    /* Glassmorphism */
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .dock-item__icon svg {
+    width: 20px;
+    height: 20px;
+    transition: all 0.4s var(--spring);
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+  }
+
+  /* Glass shine */
+  .dock-item__icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: linear-gradient(
+      135deg,
+      rgba(255,255,255,0.06) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255,255,255,0.02) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Shine sweep */
+  .dock-item__shine {
+    position: absolute;
+    top: -50%;
+    left: -80%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    transform: skewX(-20deg) rotate(25deg);
+    transition: left 0.7s var(--smooth);
+    pointer-events: none;
+  }
+
+  .dock-item:hover .dock-item__shine {
+    left: 130%;
+  }
+
+  /* === HOVER: Magnification + Glass Enhancement === */
+  .dock-item:hover > .dock-item__wrap {
+    transform: translateY(-14px) scale(1.45);
+    margin: 0 6px;
+  }
+
+  .dock-item:hover .dock-item__icon {
+    background: rgba(28, 28, 32, 0.88);
+    backdrop-filter: blur(32px) saturate(1.8) brightness(1.15);
+    -webkit-backdrop-filter: blur(32px) saturate(1.8) brightness(1.15);
+    border-color: rgba(255,255,255,0.12);
+    color: var(--color-foreground);
+    box-shadow:
+      0 20px 48px -8px rgba(0,0,0,0.6),
+      0 8px 16px -4px rgba(0,0,0,0.3),
+      0 0 24px -4px rgba(200,149,110,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.1),
+      inset 0 -1px 0 rgba(0,0,0,0.05);
+  }
+
+  .dock-item:hover .dock-item__icon svg {
+    transform: scale(1.18);
+    filter: drop-shadow(0 2px 8px rgba(255,255,255,0.1));
+  }
+
+  /* Adjacent items */
+  .dock-item:hover + .dock-item > .dock-item__wrap,
+  .dock-item:has(+ :hover) > .dock-item__wrap {
+    transform: translateY(-8px) scale(1.18);
+    margin: 0 3px;
+  }
+
+  .dock-item:hover + .dock-item + .dock-item > .dock-item__wrap,
+  .dock-item:has(+ .dock-item + :hover) > .dock-item__wrap {
+    transform: translateY(-4px) scale(1.08);
+    margin: 0 1px;
+  }
+
+  /* === ACTIVE STATE === */
+  .dock-item.is-active .dock-item__icon {
+    background: rgba(200, 149, 110, 0.1);
+    border-color: rgba(200, 149, 110, 0.2);
+    color: var(--color-primary);
+    box-shadow:
+      0 4px 16px -4px rgba(200,149,110,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  .dock-item.is-active .dock-item__icon svg {
+    filter: drop-shadow(0 2px 10px rgba(200,149,110,0.4));
+  }
+
+  .dock-item__dot {
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 10px rgba(200,149,110,0.5);
+    transform: translateX(-50%) scale(0);
+    transition: transform 0.4s var(--spring);
+  }
+
+  .dock-item.is-active .dock-item__dot {
+    transform: translateX(-50%) scale(1);
+    animation: dotBreathe 2.5s ease-in-out infinite;
+  }
+
+  @keyframes dotBreathe {
+    0%, 100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 10px rgba(200,149,110,0.4); }
+    50% { transform: translateX(-50%) scale(1.5); box-shadow: 0 0 18px rgba(200,149,110,0.6); }
+  }
+
+  /* === LABEL === */
+  .dock-item__label {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(161,161,161, 0.35);
+    text-align: center;
+    width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: all 0.3s var(--smooth);
+    letter-spacing: 0.01em;
+  }
+
+  .dock-item:hover .dock-item__label {
+    color: rgba(230,230,230,0.85);
+  }
+
+  .dock-item.is-active .dock-item__label {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  /* === TOOLTIP === */
+  .dock-item__tip {
+    position: absolute;
+    bottom: calc(100% + 16px);
+    left: 50%;
+    padding: 7px 14px;
+    background: rgba(16, 16, 20, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-foreground);
+    white-space: nowrap;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    transform: translateX(-50%) translateY(10px) scale(0.85);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.28s var(--spring);
+    z-index: 100;
+  }
+
+  .dock-item__tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(16, 16, 20, 0.9);
+  }
+
+  .dock-item:hover .dock-item__tip {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  /* === SEPARATOR === */
+  .dock-sep {
+    width: 1px;
+    height: 32px;
+    margin: 0 8px;
+    position: relative;
+    align-self: center;
+  }
+
+  .dock-sep::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(255,255,255,0.06) 30%,
+      rgba(255,255,255,0.06) 70%,
+      transparent
+    );
+  }
+
+  /* === THEME TOGGLE === */
+  .dock-item--theme .dock-item__icon {
+    background: rgba(252,211,77,0.05);
+  }
+
+  .dock-item--theme .dock-item__icon svg { color: var(--color-amber); }
+
+  .dock-item--theme:hover .dock-item__icon {
+    background: rgba(252,211,77,0.1);
+    border-color: rgba(252,211,77,0.2);
+    box-shadow:
+      0 20px 48px -8px rgba(0,0,0,0.6),
+      0 0 24px -4px rgba(252,211,77,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* === QUICK ACCESS === */
+  .dock-item--quick .dock-item__icon {
+    background: rgba(167,139,250,0.05);
+  }
+
+  .dock-item--quick .dock-item__icon svg { color: #a78bfa; }
+
+  .dock-item--quick:hover .dock-item__icon {
+    background: rgba(167,139,250,0.1);
+    border-color: rgba(167,139,250,0.2);
+    box-shadow:
+      0 20px 48px -8px rgba(0,0,0,0.6),
+      0 0 24px -4px rgba(167,139,250,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* === USER AVATAR === */
+  .dock-item__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--color-primary), #a06848 40%, var(--color-primary) 80%);
+    background-size: 200% 200%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    border: 2px solid rgba(200,149,110,0.2);
+    transition: all 0.45s var(--spring);
+    cursor: pointer;
+    position: relative;
+    box-shadow:
+      0 4px 16px -3px rgba(200,149,110,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.12);
+    animation: avatarShimmer 5s ease-in-out infinite;
+  }
+
+  @keyframes avatarShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .dock-item:hover .dock-item__avatar {
+    transform: translateY(-14px) scale(1.45);
+    box-shadow:
+      0 20px 40px -6px rgba(200,149,110,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+    border-color: rgba(200,149,110,0.4);
+  }
+
+  /* Badge */
+  .dock-item__badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    background: #f43f5e;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 3px 10px rgba(244,63,94,0.5);
+    animation: badgeHeartbeat 1.8s ease-in-out infinite;
+    z-index: 5;
+  }
+
+  @keyframes badgeHeartbeat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.15); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.08); }
+    60% { transform: scale(1); }
+  }
+
+  /* === CLICK RIPPLE === */
+  .dock-item__ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .dock-item__ripple::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+
+  .dock-item:active .dock-item__ripple::before {
+    animation: rippleExpand 0.5s ease-out;
+  }
+
+  @keyframes rippleExpand {
+    0% { width: 0; height: 0; opacity: 0.7; }
+    100% { width: 120px; height: 120px; opacity: 0; }
+  }
+
+  /* === ELASTIC SQUASH === */
+  .dock-item:active:nth-child(odd) > .dock-item__wrap {
+    transition: transform 0.1s ease-out;
+    transform: translateY(-8px) scaleX(1.2) scaleY(0.85);
+  }
+
+  .dock-item:active:nth-child(even) > .dock-item__wrap {
+    transition: transform 0.1s ease-out;
+    transform: translateY(-8px) scaleX(0.85) scaleY(1.2);
+  }
+
+  /* === Demo Content === */
+  .demo-content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  .demo-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: var(--color-foreground);
+  }
+
+  .demo-subtitle {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    font-weight: 300;
+    margin-bottom: 2rem;
+  }
+
+  .demo-card {
+    background: rgba(20, 20, 23, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .demo-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .demo-card p {
+    font-size: 0.8125rem;
+    color: var(--color-muted-foreground);
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 700px) {
+    .dock { gap: 2px; }
+    .dock-item__wrap { width: 40px; height: 40px; border-radius: 11px; }
+    .dock-item__icon { border-radius: 11px; }
+    .dock-item__icon svg { width: 17px; height: 17px; }
+    .dock-item__label { display: none; }
+    .dock-item__tip { display: none; }
+    .dock-item__avatar { width: 40px; height: 40px; border-radius: 11px; font-size: 13px; }
+    .dock-item:hover > .dock-item__wrap { transform: translateY(-10px) scale(1.3); }
+    .dock-item:hover .dock-item__avatar { transform: translateY(-10px) scale(1.3); }
+    .dock-sep { margin: 0 4px; }
+    .demo-content { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Site Background -->
+<div class="bg-grid"></div>
+<div class="bg-halo bg-halo--1"></div>
+<div class="bg-halo bg-halo--2"></div>
+
+<!-- DOCK -->
+<div class="dock-fixed">
+  <div class="dock" id="dock">
+
+    <!-- Home -->
+    <div class="dock-item">
+      <div class="dock-item__tip">صفحه اصلی</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">صفحه اصلی</span>
+    </div>
+
+    <!-- Listings -->
+    <div class="dock-item is-active">
+      <div class="dock-item__tip">آگهی‌ها</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">آگهی‌ها</span>
+    </div>
+
+    <!-- News -->
+    <div class="dock-item">
+      <div class="dock-item__tip">اخبار</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">اخبار</span>
+    </div>
+
+    <!-- Encyclopedia -->
+    <div class="dock-item">
+      <div class="dock-item__tip">دانشنامه</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M20 13.5V6a2 2 0 00-2-2H6a2 2 0 00-2 2v13"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">دانشنامه</span>
+    </div>
+
+    <!-- Categories -->
+    <div class="dock-item">
+      <div class="dock-item__tip">دسته‌بندی‌ها</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">دسته‌بندی</span>
+    </div>
+
+    <!-- Separator -->
+    <div class="dock-sep" aria-hidden="true"></div>
+
+    <!-- Dashboard -->
+    <div class="dock-item">
+      <div class="dock-item__tip">داشبورد</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">داشبورد</span>
+    </div>
+
+    <!-- Quick Access -->
+    <div class="dock-item dock-item--quick">
+      <div class="dock-item__tip">دسترسی سریع ⌘K</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">سریع</span>
+    </div>
+
+    <!-- Separator -->
+    <div class="dock-sep" aria-hidden="true"></div>
+
+    <!-- Theme -->
+    <div class="dock-item dock-item--theme">
+      <div class="dock-item__tip">تغییر تم</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <div class="dock-item__shine"></div>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">تم</span>
+    </div>
+
+    <!-- User -->
+    <div class="dock-item">
+      <div class="dock-item__tip">علی رضایی — نمایندگی</div>
+      <div class="dock-item__wrap">
+        <div class="dock-item__avatar">
+          ع
+          <div class="dock-item__badge">۳</div>
+        </div>
+        <div class="dock-item__dot"></div>
+      </div>
+      <span class="dock-item__label">کاربر</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- Demo Content -->
+<div class="site-content">
+  <div class="demo-content">
+    <h1 class="demo-title">بازارگاه مدرن</h1>
+    <p class="demo-subtitle">پلتفرم معامله خودرو و ماشین‌آلات با طراحی پرمیوم</p>
+
+    <div class="demo-card">
+      <h3>طراحی شیشه‌ای (Glassmorphism)</h3>
+      <p>هر آیکون از افکت شیشه‌ای با blur، transparency و border نورانی بهره می‌برد. در حالت هاور، شدت افکت بیشتر شده و یک هاله نورانی دور آیکون ظاهر می‌شود.</p>
+    </div>
+
+    <div class="demo-card">
+      <h3>فیزیک دینامیک</h3>
+      <p>افکت magnification با spring physics، موج ضربه هنگام کلیک، و الستیک اسکواش برای حس زندگی در رابط کاربری.</p>
+    </div>
+
+    <div class="demo-card">
+      <h3>بدون بک‌گروند اضافی</h3>
+      <p>آیتم‌ها مستقیماً روی بک‌گروند سایت (گرید نقطه‌ای) شناور هستند. هیچ کادر یا پس‌زمینه اضافی وجود ندارد.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const items = document.querySelectorAll('.dock-item');
+
+  items.forEach((item, index) => {
+    item.addEventListener('click', function() {
+      if (this.classList.contains('dock-item--theme')) {
+        document.body.style.transition = 'filter 0.3s';
+        document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+        setTimeout(() => { document.body.style.filter = ''; }, 200);
+        return;
+      }
+
+      items.forEach(i => i.classList.remove('is-active'));
+      this.classList.add('is-active');
+
+      const wrap = this.querySelector('.dock-item__wrap');
+      const dir = index % 2 === 0 ? 'scaleX(1.25) scaleY(0.82)' : 'scaleX(0.82) scaleY(1.25)';
+      wrap.style.transition = 'transform 0.1s ease-out';
+      wrap.style.transform = `translateY(-10px) ${dir}`;
+      setTimeout(() => {
+        wrap.style.transform = '';
+        wrap.style.transition = '';
+      }, 100);
+    });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      const quick = document.querySelector('.dock-item--quick .dock-item__wrap');
+      quick.style.transition = 'transform 0.12s ease-out';
+      quick.style.transform = 'translateY(-22px) scale(1.6)';
+      setTimeout(() => {
+        quick.style.transform = '';
+        setTimeout(() => { quick.style.transition = ''; }, 450);
+      }, 120);
+    }
+  });
+</script>
+
+</body>
+</html>

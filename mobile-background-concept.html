@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Background Concept — Aurora Orbs</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --color-primary: #b45309;
+    --color-amber: #f0b35f;
+    --color-amber-bright: #f5b971;
+    --color-bg: #0f0c09;
+    --color-foreground: #f5e3c5;
+  }
+
+  html.dark {
+    --color-primary: #f5b971;
+    --color-amber: #fcd34d;
+    --color-bg: #0f0c09;
+    --color-foreground: #f5e3c5;
+  }
+
+  html:not(.dark) {
+    --color-primary: #b45309;
+    --color-amber: #f0b35f;
+    --color-bg: #faf7f2;
+    --color-foreground: #3d3024;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-foreground);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.4s, color 0.4s;
+  }
+
+  /* ===== PHONE FRAME ===== */
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    margin: 30px auto;
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    background: var(--color-bg);
+    box-shadow:
+      0 0 0 12px #1a1a1a,
+      0 0 0 14px #333,
+      0 25px 60px rgba(0,0,0,0.5);
+    transition: background 0.4s;
+  }
+
+  .phone-notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 30px;
+    background: #1a1a1a;
+    border-radius: 0 0 18px 18px;
+    z-index: 100;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    scrollbar-width: none;
+  }
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  /* ===== AURORA ORBS BACKGROUND ===== */
+  .aurora-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    will-change: transform, opacity;
+  }
+
+  .orb-1 {
+    top: -80px;
+    right: -60px;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+    filter: blur(70px);
+    opacity: 0.35;
+    animation: orb-breathe-1 9s ease-in-out infinite;
+  }
+
+  .orb-2 {
+    top: 35%;
+    left: -70px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, var(--color-amber) 0%, transparent 70%);
+    filter: blur(60px);
+    opacity: 0.28;
+    animation: orb-breathe-2 11s ease-in-out 2s infinite;
+  }
+
+  .orb-3 {
+    bottom: 15%;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+    filter: blur(55px);
+    opacity: 0.22;
+    animation: orb-breathe-3 13s ease-in-out 4s infinite;
+  }
+
+  .orb-4 {
+    top: 60%;
+    left: 30%;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, var(--color-amber-bright) 0%, transparent 70%);
+    filter: blur(50px);
+    opacity: 0.18;
+    animation: orb-breathe-1 10s ease-in-out 1s infinite;
+  }
+
+  .dot-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background-image: radial-gradient(circle, var(--color-foreground) 1px, transparent 1px);
+    background-size: 32px 32px;
+    will-change: transform;
+  }
+
+  .twinkles {
+    position: absolute;
+    inset: 0;
+  }
+
+  .twinkle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: var(--color-amber-bright);
+    border-radius: 50%;
+    opacity: 0;
+    animation: twinkle 4s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  .twinkle:nth-child(1) { top: 12%; right: 18%; animation-delay: 0s; }
+  .twinkle:nth-child(2) { top: 25%; left: 25%; animation-delay: 1.2s; width: 2px; height: 2px; }
+  .twinkle:nth-child(3) { top: 42%; right: 30%; animation-delay: 2.5s; }
+  .twinkle:nth-child(4) { top: 55%; left: 15%; animation-delay: 0.8s; width: 2px; height: 2px; }
+  .twinkle:nth-child(5) { top: 68%; right: 22%; animation-delay: 3.1s; }
+  .twinkle:nth-child(6) { top: 78%; left: 35%; animation-delay: 1.8s; width: 2px; height: 2px; }
+  .twinkle:nth-child(7) { top: 88%; right: 40%; animation-delay: 2.2s; }
+  .twinkle:nth-child(8) { top: 18%; left: 60%; animation-delay: 3.8s; width: 2px; height: 2px; }
+
+  /* ===== KEYFRAMES ===== */
+  @keyframes orb-breathe-1 {
+    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.35; }
+    50% { transform: scale(1.18) translate(-10px, 8px); opacity: 0.5; }
+  }
+
+  @keyframes orb-breathe-2 {
+    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.28; }
+    50% { transform: scale(1.12) translate(12px, -6px); opacity: 0.4; }
+  }
+
+  @keyframes orb-breathe-3 {
+    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.22; }
+    50% { transform: scale(1.2) translate(-8px, -10px); opacity: 0.35; }
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.5); }
+  }
+
+  /* ===== MOCK CONTENT ===== */
+  .content {
+    position: relative;
+    z-index: 10;
+    padding: 60px 20px 40px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(180, 83, 9, 0.1);
+    border: 1px solid rgba(180, 83, 9, 0.2);
+    font-size: 12px;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+  }
+
+  .hero-title {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero-subtitle {
+    font-size: 15px;
+    line-height: 1.7;
+    opacity: 0.7;
+    margin-bottom: 28px;
+  }
+
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 14px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(245, 227, 197, 0.1);
+  }
+
+  .stat-item .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  .stat-item .stat-label {
+    font-size: 12px;
+    opacity: 0.5;
+    margin-top: 4px;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 40px 0 16px;
+  }
+
+  .card {
+    background: rgba(245, 227, 197, 0.04);
+    border: 1px solid rgba(245, 227, 197, 0.08);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 12px;
+    backdrop-filter: blur(12px);
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    opacity: 0.6;
+    line-height: 1.6;
+  }
+
+  /* ===== CONTROLS ===== */
+  .controls {
+    text-align: center;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .controls h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    opacity: 0.7;
+  }
+
+  .toggle-btn {
+    padding: 10px 24px;
+    border-radius: 12px;
+    border: 1px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn:hover {
+    background: var(--color-primary);
+    color: #fff;
+  }
+
+  .info {
+    max-width: 500px;
+    margin: 24px auto;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(245, 227, 197, 0.03);
+    border: 1px solid rgba(245, 227, 197, 0.06);
+    text-align: right;
+  }
+
+  .info h3 {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: var(--color-primary);
+  }
+
+  .info ul {
+    list-style: none;
+    font-size: 13px;
+    line-height: 2;
+    opacity: 0.7;
+  }
+
+  .info li::before {
+    content: '• ';
+    color: var(--color-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb, .twinkle { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Phone Frame -->
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="phone-screen" id="screen">
+
+    <!-- Aurora Background -->
+    <div class="aurora-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+      <div class="orb orb-4"></div>
+      <div class="dot-grid"></div>
+      <div class="twinkles">
+        <div class="twinkle"></div>
+        <div class="twinkle"></div>
+        <div class="twinkle"></div>
+        <div class="twinkle"></div>
+        <div class="twinkle"></div>
+        <div class="twinkle"></div>
+        <div class="twinkle"></div>
+        <div class="twinkle"></div>
+      </div>
+    </div>
+
+    <!-- Mock Content -->
+    <div class="content">
+      <div class="hero-badge">
+        <span>●</span> بازار آنلاین اعتماد
+      </div>
+      <h1 class="hero-title">خرید و فروش مطمئن<br>قطعات خودرو</h1>
+      <p class="hero-subtitle">هزارها کسب‌وکار به ما اعتماد کرده‌ند. شما هم همین الان ثبت‌نام کنید و از مزایای ویژه بهره‌مند شوید.</p>
+      <button class="cta-button">شروع رایگان ←</button>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value">۱,۲۰۰+</div>
+          <div class="stat-label">فروشنده فعال</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">۴۵,۰۰۰</div>
+          <div class="stat-label">قطعه موجود</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">۹۸٪</div>
+          <div class="stat-label">رضایت مشتری</div>
+        </div>
+      </div>
+
+      <h2 class="section-title">دسته‌بندی‌های محبوب</h2>
+      <div class="card">
+        <div class="card-title">موتوری و گیربکس</div>
+        <div class="card-desc">بیش از ۱۲,۰۰۰ قطعه موجود در انواع برندها</div>
+      </div>
+      <div class="card">
+        <div class="card-title">بدنه و چراغ</div>
+        <div class="card-desc">قطعات اصلی و اورجینال با گارانتی</div>
+      </div>
+      <div class="card">
+        <div class="card-title">لوازم جانبی</div>
+        <div class="card-desc">اکسسوری و تزئینات خودرو</div>
+      </div>
+
+      <h2 class="section-title">آخرین اخبار</h2>
+      <div class="card">
+        <div class="card-title">راهنمای خرید هوشمند</div>
+        <div class="card-desc">۱۰ نکته مهم در انتخاب قطعه مناسب</div>
+      </div>
+      <div class="card">
+        <div class="card-title">مقایسه قیمت‌ها</div>
+        <div class="card-desc">چگونه بهترین قیمت را پیدا کنیم؟</div>
+      </div>
+
+      <div style="height: 60px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <h2>تغییر تم برای مشاهده تأثیر رنگ‌ها</h2>
+  <button class="toggle-btn" onclick="toggleTheme()">تغییر دارک/لایت</button>
+
+  <div class="info">
+    <h3>✨ مشخصات فنی این مفهوم</h3>
+    <ul>
+      <li>۴ اورب گرادیانت با blur و opacity متفاوت</li>
+      <li>انیمیشن تنفس فقط با transform و opacity</li>
+      <li>۸ نقطه درخشان با animation-delay متفاوت</li>
+      <li>گرید نقطه‌ای ثابت برای عمق</li>
+      <li>بدون Canvas، بدون JavaScript animation</li>
+      <li>فقط CSS keyframes → GPU compositing</li>
+      <li>prefers-reduced-motion پشتیبانی می‌شود</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // Theme toggle
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+  }
+
+  // Parallax on scroll (very lightweight)
+  const screen = document.getElementById('screen');
+  const orbs = document.querySelectorAll('.orb');
+  const dotGrid = document.querySelector('.dot-grid');
+
+  let ticking = false;
+  screen.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrolled = screen.scrollTop;
+        orbs.forEach((orb, i) => {
+          const speed = 0.03 + (i * 0.015);
+          orb.style.transform = `translateY(${scrolled * speed}px)`;
+        });
+        if (dotGrid) {
+          dotGrid.style.transform = `translateY(${scrolled * 0.01}px)`;
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function MobileFilterSheet({
   open,
@@ -25,27 +26,43 @@ export function MobileFilterSheet({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className="absolute bottom-0 inset-x-0 max-h-[85vh] overflow-y-auto rounded-t-3xl border border-border bg-background shadow-2xl animate-slide-up">
-        <div className="sticky top-0 z-10 flex items-center justify-between px-5 pt-3 pb-3 border-b border-border bg-background/95 backdrop-blur">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} />
-            <h3 className="font-bold text-foreground text-sm">{title}</h3>
-          </div>
-          <button
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-overlay/80 backdrop-blur-md"
             onClick={onClose}
-            aria-label="بستن"
-            className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="absolute bottom-0 inset-x-0 max-h-[85vh] overflow-y-auto rounded-t-3xl" style={{ background: 'var(--color-glass-bg)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-glass)' }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-          </button>
+            {/* Glow border top */}
+            <div className="absolute -top-px inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+            <div className="sticky top-0 z-10 flex items-center justify-between px-5 pt-3 pb-3 border-b border-border/40 bg-surface-1/95 backdrop-blur">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} />
+                <h3 className="font-bold text-foreground text-sm">{title}</h3>
+              </div>
+              <button
+                onClick={onClose}
+                aria-label="بستن"
+                className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-5 space-y-6">{children}</div>
+          </motion.div>
         </div>
-        <div className="p-5 space-y-6">{children}</div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

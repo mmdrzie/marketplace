@@ -28,11 +28,13 @@ import { SectionHeader } from '@/components/home/SectionHeader';
 import { CardSkeleton } from '@/components/home/CardSkeleton';
 import { CategoryGrid } from '@/components/home/CategoryGrid';
 import { AnimatedWords } from '@/components/home/AnimatedWords';
+import { CatalogEntryCard } from '@/components/home/CatalogEntryCard';
+import { StepCard } from '@/components/home/StepCard';
+import { FeatureCard } from '@/components/home/FeatureCard';
 import { FEATURES, STEPS, QUICK_LINKS, usePublicStats } from '@/components/home/homeData';
 
 const CustomCursor = dynamic(() => import('@/components/common/CustomCursor').then(mod => mod.CustomCursor), { ssr: false });
 const ParticleBackground = dynamic(() => import('@/components/common/ParticleBackground').then(mod => mod.ParticleBackground), { ssr: false });
-const ShootingStars = dynamic(() => import('@/components/ui/shooting-stars').then(mod => ({ default: mod.ShootingStars })), { ssr: false });
 
 const Icon = ({ d, className = 'w-5 h-5' }: { d: string; className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -162,13 +164,6 @@ export default function HomePage() {
       {/* cursor glow — only on desktop */}
       {!disableEffects && <motion.div className="fixed inset-0 z-0 pointer-events-none" style={{ background: glowBg }} />}
 
-      {/* شوتینگ استار - فقط موبایل */}
-      <div className="md:hidden fixed inset-0 z-[15] pointer-events-none overflow-hidden" style={{ '--star-color': 'var(--color-primary)' } as React.CSSProperties}>
-        <ShootingStars starColor="var(--star-color)" trailColor="var(--star-color)" minSpeed={3} maxSpeed={9} minDelay={4000} maxDelay={9000} starWidth={120} starHeight={2} />
-        <ShootingStars starColor="var(--star-color)" trailColor="var(--star-color)" minSpeed={5} maxSpeed={12} minDelay={6000} maxDelay={12000} starWidth={90} starHeight={1.5} />
-        <ShootingStars starColor="var(--star-color)" trailColor="var(--star-color)" minSpeed={4} maxSpeed={10} minDelay={3000} maxDelay={15000} starWidth={140} starHeight={2.5} />
-      </div>
-
       {/* interactive particles — فقط دسکتاپ */}
       {!disableEffects && <ParticleBackground className="fixed inset-0 z-[1] w-full h-full" />}
 
@@ -239,189 +234,67 @@ export default function HomePage() {
         <CategoryGrid categories={categories} catLoading={catLoading} catError={catError} showAllTrigger={showAllTrigger} />
       </section>
 
-      {/* ===== 4. TUNING CATALOG ENTRY ===== */}
+      {/* ===== 4. CATALOG ENTRY CARDS (Floating) ===== */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 py-10 w-full">
         <SlideUp rootMargin="-40px">
-          <Link href="/catalog/tuning" className="group block">
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface/30 to-surface-2/30 hover:border-primary/30 transition-colors duration-300">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/[0.06] rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 p-6 md:p-8">
-                <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 border border-primary/25 flex items-center justify-center text-primary shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_30px_-8px_var(--color-primary)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-                      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      قطعات تیونینگ
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 leading-relaxed">
-                      ارتقای عملکرد خودرو و موتورسیکلت؛ پیستون، اگزوز اسپرت، ریمپ ECU، زیربندی و بدنه
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                  <span className="text-xs md:text-sm font-medium text-primary/80 group-hover:text-primary transition-colors">
-                    ورود به کاتالوگ تیونینگ
-                  </span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-4 h-4 text-primary transition-transform duration-300 group-hover:-translate-x-1">
-                    <path d="M13 15l-5-5 5-5" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </SlideUp>
-      </section>
-
-      {/* ===== 4a. ACCESSORY CATALOG ENTRY ===== */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 py-10 w-full">
-        <SlideUp rootMargin="-40px">
-          <Link href="/catalog/accessory" className="group block">
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface/30 to-surface-2/30 hover:border-primary/30 transition-colors duration-300">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/[0.06] rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 p-6 md:p-8">
-                <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 border border-primary/25 flex items-center justify-center text-primary shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_30px_-8px_var(--color-primary)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-                      <path d="M12 3l1.9 5.8a2 2 0 001.3 1.3L21 12l-5.8 1.9a2 2 0 00-1.3 1.3L12 21l-1.9-5.8a2 2 0 00-1.3-1.3L3 12l5.8-1.9a2 2 0 001.3-1.3L12 3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      اکسسوری و تزئینات خودرو
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 leading-relaxed">
-                      دکوراسیون داخلی، نورپردازی، محافظت بدنه و لوازم جانبی موتورسیکلت
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                  <span className="text-xs md:text-sm font-medium text-primary/80 group-hover:text-primary transition-colors">
-                    ورود به کاتالوگ اکسسوری
-                  </span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-4 h-4 text-primary transition-transform duration-300 group-hover:-translate-x-1">
-                    <path d="M13 15l-5-5 5-5" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </SlideUp>
-      </section>
-
-      {/* ===== 4b. PARTS CATALOG ENTRY ===== */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 py-10 w-full">
-        <SlideUp rootMargin="-40px">
-          <Link href="/parts" className="group block">
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface/30 to-surface-2/30 hover:border-primary/30 transition-colors duration-300">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/[0.06] rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 p-6 md:p-8">
-                <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 border border-primary/25 flex items-center justify-center text-primary shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_30px_-8px_var(--color-primary)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      قطعات یدکی و ادوات
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 leading-relaxed">
-                      جستجوی قطعات اصلی، تأمینی، ادوات و مصرفی خودروها و ماشین‌آلات
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                  <span className="text-xs md:text-sm font-medium text-primary/80 group-hover:text-primary transition-colors">
-                    ورود به فروشگاه قطعات
-                  </span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-4 h-4 text-primary transition-transform duration-300 group-hover:-translate-x-1">
-                    <path d="M13 15l-5-5 5-5" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </SlideUp>
-      </section>
-
-      {/* ===== 4c. WORKSHOPS ENTRY ===== */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 py-10 w-full">
-        <SlideUp rootMargin="-40px">
-          <Link href="/workshops" className="group block">
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface/30 to-surface-2/30 hover:border-primary/30 transition-colors duration-300">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/[0.06] rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 p-6 md:p-8">
-                <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 border border-primary/25 flex items-center justify-center text-primary shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_30px_-8px_var(--color-primary)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-                      <path d="M12 15l3.5-3.5M20.3 18a10 10 0 10-16.6 0" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      تعمیرکاران و تیونرها
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 leading-relaxed">
-                      معرفی تعمیرگاه‌ها و تیونرهای معتبر با آدرس، تخصص و خدمات
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                  <span className="text-xs md:text-sm font-medium text-primary/80 group-hover:text-primary transition-colors">
-                    مشاهده تعمیرکاران
-                  </span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-4 h-4 text-primary transition-transform duration-300 group-hover:-translate-x-1">
-                    <path d="M13 15l-5-5 5-5" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </SlideUp>
-      </section>
-
-      {/* ===== 4b. INSURANCE SECTION ===== */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 py-10 w-full">
-        <SlideUp rootMargin="-40px">
-          <Link href="/insurance" className="group block">
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface/30 to-surface-2/30 hover:border-primary/30 transition-colors duration-300">
-              <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/[0.06] rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 p-6 md:p-8">
-                <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 border border-primary/25 flex items-center justify-center text-primary shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_30px_-8px_var(--color-primary)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      بیمه خودرو و ماشین‌آلات
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 leading-relaxed">
-                      مقایسه و خرید آنلاین بیمه شخص ثالث، بدنه، موتور و ماشین‌آلات از معتبرترین شرکت‌های بیمه
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                  <span className="text-xs md:text-sm font-medium text-primary/80 group-hover:text-primary transition-colors">
-                    خرید بیمه
-                  </span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-4 h-4 text-primary transition-transform duration-300 group-hover:-translate-x-1">
-                    <path d="M13 15l-5-5 5-5" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </Link>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CatalogEntryCard
+              href="/catalog/tuning"
+              title="قطعات تیونینگ"
+              description="ارتقای عملکرد خودرو و موتورسیکلت؛ پیستون، اگزوز اسپرت، ریمپ ECU، زیربندی و بدنه"
+              linkText="ورود به کاتالوگ"
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                </svg>
+              }
+            />
+            <CatalogEntryCard
+              href="/catalog/accessory"
+              title="اکسسوری و تزئینات خودرو"
+              description="دکوراسیون داخلی، نورپردازی، محافظت بدنه و لوازم جانبی موتورسیکلت"
+              linkText="ورود به کاتالوگ"
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <path d="M12 3l1.9 5.8a2 2 0 001.3 1.3L21 12l-5.8 1.9a2 2 0 00-1.3 1.3L12 21l-1.9-5.8a2 2 0 00-1.3-1.3L3 12l5.8-1.9a2 2 0 001.3-1.3L12 3z" />
+                </svg>
+              }
+            />
+            <CatalogEntryCard
+              href="/parts"
+              title="قطعات یدکی و ادوات"
+              description="جستجوی قطعات اصلی، تأمینی، ادوات و مصرفی خودروها و ماشین‌آلات"
+              linkText="ورود به فروشگاه"
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+              }
+            />
+            <CatalogEntryCard
+              href="/workshops"
+              title="تعمیرکاران و تیونرها"
+              description="معرفی تعمیرگاه‌ها و تیونرهای معتبر با آدرس، تخصص و خدمات"
+              linkText="مشاهده تعمیرکاران"
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <path d="M12 15l3.5-3.5M20.3 18a10 10 0 10-16.6 0" />
+                </svg>
+              }
+            />
+            <CatalogEntryCard
+              href="/insurance"
+              title="بیمه خودرو و ماشین‌آلات"
+              description="مقایسه و خرید آنلاین بیمه شخص ثالث، بدنه، موتور و ماشین‌آلات از معتبرترین شرکت‌های بیمه"
+              linkText="خرید بیمه"
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              }
+            />
+          </div>
         </SlideUp>
       </section>
 
@@ -433,32 +306,36 @@ export default function HomePage() {
         {listLoading ? (
           <SkeletonListings count={8} />
         ) : listError ? (
-          <SlideUp rootMargin="-60px" className="relative bg-surface/20 border border-border rounded-3xl p-4 md:p-6 overflow-hidden">
-            <EmptyState title="خطا در بارگذاری" description="امکان دریافت آگهی‌ها وجود ندارد. لطفاً بعداً تلاش کنید." icon="listing" />
+          <SlideUp rootMargin="-60px">
+            <div className="glass-3d">
+              <div className="glass-3d__inner">
+                <div className="glass-3d__spotlight"></div>
+                <div className="glass-3d__content p-4 md:p-6">
+                  <EmptyState title="خطا در بارگذاری" description="امکان دریافت آگهی‌ها وجود ندارد. لطفاً بعداً تلاش کنید." icon="listing" />
+                </div>
+              </div>
+            </div>
           </SlideUp>
         ) : !latest || latest.length === 0 ? (
-          <SlideUp rootMargin="-60px" className="relative bg-surface/20 border border-border rounded-3xl p-4 md:p-6 overflow-hidden">
-            <EmptyState title="آگهی‌ای یافت نشد" description="هنوز آگهی برای نمایش وجود ندارد." icon="listing" />
+          <SlideUp rootMargin="-60px">
+            <div className="glass-3d">
+              <div className="glass-3d__inner">
+                <div className="glass-3d__spotlight"></div>
+                <div className="glass-3d__content p-4 md:p-6">
+                  <EmptyState title="آگهی‌ای یافت نشد" description="هنوز آگهی برای نمایش وجود ندارد." icon="listing" />
+                </div>
+              </div>
+            </div>
           </SlideUp>
         ) : (
-          <SlideUp rootMargin="-60px" className="relative">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent pointer-events-none z-[2]" />
-            <div
-              onMouseMove={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
-                e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
-              }}
-              className="relative bg-surface/20 border border-border rounded-3xl p-4 md:p-6 h-full overflow-hidden group hover:shadow-[0_0_50px_-16px_var(--color-primary)] transition-shadow duration-500"
-            >
-              {/* spotlight */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-3xl"
-                style={{ background: 'radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 60%)' }}
-              />
-              {/* noise texture */}
-              <div className="absolute inset-0 opacity-[0.01] pointer-events-none rounded-3xl" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
-              <ListingGrid listings={latest} />
+          <SlideUp rootMargin="-60px">
+            <div className="glass-3d">
+              <div className="glass-3d__inner">
+                <div className="glass-3d__spotlight"></div>
+                <div className="glass-3d__content p-4 md:p-6">
+                  <ListingGrid listings={latest} />
+                </div>
+              </div>
             </div>
           </SlideUp>
         )}
@@ -548,16 +425,13 @@ export default function HomePage() {
               key={step.title}
               delay={i * 0.15}
               rootMargin="-60px"
-              className="relative flex flex-col items-center text-center"
             >
-              <div className="relative z-10 w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center text-primary mb-5 shadow-[0_0_25px_-10px_var(--color-primary)]">
-                <Icon d={step.icon} className="w-7 h-7" />
-                <span className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                  {(i + 1).toLocaleString('fa-IR')}
-                </span>
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px]">{step.desc}</p>
+              <StepCard
+                icon={<Icon d={step.icon} className="w-7 h-7" />}
+                title={step.title}
+                description={step.desc}
+                index={i}
+              />
             </SlideUp>
           ))}
         </div>
@@ -577,39 +451,14 @@ export default function HomePage() {
               key={feature.title}
               delay={i * 0.1}
               rootMargin="-40px"
-              className={feature.size}
             >
-            <div
-              onMouseMove={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
-                e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
-              }}
-              className="group relative bg-gradient-to-br from-card to-surface/30 border border-border rounded-2xl p-8 hover:border-primary/40 transition-all duration-500 overflow-hidden h-full hover:shadow-[0_0_50px_-16px_var(--color-primary)] hover:-translate-y-0.5"
-            >
-              {/* mouse spotlight */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-2xl"
-                style={{ background: 'radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 60%)' }}
+              <FeatureCard
+                icon={<Icon d={feature.icon} className="w-6 h-6" />}
+                title={feature.title}
+                description={feature.desc}
+                index={i}
+                size={feature.size}
               />
-              {/* shimmer sweep on hover */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden rounded-2xl">
-                <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(110deg, transparent, color-mix(in srgb, var(--color-primary) 4%, transparent), transparent)', backgroundSize: '200% 100%' }} />
-              </div>
-              {/* noise texture */}
-              <div className="absolute inset-0 opacity-[0.012] pointer-events-none rounded-2xl" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
-              <span className="absolute top-6 left-6 text-5xl font-black text-foreground/[0.04] group-hover:text-primary/10 transition-colors select-none">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-primary mb-6 transition-all duration-300 group-hover:-translate-y-1 group-hover:scale-110 group-hover:shadow-[0_0_20px_-6px_var(--color-primary)]">
-                  <Icon d={feature.icon} className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-              </div>
-              <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
             </SlideUp>
           ))}
         </div>
@@ -619,31 +468,22 @@ export default function HomePage() {
       <section className="relative z-10 max-w-7xl mx-auto px-4 py-20 w-full">
         <SlideUp rootMargin="-60px" className="relative">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent pointer-events-none z-[2]" />
-          <div
-            onMouseMove={(e) => {
-              const r = e.currentTarget.getBoundingClientRect();
-              e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
-              e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
-            }}
-            className="border border-border rounded-3xl bg-surface/20 backdrop-blur-sm overflow-hidden group hover:shadow-[0_0_50px_-16px_var(--color-primary)] transition-shadow duration-500"
-          >
-            {/* spotlight */}
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-3xl"
-              style={{ background: 'radial-gradient(700px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 60%)' }}
-            />
-            {/* noise texture */}
-            <div className="absolute inset-0 opacity-[0.01] pointer-events-none rounded-3xl" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
-            <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 divide-x divide-x-reverse divide-border">
-              {STATS.map((stat, i) => (
-                <div key={i} className="flex flex-col items-center justify-center text-center p-8 md:p-10 hover:bg-surface/40 transition-colors">
-                  <Icon d={stat.icon} className="w-6 h-6 text-primary mb-3" />
-                  <span className="text-3xl md:text-4xl font-bold text-foreground tracking-tighter mb-1">
-                    <CountUp value={stat.value} suffix={stat.suffix} />
-                  </span>
-                  <span className="text-xs text-muted-foreground uppercase tracking-widest">{stat.label}</span>
+          <div className="glass-3d">
+            <div className="glass-3d__inner">
+              <div className="glass-3d__spotlight"></div>
+              <div className="glass-3d__content">
+                <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-x-reverse divide-border">
+                  {STATS.map((stat, i) => (
+                    <div key={i} className="flex flex-col items-center justify-center text-center p-8 md:p-10 hover:bg-surface/40 transition-colors">
+                      <Icon d={stat.icon} className="w-6 h-6 text-primary mb-3" />
+                      <span className="text-3xl md:text-4xl font-bold text-foreground tracking-tighter mb-1">
+                        <CountUp value={stat.value} suffix={stat.suffix} />
+                      </span>
+                      <span className="text-xs text-muted-foreground uppercase tracking-widest">{stat.label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </SlideUp>
@@ -654,32 +494,17 @@ export default function HomePage() {
       {/* ===== 10. CTA ===== */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 py-20 w-full">
         <ScaleIn rootMargin="-60px">
-          <div
-            onMouseMove={(e) => {
-              const r = e.currentTarget.getBoundingClientRect();
-              e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
-              e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
-            }}
-            className="relative bg-gradient-to-br from-card via-primary/[0.06] to-card border border-border rounded-3xl p-12 md:p-20 overflow-hidden text-center group hover:border-primary/30 transition-colors duration-500 hover:shadow-[0_0_60px_-20px_var(--color-primary)]"
-          >
-            {/* spotlight */}
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-3xl"
-              style={{ background: 'radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 60%)' }}
-            />
-            {/* noise texture */}
-            <div className="absolute inset-0 opacity-[0.012] pointer-events-none rounded-3xl" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
-            {/* animated glow orb */}
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.9, 0.5] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-primary/15 rounded-full blur-[120px]"
-            />
-            {/* shimmer sweep */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden rounded-3xl">
-              <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(110deg, transparent, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent)', backgroundSize: '200% 100%' }} />
-            </div>
-            <div className="relative z-10 max-w-2xl mx-auto">
+          <div className="glass-3d">
+            <div className="glass-3d__inner">
+              <div className="glass-3d__spotlight"></div>
+              <div className="glass-3d__content relative p-12 md:p-20 text-center">
+                {/* animated glow orb */}
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.9, 0.5] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute top-0 left/1/2 -translate-x-1/2 w-[500px] h-[250px] bg-primary/15 rounded-full blur-[120px]"
+                />
+                <div className="relative z-10 max-w-2xl mx-auto">
               <div className="mb-6 inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-xs text-muted-foreground border border-border/60">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
@@ -707,11 +532,13 @@ export default function HomePage() {
                     <Icon d={ICON_PATHS.check} className="w-3.5 h-3.5 text-success" /> {t}
                   </span>
                 ))}
+               </div>
               </div>
             </div>
+           </div>
           </div>
-        </ScaleIn>
-      </section>
+         </ScaleIn>
+       </section>
 
       {/* ===== BACK TO TOP ===== */}
       <button

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { Content } from '@/types/content';
 import { contentTypeThemeColor, difficultyThemeColor } from '@/types/content';
+import { use3DTilt } from '@/hooks/use3DTilt';
 
 function getRoute(content: Content): string {
   if (content.contentType.slug === 'news') return `/news/${content.slug}`;
@@ -13,12 +14,17 @@ export function ContentCard({ content, accent }: { content: Content; accent?: st
   const type = content.contentType;
   const c = accent ?? contentTypeThemeColor(type.slug);
   const diffColor = content.difficulty ? difficultyThemeColor(content.difficulty) : null;
-  const diffLabel: Record<string, string> = { beginner: 'مبتدی', intermediate: 'متوسط', expert: 'پیشرفته' };
+  const diffLabel: Record<string, string> = { beginner: 'مبتدی', intermediate: 'متقدم', expert: 'پیشرفته' };
+  const tiltRef = use3DTilt({ maxTilt: 5, lerp: 0.08 });
 
   return (
+    <div ref={tiltRef} className="glass-3d group">
+      <div className="glass-3d__inner">
+        <div className="glass-3d__spotlight"></div>
+        <div className="glass-3d__content">
     <Link
       href={getRoute(content)}
-      className="group relative block bg-surface/40 border border-border rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/40 hover:bg-surface hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_color-mix(in_srgb,var(--color-primary)_25%,transparent)] h-full flex flex-col backdrop-blur-sm"
+      className="group relative block overflow-hidden transition-all duration-300 h-full flex flex-col"
     >
       {/* top accent line */}
       <span className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-l from-transparent via-primary/0 to-transparent transition-all duration-500 group-hover:via-primary/70" />
@@ -93,8 +99,11 @@ export function ContentCard({ content, accent }: { content: Content; accent?: st
           <span className="w-6 h-6 rounded-full border border-border-subtle flex items-center justify-center text-muted-foreground transition-all duration-300 group-hover:border-primary/40 group-hover:text-primary group-hover:bg-primary/10" style={{ transform: 'scaleX(-1)' }}>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
           </span>
+         </div>
+       </div>
+     </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

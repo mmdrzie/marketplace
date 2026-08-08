@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PriceDisplay } from '@/components/common/PriceDisplay';
 import Image from 'next/image';
 import type { Listing } from '@/types';
@@ -41,20 +42,35 @@ export function QuickViewModal({ listing, onClose }: { listing: Listing; onClose
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="quick-view-title">
-      <div className="absolute inset-0 bg-overlay backdrop-blur-sm" />
-      <div
-        ref={modalRef}
-        tabIndex={-1}
-        className="relative glass rounded-3xl max-w-lg w-full p-6 border border-border shadow-2xl animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <h3 className="text-lg font-bold text-foreground flex-1">{listing.title}</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-          </button>
-        </div>
+    <AnimatePresence>
+      <div className="fixed inset-0 z-40 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="quick-view-title">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-overlay/80 backdrop-blur-md"
+          onClick={onClose}
+        />
+        <motion.div
+          ref={modalRef}
+          tabIndex={-1}
+          initial={{ opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 8 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          className="relative max-w-lg w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Glow border */}
+          <div className="absolute -inset-px rounded-3xl bg-gradient-to-b from-primary/20 via-transparent to-primary/10 blur-sm pointer-events-none" />
+
+          <div className="relative rounded-3xl p-6" style={{ background: 'var(--color-glass-bg)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-glass)' }}>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <h3 className="text-lg font-bold text-foreground flex-1">{listing.title}</h3>
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
         {listing.primary_image && (
           <div className="relative w-full aspect-[16/9] rounded-2xl mb-4 overflow-hidden">
             <Image src={listing.primary_image} alt={listing.title} fill sizes="100vw" className="object-cover" />
@@ -65,7 +81,9 @@ export function QuickViewModal({ listing, onClose }: { listing: Listing; onClose
           <span>{listing.city_name || listing.province_name || '—'}</span>
         </div>
         <a href={`/listings/${listing.slug}`} className="btn btn-primary w-full">مشاهده کامل</a>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }

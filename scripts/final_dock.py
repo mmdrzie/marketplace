@@ -1,4 +1,8 @@
-'use client';
+import os
+
+filepath = r'C:\projects\marketplace\nextjs-frontend\src\components\common\Dock.tsx'
+
+content = r"""'use client';
 
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
@@ -96,7 +100,7 @@ export function Dock() {
     <>
       <motion.div
         style={{ y: dockYSpring }}
-        className="max-md:hidden fixed top-0 inset-x-0 z-50 pt-14"
+        className="max-md:hidden fixed top-0 inset-x-0 z-50 pt-5"
       >
         <div className="flex justify-center">
           <div className="dock-root" role="toolbar" aria-label="Application dock">
@@ -180,88 +184,57 @@ export function Dock() {
         </div>
       </motion.div>
 
-      {/* ===== COMMAND PALETTE (Premium Spotlight) ===== */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {quickOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] p-4"
-          >
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-overlay backdrop-blur-sm" onClick={() => setQuickOpen(false)} />
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-overlay/80 backdrop-blur-md"
-              onClick={() => setQuickOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: -8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: -8 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="relative z-10 w-full max-w-xl"
+              initial={{ opacity: 0, y: -20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+              className="relative z-10 w-full max-w-2xl bg-surface-1/90 border border-border/50 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden"
               role="dialog" aria-modal="true"
             >
-              <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/20 via-transparent to-primary/10 blur-sm pointer-events-none" />
-              <div className="relative rounded-2xl overflow-hidden" style={{ background: 'var(--color-glass-bg)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-glass)' }}>
-                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border/40">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                    <SvgIcon className="w-4 h-4 text-primary"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></SvgIcon>
-                  </div>
-                  <input ref={searchInputRef} value={quickQuery} onChange={(e) => setQuickQuery(e.target.value)} placeholder="جستجو در ابزارها و صفحات..." className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 outline-none" />
-                  <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-surface-2 border border-border/50 text-[10px] text-muted-foreground font-sans">ESC</kbd>
-                </div>
-                <div className="max-h-[55vh] overflow-y-auto py-2">
-                  {filteredLinks.length > 0 ? (
-                    <div className="px-2">
-                      {(['browse', 'tools', 'account'] as const).map((cat) => {
-                        const catLinks = filteredLinks.filter((l) => l.category === cat);
-                        if (catLinks.length === 0) return null;
-                        return (
-                          <div key={cat} className="mb-1">
-                            <div className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
-                              {cat === 'browse' ? 'مرور' : cat === 'tools' ? 'ابزارها' : 'حساب کاربری'}
-                            </div>
-                            {catLinks.map((link) => (
-                              <Link key={link.href} href={link.href} onClick={() => setQuickOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-surface-2/60 hover:text-foreground transition-all">
-                                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-surface-2/80">
-                                  <SvgIcon className="w-4 h-4">{link.icon}</SvgIcon>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-medium text-foreground truncate">{link.label}</div>
-                                  <div className="text-[11px] text-muted-foreground/70 truncate">{link.href}</div>
-                                </div>
-                              </Link>
-                            ))}
+              <div className="p-4 border-b border-border/30 flex items-center gap-3 bg-surface-2/40">
+                <SvgIcon className="w-5 h-5 text-muted-foreground shrink-0"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></SvgIcon>
+                <input ref={searchInputRef} value={quickQuery} onChange={(e) => setQuickQuery(e.target.value)} placeholder="\u062c\u0633\u062a\u062c\u0648 \u062f\u0631 \u0627\u0628\u0632\u0627\u0631\u0647\u0627 \u0648 \u0635\u0641\u062d\u0627\u062a..." className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none" />
+                <button onClick={() => setQuickOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-surface-3 transition-colors text-muted-foreground" aria-label="\u0628\u0633\u062a\u0646">
+                  <SvgIcon className="w-4 h-4"><path d="M18 6L6 18M6 6l12 12" /></SvgIcon>
+                </button>
+              </div>
+              <div className="p-4 max-h-[50vh] overflow-y-auto overscroll-contain">
+                {filteredLinks.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {filteredLinks.map((link, i) => (
+                      <motion.div key={link.href} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                        <Link href={link.href} onClick={() => setQuickOpen(false)} className="group flex flex-col items-start gap-3 p-4 rounded-xl border border-border/30 hover:border-primary/30 bg-surface-2/30 hover:bg-primary/5 transition-all h-full">
+                          <div className="w-9 h-9 rounded-lg bg-surface-2 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
+                            <SvgIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary">{link.icon}</SvgIcon>
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-surface-2/50 flex items-center justify-center">
-                        <SvgIcon className="w-5 h-5 text-muted-foreground/50"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></SvgIcon>
-                      </div>
-                      <p className="text-sm text-muted-foreground">نتیجه‌ای برای «{quickQuery}» یافت نشد</p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">عبارت دیگری را امتحان کنید</p>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/30 bg-surface-2/30">
-                  <div className="flex items-center gap-3 text-[10px] text-muted-foreground/70">
-                    <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-2 border border-border/40 font-sans">↑↓</kbd> حرکت</span>
-                    <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-2 border border-border/40 font-sans">↵</kbd> انتخاب</span>
+                          <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">{link.label}</span>
+                        </Link>
+                      </motion.div>
+                    ))}
                   </div>
-                  <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium">⌘K</span>
-                </div>
+                ) : (
+                  <div className="py-10 text-center text-sm text-muted-foreground">\u0646\u062a\u06cc\u062c\u0647\u200c\u0627\u06cc \u0628\u0631\u0627\u06cc \u00ab{quickQuery}\u00bb \u06cc\u0627\u0641\u062a \u0646\u0634\u062f.</div>
+                )}
+              </div>
+              <div className="px-5 py-3 border-t border-border/30 bg-surface-2/20 text-[11px] text-muted-foreground flex justify-between items-center">
+                <span className="flex items-center gap-2"><kbd className="bg-surface-2 border border-border rounded px-1.5 py-0.5 font-sans">ESC</kbd> \u0628\u0631\u0627\u06cc \u0628\u0633\u062a\u0646</span>
+                <span>\u067e\u0644\u062a\u0641\u0631\u0645 \u062a\u062e\u0635\u0635\u06cc \u0628\u0627\u0632\u0627\u0631\u06af\u0627\u0647</span>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>
   );
 }
+"""
+
+with open(filepath, 'w', encoding='utf-8', newline='\n') as f:
+    f.write(content)
+
+print('Dock.tsx written successfully!')

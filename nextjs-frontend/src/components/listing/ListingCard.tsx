@@ -12,6 +12,7 @@ import { FavoriteButton } from '@/components/listing/FavoriteButton';
 import Image from 'next/image';
 import { toast } from '@/components/common/Toast';
 import { cn } from '@/lib/utils';
+import { use3DTilt } from '@/hooks/use3DTilt';
 
 interface ListingCardProps {
   listing: Listing;
@@ -23,6 +24,7 @@ export const ListingCard = memo(function ListingCard({ listing, showStatus = fal
   const addItem = useCompareStore((s) => s.addItem);
   const removeItem = useCompareStore((s) => s.removeItem);
   const isInCompare = useCompareStore((s) => s.hasItem(listing.id));
+  const tiltRef = use3DTilt({ maxTilt: 6, lerp: 0.07 });
 
   const toggleCompare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,7 +41,10 @@ export const ListingCard = memo(function ListingCard({ listing, showStatus = fal
   };
 
   return (
-    <div className="group relative flex flex-col glass rounded-3xl overflow-hidden border border-border-subtle hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
+    <div ref={tiltRef} className="glass-3d group">
+      <div className="glass-3d__inner">
+        <div className="glass-3d__spotlight"></div>
+        <div className="glass-3d__content flex flex-col">
       
       {/* لینک کل کارت (فقط تصویر و متن) */}
       <Link href={`/listings/${listing.slug}`} className="flex flex-col flex-1">
@@ -149,12 +154,14 @@ export const ListingCard = memo(function ListingCard({ listing, showStatus = fal
         </div>
         
         {/* دسته‌بندی در گوشه پایین */}
-        {listing.category_name && (
-          <span className="text-[10px] text-muted-foreground font-light uppercase tracking-wider pr-2">
-            {listing.category_name}
-          </span>
-        )}
+         {listing.category_name && (
+           <span className="text-[10px] text-muted-foreground font-light uppercase tracking-wider pr-2">
+             {listing.category_name}
+           </span>
+         )}
+       </div>
       </div>
+     </div>
     </div>
   );
 });

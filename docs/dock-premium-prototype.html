@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dock — Premium Animated</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060608;
+    --fg: #e6e6e6;
+    --muted: #a1a1a1;
+    --primary: #c8956e;
+    --primary-glow: rgba(200, 149, 110, 0.5);
+    --primary-deep: rgba(200, 149, 110, 0.15);
+    --amber: #fcd34d;
+    --purple: #a78bfa;
+    --surface: rgba(20, 20, 23, 0.85);
+    --border: rgba(255, 255, 255, 0.08);
+    --error: #f43f5e;
+    --success: #10b981;
+    --font: 'Vazirmatn', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+
+  /* === Ambient Background === */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .ambient__orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.3;
+    animation: orbFloat 12s ease-in-out infinite;
+  }
+
+  .ambient__orb--1 {
+    width: 600px;
+    height: 400px;
+    top: -10%;
+    left: 20%;
+    background: radial-gradient(ellipse, var(--primary-glow), transparent 70%);
+    animation-duration: 14s;
+  }
+
+  .ambient__orb--2 {
+    width: 500px;
+    height: 350px;
+    bottom: -5%;
+    right: 15%;
+    background: radial-gradient(ellipse, rgba(167, 139, 250, 0.2), transparent 70%);
+    animation-duration: 18s;
+    animation-delay: -4s;
+  }
+
+  .ambient__orb--3 {
+    width: 300px;
+    height: 300px;
+    top: 40%;
+    left: 50%;
+    background: radial-gradient(ellipse, rgba(252, 211, 77, 0.08), transparent 70%);
+    animation-duration: 20s;
+    animation-delay: -8s;
+  }
+
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(30px, -20px) scale(1.05); }
+    50% { transform: translate(-20px, 15px) scale(0.95); }
+    75% { transform: translate(15px, 25px) scale(1.02); }
+  }
+
+  .ambient__particles {
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.15), transparent),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.1), transparent),
+      radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.12), transparent),
+      radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.08), transparent),
+      radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.14), transparent),
+      radial-gradient(1px 1px at 15% 90%, rgba(255,255,255,0.06), transparent),
+      radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.1), transparent),
+      radial-gradient(1px 1px at 45% 45%, rgba(255,255,255,0.12), transparent);
+    animation: particlesDrift 30s linear infinite;
+  }
+
+  @keyframes particlesDrift {
+    from { transform: translateY(0); }
+    to { transform: translateY(-100px); }
+  }
+
+  .ambient__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(179,179,179,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 20%, transparent 70%);
+  }
+
+  /* === DOCK CONTAINER === */
+  .dock-stage {
+    position: relative;
+    z-index: 10;
+    perspective: 800px;
+  }
+
+  .dock-reflection {
+    position: absolute;
+    bottom: -60px;
+    left: 5%;
+    right: 5%;
+    height: 50px;
+    background: linear-gradient(to bottom, rgba(200,149,110,0.08), transparent);
+    filter: blur(12px);
+    border-radius: 50%;
+    transform: scaleY(-0.3);
+    opacity: 0.4;
+    animation: reflectionPulse 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes reflectionPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(-0.3) scaleX(1); }
+    50% { opacity: 0.5; transform: scaleY(-0.35) scaleX(1.02); }
+  }
+
+  .dock {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 10px 16px;
+    background: linear-gradient(180deg, rgba(22, 22, 26, 0.92) 0%, rgba(14, 14, 16, 0.96) 100%);
+    backdrop-filter: blur(48px) saturate(1.6) brightness(1.1);
+    -webkit-backdrop-filter: blur(48px) saturate(1.6) brightness(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 28px;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.4),
+      0 8px 32px rgba(0,0,0,0.6),
+      0 2px 8px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      inset 0 -1px 0 rgba(0,0,0,0.2);
+    position: relative;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dock:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Dock top edge glow */
+  .dock::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255,255,255,0.1) 30%,
+      rgba(200,149,110,0.2) 50%,
+      rgba(255,255,255,0.1) 70%,
+      transparent
+    );
+    border-radius: 1px;
+  }
+
+  /* Bottom glow line */
+  .dock::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 30%;
+    right: 30%;
+    height: 2px;
+    background: radial-gradient(ellipse, var(--primary-glow), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+    border-radius: 50%;
+    filter: blur(4px);
+  }
+
+  .dock:hover::after {
+    opacity: 0.6;
+  }
+
+  /* === DOCK ITEM === */
+  .dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dock-item__wrapper {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: bottom center;
+  }
+
+  /* Icon container */
+  .dock-item__icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(35, 35, 42, 0.9) 0%, rgba(22, 22, 26, 0.95) 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    color: var(--muted);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .dock-item__icon svg {
+    width: 20px;
+    height: 20px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  }
+
+  /* Shine overlay */
+  .dock-item__icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: linear-gradient(
+      135deg,
+      rgba(255,255,255,0.06) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255,255,255,0.02) 100%
+    );
+    opacity: 0.5;
+    transition: opacity 0.3s;
+  }
+
+  /* Spotlight glow */
+  .dock-item__spotlight {
+    position: absolute;
+    inset: -8px;
+    border-radius: 20px;
+    background: radial-gradient(ellipse at center bottom, var(--primary-glow), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+    filter: blur(8px);
+    pointer-events: none;
+  }
+
+  /* === HOVER STATE === */
+  .dock-item:hover .dock-item__wrapper {
+    transform: translateY(-12px) scale(1.35);
+  }
+
+  .dock-item:hover .dock-item__icon {
+    background: linear-gradient(145deg, rgba(200, 149, 110, 0.15) 0%, rgba(35, 35, 42, 0.95) 100%);
+    border-color: rgba(200, 149, 110, 0.25);
+    color: var(--fg);
+    box-shadow:
+      0 8px 24px -4px var(--primary-glow),
+      0 4px 8px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .dock-item:hover .dock-item__icon svg {
+    transform: scale(1.15);
+    filter: drop-shadow(0 2px 4px rgba(200,149,110,0.3));
+  }
+
+  .dock-item:hover .dock-item__spotlight {
+    opacity: 1;
+  }
+
+  /* Adjacent items scale slightly */
+  .dock-item:hover + .dock-item .dock-item__wrapper,
+  .dock-item:has(+ :hover) .dock-item__wrapper {
+    transform: translateY(-6px) scale(1.15);
+  }
+
+  /* === ACTIVE STATE === */
+  .dock-item.active .dock-item__icon {
+    background: linear-gradient(145deg, rgba(200, 149, 110, 0.18) 0%, rgba(35, 35, 42, 0.9) 100%);
+    border-color: rgba(200, 149, 110, 0.3);
+    color: var(--primary);
+    box-shadow:
+      0 4px 16px -4px var(--primary-glow),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  .dock-item.active .dock-item__icon svg {
+    filter: drop-shadow(0 2px 6px rgba(200,149,110,0.4));
+  }
+
+  /* Active indicator dot */
+  .dock-item__indicator {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 8px var(--primary-glow), 0 0 16px rgba(200,149,110,0.2);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dock-item.active .dock-item__indicator {
+    transform: translateX(-50%) scale(1);
+  }
+
+  .dock-item.active:hover .dock-item__indicator {
+    transform: translateX(-50%) scale(1.3);
+  }
+
+  /* === LABEL === */
+  .dock-item__label {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(161, 161, 161, 0.5);
+    text-align: center;
+    width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: all 0.3s;
+    letter-spacing: 0.01em;
+  }
+
+  .dock-item:hover .dock-item__label {
+    color: var(--fg);
+    transform: translateY(2px);
+  }
+
+  .dock-item.active .dock-item__label {
+    color: var(--primary);
+  }
+
+  /* === TOOLTIP === */
+  .dock-item__tooltip {
+    position: absolute;
+    bottom: calc(100% + 16px);
+    left: 50%;
+    transform: translateX(-50%) translateY(8px) scale(0.9);
+    padding: 6px 12px;
+    background: rgba(20, 20, 24, 0.96);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--fg);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3);
+    z-index: 100;
+  }
+
+  .dock-item__tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(20, 20, 24, 0.96);
+  }
+
+  .dock-item:hover .dock-item__tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  /* === SEPARATOR === */
+  .dock-sep {
+    width: 1px;
+    height: 38px;
+    margin: 0 6px;
+    position: relative;
+    align-self: center;
+  }
+
+  .dock-sep::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(255,255,255,0.08) 30%,
+      rgba(255,255,255,0.08) 70%,
+      transparent
+    );
+  }
+
+  /* === SPECIAL: THEME TOGGLE === */
+  .dock-item--theme .dock-item__icon {
+    background: linear-gradient(145deg, rgba(252, 211, 77, 0.08) 0%, rgba(35, 35, 42, 0.9) 100%);
+    border-color: rgba(252, 211, 77, 0.1);
+  }
+
+  .dock-item--theme .dock-item__icon svg {
+    color: var(--amber);
+  }
+
+  .dock-item--theme:hover .dock-item__icon {
+    background: linear-gradient(145deg, rgba(252, 211, 77, 0.18) 0%, rgba(35, 35, 42, 0.95) 100%);
+    border-color: rgba(252, 211, 77, 0.3);
+    box-shadow: 0 8px 24px -4px rgba(252, 211, 77, 0.25);
+  }
+
+  .dock-item--theme .dock-item__spotlight {
+    background: radial-gradient(ellipse at center bottom, rgba(252, 211, 77, 0.3), transparent 70%);
+  }
+
+  /* === SPECIAL: QUICK ACCESS === */
+  .dock-item--quick .dock-item__icon {
+    background: linear-gradient(145deg, rgba(167, 139, 250, 0.08) 0%, rgba(35, 35, 42, 0.9) 100%);
+    border-color: rgba(167, 139, 250, 0.1);
+  }
+
+  .dock-item--quick .dock-item__icon svg {
+    color: var(--purple);
+  }
+
+  .dock-item--quick:hover .dock-item__icon {
+    background: linear-gradient(145deg, rgba(167, 139, 250, 0.18) 0%, rgba(35, 35, 42, 0.95) 100%);
+    border-color: rgba(167, 139, 250, 0.3);
+    box-shadow: 0 8px 24px -4px rgba(167, 139, 250, 0.25);
+  }
+
+  .dock-item--quick .dock-item__spotlight {
+    background: radial-gradient(ellipse at center bottom, rgba(167, 139, 250, 0.3), transparent 70%);
+  }
+
+  /* === USER AVATAR === */
+  .dock-item__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary) 0%, #a06848 50%, var(--primary) 100%);
+    background-size: 200% 200%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    border: 2px solid rgba(200, 149, 110, 0.35);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    position: relative;
+    box-shadow:
+      0 4px 12px -2px var(--primary-glow),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    animation: avatarShimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes avatarShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .dock-item:hover .dock-item__avatar {
+    transform: translateY(-12px) scale(1.35);
+    box-shadow:
+      0 12px 28px -4px var(--primary-glow),
+      0 4px 12px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+    border-color: rgba(200, 149, 110, 0.6);
+  }
+
+  /* Status ring */
+  .dock-item__avatar::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 16px;
+    border: 1.5px solid transparent;
+    background: conic-gradient(from 0deg, var(--primary), var(--amber), var(--primary)) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.4;
+    animation: ringRotate 6s linear infinite;
+  }
+
+  @keyframes ringRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .dock-item:hover .dock-item__avatar::before {
+    opacity: 0.7;
+  }
+
+  /* Badge */
+  .dock-item__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--error), #d6336c);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.5), 0 0 0 2px var(--bg);
+    animation: badgeBounce 2s ease-in-out infinite;
+    z-index: 5;
+  }
+
+  @keyframes badgeBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+  }
+
+  /* === WAVE RIPPLE on click === */
+  .dock-item__ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+    opacity: 0;
+    transform: scale(0.5);
+    pointer-events: none;
+  }
+
+  .dock-item:active .dock-item__ripple {
+    animation: ripple 0.5s ease-out;
+  }
+
+  @keyframes ripple {
+    0% { opacity: 0.6; transform: scale(0.5); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+
+  /* === BOTTOM GLOW LINE (follows hover) === */
+  .dock-glow-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    border-radius: 2px;
+    opacity: 0;
+    transform: translateX(0);
+    transition: opacity 0.3s, left 0.15s ease-out;
+    filter: blur(1px);
+    pointer-events: none;
+  }
+
+  .dock:hover .dock-glow-line {
+    opacity: 0.8;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .dock {
+      padding: 8px 12px;
+      gap: 2px;
+      border-radius: 20px;
+    }
+
+    .dock-item__wrapper {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+    }
+
+    .dock-item__icon {
+      border-radius: 10px;
+    }
+
+    .dock-item__icon svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .dock-item__label {
+      display: none;
+    }
+
+    .dock-item:hover .dock-item__wrapper {
+      transform: translateY(-8px) scale(1.25);
+    }
+
+    .dock-item:hover + .dock-item .dock-item__wrapper,
+    .dock-item:has(+ :hover) .dock-item__wrapper {
+      transform: translateY(-4px) scale(1.1);
+    }
+
+    .dock-item__avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .dock-item:hover .dock-item__avatar {
+      transform: translateY(-8px) scale(1.25);
+    }
+
+    .dock-item__tooltip {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Ambient Background -->
+<div class="ambient">
+  <div class="ambient__orb ambient__orb--1"></div>
+  <div class="ambient__orb ambient__orb--2"></div>
+  <div class="ambient__orb ambient__orb--3"></div>
+  <div class="ambient__particles"></div>
+  <div class="ambient__grid"></div>
+</div>
+
+<!-- DOCK -->
+<div class="dock-stage">
+  <div class="dock-reflection"></div>
+  <div class="dock" id="dock" role="toolbar" aria-label="ناوبری اصلی">
+
+    <!-- Glow line that follows mouse -->
+    <div class="dock-glow-line" id="glowLine"></div>
+
+    <!-- Home -->
+    <div class="dock-item">
+      <div class="dock-item__tooltip">صفحه اصلی</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">صفحه اصلی</span>
+    </div>
+
+    <!-- Listings -->
+    <div class="dock-item active">
+      <div class="dock-item__tooltip">آگهی‌ها</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">آگهی‌ها</span>
+    </div>
+
+    <!-- News -->
+    <div class="dock-item">
+      <div class="dock-item__tooltip">اخبار بازار</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">اخبار</span>
+    </div>
+
+    <!-- Encyclopedia -->
+    <div class="dock-item">
+      <div class="dock-item__tooltip">دانشنامه</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M20 13.5V6a2 2 0 00-2-2H6a2 2 0 00-2 2v13"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">دانشنامه</span>
+    </div>
+
+    <!-- Categories -->
+    <div class="dock-item">
+      <div class="dock-item__tooltip">دسته‌بندی‌ها</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z M3 7a2 2 0 012-2h3l2 2h7a2 2 0 012 2"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">دسته‌بندی</span>
+    </div>
+
+    <!-- Separator -->
+    <div class="dock-sep" aria-hidden="true"></div>
+
+    <!-- Dashboard -->
+    <div class="dock-item">
+      <div class="dock-item__tooltip">داشبورد</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">داشبورد</span>
+    </div>
+
+    <!-- Quick Access -->
+    <div class="dock-item dock-item--quick">
+      <div class="dock-item__tooltip">دسترسی سریع ⌘K</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">سریع</span>
+    </div>
+
+    <!-- Separator -->
+    <div class="dock-sep" aria-hidden="true"></div>
+
+    <!-- Theme Toggle -->
+    <div class="dock-item dock-item--theme">
+      <div class="dock-item__tooltip">تغییر تم</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__spotlight"></div>
+        <div class="dock-item__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <div class="dock-item__ripple"></div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">تم</span>
+    </div>
+
+    <!-- User -->
+    <div class="dock-item">
+      <div class="dock-item__tooltip">علی رضایی — نمایندگی</div>
+      <div class="dock-item__wrapper">
+        <div class="dock-item__avatar">
+          ع
+          <div class="dock-item__badge">۳</div>
+        </div>
+        <div class="dock-item__indicator"></div>
+      </div>
+      <span class="dock-item__label">کاربر</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Mouse-following glow line
+  const dock = document.getElementById('dock');
+  const glowLine = document.getElementById('glowLine');
+  const items = dock.querySelectorAll('.dock-item');
+
+  dock.addEventListener('mousemove', (e) => {
+    const rect = dock.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    glowLine.style.left = (x - 20) + 'px';
+    glowLine.style.opacity = '0.8';
+  });
+
+  dock.addEventListener('mouseleave', () => {
+    glowLine.style.opacity = '0';
+  });
+
+  // Click ripple effect
+  items.forEach(item => {
+    item.addEventListener('click', function() {
+      // Remove active from all
+      items.forEach(i => i.classList.remove('active'));
+      // Add to clicked
+      this.classList.add('active');
+
+      // Haptic-like bounce
+      const wrapper = this.querySelector('.dock-item__wrapper');
+      wrapper.style.transform = 'translateY(-16px) scale(1.4)';
+      setTimeout(() => {
+        wrapper.style.transform = '';
+      }, 200);
+    });
+  });
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      // Simulate quick access open
+      const quickItem = document.querySelector('.dock-item--quick');
+      quickItem.style.transform = 'scale(1.2)';
+      setTimeout(() => quickItem.style.transform = '', 200);
+    }
+  });
+</script>
+
+</body>
+</html>

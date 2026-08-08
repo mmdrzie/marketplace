@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useIsAuthenticated } from '@/store/authStore';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
+import { QUICK_LINKS } from '@/config/nav';
 
 function SvgIcon({ children, className = 'h-5 w-5' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -12,57 +14,45 @@ function SvgIcon({ children, className = 'h-5 w-5' }: { children: React.ReactNod
   );
 }
 
-const QUICK_LINKS = [
-  { href: '/news', label: 'اخبار بازار', icon: <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />, keywords: 'news اخبار مقاله' },
-  { href: '/encyclopedia', label: 'دانشنامه', icon: <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />, keywords: 'دانشنامه راهنما تعمیرات encyclopedia guide' },
-  { href: '/market-pulse', label: 'نبض بازار', icon: <path d="M18 20V10M12 20V4M6 20v-6" />, keywords: 'pulse نبض قیمت' },
-  { href: '/price-estimator', label: 'برآورد قیمت', icon: <><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>, keywords: 'price قیمت برآورد' },
-  { href: '/car-matchmaker', label: 'مشاور خرید', icon: <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />, keywords: 'مشاور خرید پیشنهاد' },
-  { href: '/car-vs-car', label: 'مقایسه فنی', icon: <path d="M13 10V3L4 14h7v7l9-11h-7z" />, keywords: 'مقایسه فنی خودرو' },
-  { href: '/compare', label: 'مقایسه آگهی‌ها', icon: <path d="M4 6h16M4 12h16M4 18h16" />, keywords: 'مقایسه آگهی' },
-  { href: '/imported', label: 'خودروهای وارداتی', icon: <><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></>, keywords: 'وارداتی خارجی imported customs' },
-  { href: '/parts', label: 'قطعات یدکی', icon: <><circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>, keywords: 'قطعات یدکی ادوات parts' },
-  { href: '/catalog/tuning', label: 'قطعات تیونینگ', icon: <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />, keywords: 'تیونینگ tuning ارتقا قطعات' },
-  { href: '/catalog/accessory', label: 'اکسسوری خودرو', icon: <path d="M12 3l1.9 5.8a2 2 0 001.3 1.3L21 12l-5.8 1.9a2 2 0 00-1.3 1.3L12 21l-1.9-5.8a2 2 0 00-1.3-1.3L3 12l5.8-1.9a2 2 0 001.3-1.3L12 3z" />, keywords: 'اکسسوری تزئینات جانبی خودرو' },
-  { href: '/workshops', label: 'تعمیرکاران و تیونرها', icon: <path d="M12 15l3.5-3.5M20.3 18a10 10 0 10-16.6 0" />, keywords: 'تعمیرکار تیونر تعمیرگاه مکانیک' },
-  { href: '/insurance', label: 'بیمه', icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />, keywords: 'بیمه ایران آسیا شخص ثالث بدنه insurance' },
-  { href: '/search', label: 'جستجوی پیشرفته', icon: <><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>, keywords: 'جستجو search فیلتر' },
-  { href: '/dashboard/listings/new', label: 'ثبت آگهی', icon: <path d="M12 5v14M5 12h14" />, keywords: 'ثبت آگهی فروش' },
-];
-
-const navItems = [
+const MENU_SECTIONS = [
   {
-    href: '/',
-    label: 'خانه',
-    icon: <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></>,
+    title: 'اصلی',
+    items: [
+      { href: '/', label: 'صفحه اصلی', icon: 'home' },
+      { href: '/search', label: 'جستجو', icon: 'search' },
+    ],
   },
   {
-    href: '/search',
-    label: 'جستجو',
-    icon: <><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>,
+    title: 'دسترسی سریع',
+    items: [
+      { href: '/encyclopedia', label: 'دانشنامه', icon: 'book' },
+      { href: '/workshops', label: 'تعمیرکاران', icon: 'wrench' },
+      { href: '/insurance', label: 'بیمه', icon: 'shield' },
+    ],
   },
 ];
 
-const authNavItems = [
-  {
-    href: '/dashboard/favorites',
-    label: 'علاقه‌مندی',
-    icon: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />,
-  },
-  {
-    href: '/dashboard',
-    label: 'پنل',
-    icon: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
-  },
+const ACCOUNT_ITEMS = [
+  { href: '/dashboard', label: 'پروفایل', icon: 'user' },
+  { href: '/dashboard/favorites', label: 'علاقه‌مندی‌ها', icon: 'heart' },
 ];
 
-const guestNavItems = [
-  {
-    href: '/login',
-    label: 'ورود',
-    icon: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
-  },
-];
+const IconSvg = ({ children }: { children: React.ReactNode }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    {children}
+  </svg>
+);
+
+const ICONS: Record<string, React.ReactNode> = {
+  home: <IconSvg><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></IconSvg>,
+  search: <IconSvg><><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></></IconSvg>,
+  book: <IconSvg><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /></IconSvg>,
+  wrench: <IconSvg><path d="M12 15l3.5-3.5M20.3 18a10 10 0 10-16.6 0" /></IconSvg>,
+  shield: <IconSvg><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></IconSvg>,
+  user: <IconSvg><><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></></IconSvg>,
+  heart: <IconSvg><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></IconSvg>,
+  bolt: <IconSvg><path d="M13 10V3L4 14h7v7l9-11h-7z" /></IconSvg>,
+};
 
 export function MobileIslandNav({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenuOpen: (v: boolean) => void }) {
   const isAuthenticated = useIsAuthenticated();
@@ -71,24 +61,9 @@ export function MobileIslandNav({ menuOpen, setMenuOpen }: { menuOpen: boolean; 
   const [quickQuery, setQuickQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setQuickOpen(false);
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setQuickOpen((v) => !v);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   const isActive = (path: string) => {
-    if (path === '/' && pathname !== '/') return false;
-    if (path === '/dashboard' && pathname === '/dashboard') return true;
-    if (path === '/dashboard' && pathname !== '/dashboard/favorites' && pathname.startsWith('/dashboard/')) return true;
-    if (path === '/dashboard/favorites' && pathname === '/dashboard/favorites') return true;
-    return pathname === path;
+    if (path === '/') return pathname === '/';
+    return pathname === path || pathname.startsWith(path + '/');
   };
 
   const filteredLinks = QUICK_LINKS.filter((l) => {
@@ -97,140 +72,192 @@ export function MobileIslandNav({ menuOpen, setMenuOpen }: { menuOpen: boolean; 
     return l.label.includes(q) || l.keywords?.toLowerCase().includes(q);
   });
 
-  const items = [
-    ...navItems,
-    ...(isAuthenticated ? authNavItems : guestNavItems),
-  ];
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') setQuickOpen(false);
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      setQuickOpen((v) => !v);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   return (
     <>
-      {/* توپ ایلند */}
-      <div className="md:hidden fixed top-4 inset-x-0 z-50 flex justify-center px-5">
-        <div className="w-full max-w-sm glass rounded-full h-11 flex items-center justify-between px-4 border-border-subtle shadow-lg">
+      {/* Top Bar */}
+      <div className="md:hidden fixed top-3 inset-x-0 z-50 flex justify-center px-4">
+        <div className="w-full max-w-sm flex items-center justify-between">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-2/50 transition-all duration-200 active:scale-90"
+            className={`mobile-hamburger ${menuOpen ? 'open' : ''}`}
             aria-label="منو"
           >
-            <SvgIcon className="h-4.5 w-4.5">
-              {menuOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <><path d="M4 6h16M4 12h16M4 18h16" /></>}
-            </SvgIcon>
+            <div className="mobile-hamburger__line" />
+            <div className="mobile-hamburger__line" />
+            <div className="mobile-hamburger__line" />
           </button>
           <ThemeToggle />
         </div>
       </div>
 
-      {/* باتوم ایلند */}
-      <div className="md:hidden fixed bottom-5 inset-x-0 z-50 flex justify-center px-5">
-        <div className="w-full max-w-sm glass rounded-full h-14 flex items-center justify-around px-2 border-border-subtle shadow-lg">
-          {items.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`relative flex flex-col items-center justify-center gap-0.5 rounded-full transition-all duration-200 ${
-                  active
-                    ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground'
-                } ${item.href === '/dashboard/favorites' && active ? 'text-destructive bg-destructive/10' : ''}`}
-                style={{ width: 48, height: 48 }}
-              >
-                <SvgIcon className={`h-[18px] w-[18px] transition-transform duration-200 ${active ? 'scale-110' : ''}`}>
-                  {item.icon}
-                </SvgIcon>
-                <span className={`text-[9px] font-medium leading-none ${active ? 'opacity-100' : 'opacity-70'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-          <button
-            onClick={() => { setQuickOpen(true); setQuickQuery(''); setTimeout(() => searchInputRef.current?.focus(), 50); }}
-            className="flex flex-col items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-            style={{ width: 48, height: 48 }}
-            aria-label="دسترسی سریع"
+      {/* Slide Menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="md:hidden fixed inset-y-0 right-0 w-[75%] z-40 mobile-slide-menu"
           >
-            <SvgIcon className="h-[18px] w-[18px]">
-              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </SvgIcon>
-            <span className="text-[9px] font-medium leading-none opacity-70">سریع</span>
-          </button>
-          {isAuthenticated && (
-            <Link
-              href="/dashboard/listings/new"
-              className="flex flex-col items-center justify-center"
-              style={{ width: 48, height: 48 }}
-            >
-              <div className="w-9 h-9 rounded-full bg-gradient-accent flex items-center justify-center shadow-glow-accent transition-transform duration-200 active:scale-90">
-                <SvgIcon className="h-5 w-5 text-white"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></SvgIcon>
-              </div>
-              <span className="text-[9px] font-medium text-primary leading-none mt-0.5">ثبت</span>
-            </Link>
-          )}
-        </div>
-      </div>
+            <div className="h-full overflow-y-auto pt-20 pb-8 px-5">
+              {MENU_SECTIONS.map((section, si) => (
+                <div key={si} className="mobile-menu-section">
+                  <div className="mobile-menu-section__title">{section.title}</div>
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      className={`mobile-menu-item ${isActive(item.href) ? 'active' : ''}`}
+                    >
+                      <div className="mobile-menu-item__icon">{ICONS[item.icon]}</div>
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              ))}
 
-      {/* کوئیک اکسس پالت */}
-      <div className={`fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] p-4 transition-all duration-300 ease-out ${
-        quickOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-      }`}>
-        <div className="fixed inset-0 bg-overlay backdrop-blur-sm transition-opacity duration-300" onClick={() => setQuickOpen(false)} />
-        <div className={`relative z-10 w-full max-w-2xl bg-surface-1/90 border border-border/50 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden transition-all duration-300 ease-out ${
-          quickOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-95 scale-95 -translate-y-4'
-        }`} role="dialog" aria-modal="true">
-          <div className="p-4 border-b border-border/30 flex items-center gap-3 bg-surface-2/40">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-muted-foreground shrink-0">
-              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              ref={searchInputRef}
-              value={quickQuery}
-              onChange={(e) => setQuickQuery(e.target.value)}
-              placeholder="جستجو در ابزارها و صفحات..."
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-            />
-            <button onClick={() => setQuickOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-surface-3 transition-colors text-muted-foreground" aria-label="بستن">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+              <div className="mobile-menu-divider" />
 
-          <div className="p-4 max-h-[50vh] overflow-y-auto">
-            {filteredLinks.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {filteredLinks.map((link, i) => (
+              <div className="mobile-menu-section">
+                <div className="mobile-menu-section__title">حساب کاربری</div>
+                {(isAuthenticated ? ACCOUNT_ITEMS : [{ href: '/login', label: 'ورود / ثبت‌نام', icon: 'user' }]).map((item) => (
                   <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setQuickOpen(false)}
-                    className="group flex flex-col items-start gap-3 p-4 rounded-xl border border-border/30 hover:border-primary/30 bg-surface-2/30 hover:bg-primary/5 transition-all h-full"
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={`mobile-menu-item ${isActive(item.href) ? 'active' : ''}`}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-surface-2 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted-foreground group-hover:text-primary">
-                        {link.icon}
-                      </svg>
-                    </div>
-                    <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">{link.label}</span>
+                    <div className="mobile-menu-item__icon">{ICONS[item.icon]}</div>
+                    {item.label}
                   </Link>
                 ))}
               </div>
-            ) : (
-              <div className="py-10 text-center text-sm text-muted-foreground">
-                نتیجه‌ای برای «{quickQuery}» یافت نشد.
-              </div>
-            )}
-          </div>
 
-          <div className="px-5 py-3 border-t border-border/30 bg-surface-2/20 text-[11px] text-muted-foreground flex justify-between items-center">
-            <span className="flex items-center gap-2">
-              <kbd className="bg-surface-2 border border-border rounded px-1.5 py-0.5 font-sans">ESC</kbd> برای بستن
-            </span>
-            <span>پلتفرم تخصصی بازارگاه</span>
-          </div>
+              <div className="mobile-menu-footer">بازارگاه — نسل جدید معامله خودرو</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Backdrop */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-30 bg-overlay/60 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
+      )}
+
+      {/* Floating Bottom Nav */}
+      <div className="md:hidden fixed bottom-6 inset-x-0 z-20 flex justify-center px-4">
+        <div className="floating-nav">
+          <Link
+            href="/"
+            className={`floating-nav__btn ${isActive('/') ? 'active' : ''}`}
+          >
+            <div className="floating-nav__icon">
+              <SvgIcon className="h-6 w-6"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></SvgIcon>
+            </div>
+            <span className="floating-nav__label">خانه</span>
+          </Link>
+
+          <Link
+            href="/search"
+            className={`floating-nav__btn ${pathname === '/search' || pathname.startsWith('/search') ? 'active' : ''}`}
+          >
+            <div className="floating-nav__icon">
+              <SvgIcon className="h-6 w-6"><><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></></SvgIcon>
+            </div>
+            <span className="floating-nav__label">جستجو</span>
+          </Link>
+
+          {isAuthenticated && (
+            <Link href="/dashboard/listings/new" className="floating-nav__btn floating-nav__fab">
+              <div className="floating-nav__icon">
+                <SvgIcon className="h-7 w-7"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></SvgIcon>
+              </div>
+              <span className="floating-nav__label">ثبت آگهی</span>
+            </Link>
+          )}
+
+          <button
+            onClick={() => { setQuickOpen(true); setQuickQuery(''); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+            className="floating-nav__btn"
+          >
+            <div className="floating-nav__icon">
+              <SvgIcon className="h-6 w-6"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></SvgIcon>
+            </div>
+            <span className="floating-nav__label">سریع</span>
+          </button>
+
+          <Link
+            href={isAuthenticated ? '/dashboard' : '/login'}
+            className={`floating-nav__btn ${pathname.startsWith('/dashboard') || pathname === '/login' ? 'active' : ''}`}
+          >
+            <div className="floating-nav__icon">
+              <SvgIcon className="h-6 w-6"><><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></></SvgIcon>
+            </div>
+            <span className="floating-nav__label">پروفایل</span>
+          </Link>
         </div>
       </div>
+
+      {/* Command Palette */}
+      <AnimatePresence>
+        {quickOpen && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[8vh] px-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-overlay/80 backdrop-blur-md" onClick={() => setQuickOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -8 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative z-10 w-full max-w-lg"
+              role="dialog" aria-modal="true"
+            >
+              <div className="relative glass-strong rounded-2xl overflow-hidden">
+                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border/40">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                    <SvgIcon className="w-4 h-4 text-primary"><><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></></SvgIcon>
+                  </div>
+                  <input ref={searchInputRef} value={quickQuery} onChange={(e) => setQuickQuery(e.target.value)} placeholder="جستجو در ابزارها و صفحات..." className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 outline-none" />
+                  <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-surface-2 border border-border/50 text-[10px] text-muted-foreground font-sans">ESC</kbd>
+                </div>
+                <div className="max-h-[60vh] overflow-y-auto py-2">
+                  {filteredLinks.length > 0 ? (
+                    <div className="px-2">
+                      {filteredLinks.map((link) => (
+                        <Link key={link.href} href={link.href} onClick={() => setQuickOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-2/60 transition-all">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-surface-2/80">
+                            <SvgIcon className="w-5 w-5 text-muted-foreground">{link.icon}</SvgIcon>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-foreground truncate">{link.label}</div>
+                            <div className="text-[11px] text-muted-foreground/70 truncate">{link.href}</div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-12 text-center text-sm text-muted-foreground">نتیجه‌ای برای «{quickQuery}» یافت نشد.</div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
